@@ -1,0 +1,28 @@
+ ##iframe页面主体
+ <section class="content">
+	<div class="box box-default">
+      <div class="box-body">
+			##增加消息按钮
+			<button type="button" class="btn btn-default btn-sm addMessage btn-icon">
+                 <svg class="icon" aria-hidden="true">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+                 </svg>
+                 <b hidden>增加</b>&nbsp;
+            </button>
+                    	
+            ##发件箱分页展示
+            <div id="sendMessageContext" >
+            	##查询条件
+            	<div id="conditionSendMessage"></div>
+            	##列表
+            	<div id="tableSendMessage" class="dt-grid-container"></div>
+            	##分页栏
+            	<div id="pagingSendMessage" class="dt-grid-toolbar-container"></div>
+            </div>
+    
+	  </div>
+	</div >
+</section>  
+
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/message/sendMessage.js"></script>

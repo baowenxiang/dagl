@@ -1,0 +1,715 @@
+package cn.proem.dagl.web.flow.controller;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.bpm.context.TaskOperate;
+import cn.proem.bpm.entity.HandlerType;
+import cn.proem.bpm.entity.ProcTask;
+import cn.proem.bpm.model.Executor;
+import cn.proem.bpm.model.NextStep;
+import cn.proem.bpm.model.StartParam;
+import cn.proem.bpm.model.Task;
+import cn.proem.bpm.service.BpmQueryService;
+import cn.proem.bpm.service.ProcessService;
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.entity.User;
+import cn.proem.core.entity.UserDepartment;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.util.BeanUtils;
+import cn.proem.dagl.web.archives.entity.DField;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.fileUse.entity.ElectronicLend;
+import cn.proem.dagl.web.fileUse.service.ElectronicLendService;
+import cn.proem.dagl.web.flow.service.FlowService;
+import cn.proem.dagl.web.message.service.MessageService;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.table.dto.DtoSimpleFlow;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+import cn.proem.suw.web.common.util.HandParam;
+import cn.proem.suw.web.common.util.StringUtil;
+
+
+/**
+ * 归档流程控制层
+ * @author bao
+ *
+ */
+@Controller
+@RequestMapping(value = "/w/example/flow")
+public class FlowController extends BaseCtrlModel {
+    
+	@Autowired
+	private ProcessService processService;
+	@Autowired
+	private BpmQueryService bpmQueryService;
+    @Autowired
+    private CommonService commonService;
+    @Autowired
+    private FlowService flowService;
+    @Autowired
+	private MessageService messageService;
+    @Autowired
+    private ElectronicLendService electronicLendService;
+    @Autowired
+	private CustomArchiveService customArchiveService;
+   
+    private String valueOf(Object obj) {
+	    return (obj == null) ? "" : obj.toString();
+    }
+    
+    /**
+     * @Description 预归档页面
+     * @MethodName toPreArchiveView
+     * @author bao
+     * @date 2017年5月9日
+     * @param request
+     * @param tableName
+     * @return
+     * @throws ServiceException ModelAndView
+     */
+    @RequestMapping(value = "/toPreArchiveView/{tablename}")
+	public ModelAndView toPreArchiveView(HttpServletRequest request,@PathVariable("tablename") String tablename) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/flow/list.vm");
+		modelAndView.addObject("tablename", tablename);	
+		modelAndView.addObject("flag", 0);
+		return modelAndView;
+	}
+    
+    
+    /**
+     * @Description 归完档页面
+     * @MethodName toArchiveView
+     * @author bao
+     * @date 2017年5月9日
+     * @param request
+     * @param tablename
+     * @return
+     * @throws ServiceException ModelAndView
+     */
+    @RequestMapping(value = "/toArchiveView/{tablename}")
+	public ModelAndView toArchiveView(HttpServletRequest request,@PathVariable("tablename") String tablename) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/flow/list.vm");
+		modelAndView.addObject("tablename", tablename);	
+		modelAndView.addObject("flag", 1);
+		return modelAndView;
+	}
+    
+    
+    
+	/**
+ 	 * @Description 选择下一节点人员信息
+ 	 * @MethodName nextstepView
+ 	 * @author bao
+ 	 * @date 2017年5月5日
+ 	 * @param request
+ 	 * @param tablename
+ 	 * @return
+ 	 * @throws ServiceException ModelAndView
+ 	 */
+     @RequestMapping(value = "/nextstepView")
+     public ModelAndView nextstepView(HttpServletRequest request,String tablename,String ids,String flag) throws ServiceException{
+         ModelAndView modelAndView = this.createNormalView("/web/flow/nextstep.vm");
+         
+         String condition = " name = '预归档流程'";
+         List<BaseEntityInf> processes = customArchiveService.getEntitiesByConditions("ptp_bpm_process", condition);
+         String processId = processes.get(0).get("ID");
+         
+         modelAndView.addObject("processId",processId);
+         modelAndView.addObject("tablename", tablename);
+         modelAndView.addObject("ids", ids);
+         modelAndView.addObject("flag", flag);
+         
+         
+         return modelAndView;
+ 	 }
+    
+    
+	 	
+	 	/**
+		 * @MethodName getNextstepUsers
+		 * @Description 获取下一步的人员
+		 * @author Pan Jilong
+		 * @date 2017年3月2日
+		 * @return
+		 */
+		@RequestMapping(value = "/getNextstepUsers")
+		@ResponseBody
+		@LogService(description = "获取下一步的人员")
+		public String getNextstepUsers(HttpServletRequest request, String dtGridPager) {
+			User user = this.getCurrentUser(request);
+			//查询
+			DataGridQuery query = parseToQuery(dtGridPager);
+			QueryBuilder queryBuilder = query.generateQueryBuilder();
+			
+			//参数获取
+			String processId = (String) query.getParameters().get("processId").toString();
+			String businessId = null;
+			if (StringUtil.isNotEmpty(query.getParameters().get("businessId"))) {
+				businessId = query.getParameters().get("businessId").toString();
+			}
+			
+			String flag = (String) query.getParameters().get("flag").toString();
+			
+			//获取数据
+			DataGrid<User> dtgrid = new DataGrid<User>();
+			if ("NEW".toString().equals(flag)) {
+				//发起流程, 获取第二步的人员
+				dtgrid = flowService.getNextHandlerList(queryBuilder, processId, user, query.getNowPage(), -1);
+			} else {
+				//其他节点, 获取下一步
+				dtgrid = flowService.getNextHandlerList(queryBuilder, processId, businessId, user, "APPROVE", query.getNowPage(), -1);
+			}
+			return JSON.toJSONStringWithDateFormat(
+					dtgrid,
+	                "M-d HH:mm",
+	                SerializerFeature.WriteDateUseDateFormat,
+	                SerializerFeature.DisableCircularReferenceDetect);
+		}
+	 	
+    
+		
+		/**
+		 * @Description 获得用户
+		 * @MethodName convertHandlerToUser
+		 * @author bao
+		 * @date 2017年5月5日
+		 * @param handType
+		 * @param targets
+		 * @return List<User>
+		 */
+		private List<User> convertHandlerToUser(HandlerType handType, Set<String> targets) {
+			List<User> uds = new ArrayList<User>();
+			switch (handType) {
+				case ROLE :
+					//根据角色，查找人员
+					for (String rid : targets) {
+						List<User> us = commonService.findUsersByRoleId(rid);
+						uds.addAll(us);
+					}
+					break;
+				case USER :
+					//获取人员
+					for (String uid : targets) {
+						uds.add(commonService.findById(uid, User.class));
+					}
+					break;
+				case DUTY :
+					//根据职务，查找人员
+					for (String dutyid : targets) {
+						List<User> us = commonService.findUsersByDutyId(dutyid);
+						uds.addAll(us);
+					}
+					break;
+				case CREATEER :
+					//获取人员
+					for (String uid : targets) {
+						uds.add(commonService.findById(uid, User.class));
+					}
+					break;
+				case DEPARTMENT :
+					//根据部门，查找人员（下属所有部门的人员都需要查找到）
+					for (String did : targets) {
+						List<User> us = commonService.findUsersByDeptId(did);
+						uds.addAll(us);
+					}
+					break;
+			}
+			return uds;
+		}
+		
+		
+		
+		/**
+		 * @Description 发起流程
+		 * @MethodName startProcess
+		 * @author bao
+		 * @date 2017年5月7日
+		 * @param request
+		 * @param obj
+		 * @return ResultModel<String>
+		 */
+		@SuppressWarnings("unchecked")
+        @RequestMapping(value = "/startProcess")
+		@ResponseBody
+		@LogService(description = "发起流程")
+		public ResultModel<String> startProcess(HttpServletRequest request, @RequestBody Map<String, Object> obj) {
+			ResultModel<String> resultModel = new ResultModel<String>();
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			try {
+				List<String> businessIds =  (List<String>)obj.get("businessIds");
+				for(String businessId : businessIds){
+					//获取当前用户，即发起人
+					User user = this.getCurrentUser(request);
+					UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+					//启动参数的普通字段属性
+					StartParam startParam = BeanUtils.cloneObject(StartParam.class, obj.get("startParam"));
+					startParam.setBusinessId(businessId);
+					String tablename = businessId.substring(0, businessId.indexOf(","));
+					String tableid = businessId.substring(businessId.indexOf(",")+1);
+					
+					//发起流程的第一个节点直接为当前使用默认
+					startParam.setNextHandlers(null);
+					
+					//发起流程的第一个节点直接为当前使用默认
+					//传入参数， 启动流程
+					processService.startProcess(startParam, department);
+						
+						
+						//获取待办任务列表
+						DataGrid<Task> tasks = bpmQueryService.queryTask(user.getId(), startParam.getProcessId(), 0, -1);
+						Task task = null;
+						//找到第一个任务节点
+						if (tasks != null && tasks.getRecordCount() > 0) {
+							for (Task t : tasks.getExhibitDatas()) {
+								if (t.getBusinessId().equals(startParam.getBusinessId())) {
+									task = t;
+									break;
+								}
+							}
+						}
+						//找到下一步
+						List<NextStep> nextSteps = bpmQueryService.getNextSteps(task.getId());
+						NextStep nextStep = null;
+						if (nextSteps != null && nextSteps.size() > 0) {
+							nextStep = nextSteps.get(0);
+						}
+						//启动参数的下一步执行人的集合
+						Set<UserDepartment> nextDepartments = null;
+						if (obj.get("nextHandlers") != null) {
+							nextDepartments = new HashSet<UserDepartment>();
+							List<String> list = (List<String>)obj.get("nextHandlers");
+							for (String nextId : list) {
+							    User nextUser = commonService.findById(nextId, User.class);
+							    UserDepartment nextDepartment = commonService.findUserDepartmentByUserId(nextUser.getId());
+							    nextDepartments.add(nextDepartment);
+							}
+						}
+						
+						//执行下一步的任务节点
+						Executor executor = new Executor();
+						executor.setTaskId(task.getId());
+						executor.setOutcome(nextStep.getKey());
+						executor.setOperate(TaskOperate.APPROVE);
+						executor.setNextHandlers(nextDepartments);
+						processService.handTask(executor, department);
+						
+						
+						BaseEntityInf entityInf =  customArchiveService.getEntity(tablename, tableid);
+						entityInf.set("ISARCHIVE", "1");
+						entityInf.set(DField.UPDATETIME,sdf.format(new Date()));
+						customArchiveService.update(entityInf);
+						
+				}
+			}catch (ServiceException e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg(e.getMessage());
+				e.printStackTrace();
+			} catch (Exception e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg("提交失败");
+			} 
+			return resultModel;
+		}
+		
+		/**
+		 * @Description 待办列表页面
+		 * @MethodName toDoTaskView
+		 * @author bao
+		 * @date 2017年5月7日
+		 * @param request
+		 * @return
+		 * @throws ServiceException ModelAndView
+		 */
+	     @RequestMapping(value = "/toDoTaskView")
+	     public ModelAndView toDoTaskView(HttpServletRequest request) throws ServiceException{
+	         ModelAndView modelAndView = this.createNormalView("/web/flow/accountFileToDo.vm");
+	         
+	         
+	         //获得流程定义id
+	         String condition = " name = '预归档流程'";
+	         List<BaseEntityInf> processes = customArchiveService.getEntitiesByConditions("ptp_bpm_process", condition);
+	         String processId = processes.get(0).get("ID");
+	         
+	         modelAndView.addObject("processId", processId);
+	         return modelAndView;
+	 	 }
+		
+		/**
+		 * @Description 获得待办列表
+		 * @MethodName getToDoTasks
+		 * @author bao
+		 * @date 2017年5月7日
+		 * @param request
+		 * @param dtGridPager
+		 * @param processId
+		 * @return String
+		 */
+		@RequestMapping(value = "/getToDoTasks")
+		@ResponseBody
+		@LogService(description = "获取待办列表")
+		public String getToDoTasks(HttpServletRequest request, String dtGridPager,String processId) {
+			User user = this.getCurrentUser(request);
+			DataGridQuery query = parseToQuery(dtGridPager);
+			
+			//申明dtgrid所需属性
+			DataGrid<DtoSimpleFlow> dataGrid = new DataGrid<DtoSimpleFlow>();
+			dataGrid.setNowPage(query.getNowPage());
+			dataGrid.setPageSize(query.getPageSize());
+			int recordCount = 0;
+			try {
+				//获取该流程的对应实体类全限定名
+				List<DtoSimpleFlow> datas = new ArrayList<DtoSimpleFlow>();
+				//待办任务列表
+				DataGrid<Task> tasks = bpmQueryService.queryTask(user.getId(), processId, query.getNowPage(), query.getPageSize());
+				if (tasks != null && tasks.getRecordCount() > 0) {
+					int skipcnt = 0;
+					for (Task task : tasks.getExhibitDatas()) {
+						String businessId = task.getBusinessId();
+						String tablename = businessId.substring(0, businessId.indexOf(","));
+						String tableid = businessId.substring(businessId.indexOf(",")+1);
+						if("undefined".equals(tablename) || "undefined".equals(tableid)) {
+							skipcnt = skipcnt + 1;
+							continue ;
+						}
+						
+						 Map<String, Object> conditions = new HashMap<String, Object>();
+						 conditions.put("BM", tablename);
+						 BaseEntityInf table = customArchiveService.getEntityByConditions("pdagl_tablename", conditions);
+						 String archiveType = table.get("zwm");
+						
+						//循环任务列表, 赋值
+						BaseEntityInf entity = customArchiveService.getEntity(tablename, tableid);
+						try{
+							DtoSimpleFlow simpleFlow = new DtoSimpleFlow();
+							simpleFlow.setCurrentNodeName(task.getName());
+							simpleFlow.setBusinessId(task.getBusinessId());
+							simpleFlow.setUuid(this.valueOf(entity.get("UUID")));
+							simpleFlow.setTm(this.valueOf(entity.get("TM")));
+							simpleFlow.setCwrq(this.valueOf(entity.get("CWRQ")));
+							simpleFlow.setZrz(this.valueOf(entity.get("ZRZ")));
+							simpleFlow.setDh(this.valueOf(entity.get("DH")));
+							simpleFlow.setDataId(this.valueOf(entity.get("UUID")));
+							simpleFlow.setArchiveType(archiveType);
+							datas.add(simpleFlow);
+						}catch(NullPointerException e){
+							continue;
+						}
+					}
+					recordCount = tasks.getRecordCount();
+				}
+				dataGrid.setExhibitDatas(datas);
+				dataGrid.setRecordCount(recordCount);
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			} 
+			
+			return JSON.toJSONStringWithDateFormat(
+				  	dataGrid,
+	                "yyyy-MM-dd",
+	                SerializerFeature.WriteDateUseDateFormat,
+	                SerializerFeature.DisableCircularReferenceDetect);
+			
+		}
+		
+		
+		/**
+		 * @Description 流程扭转
+		 * @MethodName handProcess
+		 * @author bao
+		 * @date 2017年5月7日
+		 * @param request
+		 * @param obj
+		 * @return ResultModel<String>
+		 * @throws ServiceException 
+		 */
+		@RequestMapping(value = "/handProcess")
+		@ResponseBody
+		@LogService(description = "流程扭转")
+		public ResultModel<String> handProcess(HttpServletRequest request, @RequestBody Map<String, Object> obj) throws ServiceException {
+			ResultModel<String> resultModel = new ResultModel<String>();
+			User user = this.getCurrentUser(request);
+			UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			try {
+				//解析数据
+				HandParam handParam = BeanUtils.cloneObject(HandParam.class, obj.get("handParam"));
+				
+				String businessId = handParam.getBusinessId();
+				String tablename = businessId.substring(0, businessId.indexOf(","));
+				String tableid = businessId.substring(businessId.indexOf(",")+1);
+				
+				
+				
+				//任务对象ID
+				DataGrid<Task> tasks = bpmQueryService.queryTask(user.getId(), handParam.getProcessId(), 1, -1);
+				Task task = null;
+				//找到任务对象（所有节点使用同一个taskId）
+				if (tasks != null && tasks.getRecordCount() > 0) {
+					for (Task t : tasks.getExhibitDatas()) {
+						if (t.getBusinessId().equals(businessId)) {
+							task = t;
+							break;
+						}
+					}
+				}
+				
+				Executor executor = new Executor();
+				Boolean isAgree = false;
+				
+				NextStep nextStep = null;
+				List<NextStep> nextSteps = bpmQueryService.getNextSteps(task.getId());
+				if (nextSteps != null && nextSteps.size() > 0) {
+					if (nextSteps.size() == 1) {
+						nextStep = nextSteps.get(0);
+					} else {
+						if(StringUtil.isEmpty(handParam.getExpression())){
+							for (NextStep step : nextSteps) {
+								if(step.getOperate().equals(handParam.getOperate()) && StringUtils.isEmpty(step.getExpression())){
+									if(step.getOperate().equals("APPROVE")){
+										isAgree = true;
+									}
+									nextStep = step;
+									break;
+								}
+							}
+						}else{
+							for (NextStep step : nextSteps) {
+								if(StringUtils.isNotEmpty(step.getExpression())){
+									if(step.getOperate().equals("APPROVE") && StringUtils.isEmpty(step.getExpression())){
+										isAgree = true;
+									}
+									nextStep = step;
+									break;
+								}
+							}
+						}
+					}
+				}
+				
+				
+				//设置下一次执行人
+				Set<UserDepartment> nextHandlerUsers = new HashSet<UserDepartment>();
+				if (obj.get("nextHandlers") != null) {
+					List<String> nextHandlers = (List<String>)obj.get("nextHandlers");
+					for (String uid : nextHandlers) {
+						User us = commonService.findById(uid, User.class);
+						UserDepartment userd = new UserDepartment();
+						userd.setUser(us);
+						nextHandlerUsers.add(userd);
+					}
+					executor.setNextHandlers(new HashSet<UserDepartment>(nextHandlerUsers));
+				}
+				
+				//执行到下一步
+				executor.setTaskId(task.getId());
+				executor.setOutcome(nextStep.getKey());
+				executor.setOperate(this.convertOperateType(handParam.getOperate()));
+				processService.handTask(executor, department);
+
+				//处理实体类
+				BaseEntityInf entity =  customArchiveService.getEntity(tablename, tableid);
+				
+				if(isAgree){
+					
+					entity.set("ISARCHIVE", "3");
+					entity.set(DField.UPDATETIME,sdf.format(new Date()));
+					customArchiveService.update(entity);
+				}
+				if("REJECT".equals(handParam.getOperate())){
+					
+					entity.set("ISARCHIVE", "2");
+					entity.set(DField.UPDATETIME,sdf.format(new Date()));
+					customArchiveService.update(entity);
+				}
+				
+				
+			}catch (ServiceException e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg(e.getMessage());
+			}catch (Exception e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg("提交失败");
+			}  
+			
+			return resultModel;
+		}
+		
+		
+		
+		/**
+		 * @MethodName getOperateType
+		 * @Description 转换操作类型
+		 * @author Pan Jilong
+		 * @date 2017年3月1日
+		 * @param operate
+		 * @return
+		 */
+		private TaskOperate convertOperateType(String operate) {
+			if (TaskOperate.APPROVE.toString().equals(operate)) {
+				return TaskOperate.APPROVE;
+			} else if(TaskOperate.REJECT.toString().equals(operate)) {
+				return TaskOperate.REJECT;
+			} else if (TaskOperate.FIRST.toString().equals(operate)) {
+				return TaskOperate.FIRST;
+			} else if (TaskOperate.CANCEL.toString().equals(operate)) {
+				return TaskOperate.CANCEL;
+			} else if (TaskOperate.BACK.toString().equals(operate)) {
+				return TaskOperate.BACK;
+			} else if (TaskOperate.STOP.toString().equals(operate)) {
+				return TaskOperate.STOP;
+			} else if (TaskOperate.JUMP.toString().equals(operate)) {
+				return TaskOperate.JUMP;
+			}
+			return null;
+		}
+		
+		
+		
+	     @RequestMapping(value = "/fileLevel/{tablename}")
+	     public ModelAndView accountFile(HttpServletRequest request,@PathVariable("tablename") String tablename) throws ServiceException{
+	 		 
+	         ModelAndView modelAndView = this.createNormalView("/web/table/accountFile.vm");
+	         modelAndView.addObject("tablename", tablename);
+	         return modelAndView;
+	 	 }
+		 
+		 
+		 
+		 	/**
+		 	 * @Description 根据资料的id获取原文信息
+		 	 * @MethodName getYwgj
+		 	 * @author bao
+		 	 * @date 2017年5月9日
+		 	 * @param request
+		 	 * @param id
+		 	 * @return
+		 	 * @throws ServiceException ResultModel<Ywgj>
+		 	 */
+		 	@RequestMapping(value = "/getYwgj")
+		  	@ResponseBody
+		  	@LogService(description = "根据唯一标识ID获取原文信息")
+		    public ResultModel<Ywgj> getYwgj(HttpServletRequest request,@RequestBody Map<String, String> obj) throws ServiceException {
+		  		ResultModel<Ywgj> resultModel = new ResultModel<Ywgj>();
+		  			
+		  		List<Ywgj> ywgjs = flowService.getFileBydataId(obj.get("id"));
+		  		
+		  		resultModel.setDatas(ywgjs);
+		  		return resultModel;
+		  	}
+		 	
+		 	/**
+		 	 * @Description 通过档案id查询附件
+		 	 * @MethodName getYwgjByFileId
+		 	 * @author bao
+		 	 * @date 2017年5月15日
+		 	 * @param request
+		 	 * @param obj
+		 	 * @return
+		 	 * @throws ServiceException ResultModel<Ywgj>
+		 	 */
+		 	@RequestMapping(value = "/getYwgjByFileId")
+		  	@ResponseBody
+		  	@LogService(description = "根据档案ID查询下属附件")
+		    public ResultModel<Ywgj> getYwgjByFileId(HttpServletRequest request,@RequestBody Map<String, String> obj) throws ServiceException {
+		 		List<Ywgj> ywgjs = null;
+		 		ResultModel<Ywgj> resultModel = new ResultModel<Ywgj>();
+		  		try{
+		  			BaseEntityInf entity = customArchiveService.getEntity(obj.get("tablename"), obj.get("id"));
+		  			
+		  			ywgjs = flowService.getFileBydataId((String)entity.get("uuid"));
+		  			resultModel.setDatas(ywgjs);
+		  			
+		  		}catch(Exception e){
+		  			resultModel.setDatas(new ArrayList<Ywgj>());
+		  		}
+		  		
+		  		return resultModel;
+		  	}
+		 	
+		 	
+		 	/**
+		 	 * @Description 借阅申请
+		 	 * @MethodName loanApplication
+		 	 * @author bao
+		 	 * @date 2017年5月15日
+		 	 * @param request
+		 	 * @param obj
+		 	 * @return
+		 	 * @throws ServiceException ResultModel<String>
+		 	 */
+		 	@RequestMapping(value = "/loanApplication")
+		  	@ResponseBody
+		  	@LogService(description = "借阅申请")
+		    public ResultModel<String> loanApplication(HttpServletRequest request,@RequestBody Map<String, String> obj){
+		  		ResultModel<String> resultModel = new ResultModel<String>();
+		  		try{
+			  		String id = (String)obj.get("id");
+			  		String tablename = (String)obj.get("tablename");
+			  		
+			  		BaseEntityInf entity = customArchiveService.getEntity(tablename, id);
+			  		
+			  		ElectronicLend electronicLend = new ElectronicLend();
+			  		electronicLend.setDaid(this.valueOf(entity.get("uuid")));
+			  		electronicLend.setDh(this.valueOf(entity.get("dh")));
+			  		electronicLend.setTm(this.valueOf(entity.get("tm")));
+			  		electronicLend.setWh(this.valueOf(entity.get("wh")));
+			  		electronicLend.setBm(tablename);
+			  		electronicLend.setJyr(this.getCurrentUser(request));
+			  		electronicLend.setJyzt("未登记");
+			  		
+			  		electronicLendService.saveOrUpdate(electronicLend);
+		  		}catch (ServiceException e) {
+					resultModel.setSuccess(false);
+					resultModel.setMsg(e.getMessage());
+				}catch (Exception e) {
+					resultModel.setSuccess(false);
+					resultModel.setMsg("借阅申请失败");
+				}  
+				
+				return resultModel;
+		  	}
+		 	
+ 	@RequestMapping(value = "/checkFlowState")
+  	@ResponseBody
+  	@LogService(description = "根据档案ID查询下属附件")	 	
+	public ResultModel<ProcTask> checkFlowState(HttpServletRequest request,String businessId){
+ 		ResultModel<ProcTask> resultModel = new ResultModel<ProcTask>();
+ 		List<ProcTask> procTasks = flowService.checkFlowState(businessId);
+ 		resultModel.setDatas(procTasks);
+ 		return resultModel;
+	}	
+		 	
+}
+
+
+
+
+

@@ -1,0 +1,741 @@
+@import url('icons/styles.css');
+/*! HTML5 Boilerplate v4.3.0 | MIT License | http://h5bp.com/ */
+/*
+ * What follows is the result of much research on cross-browser styling.
+ * Credit left inline and big thanks to Nicolas Gallagher, Jonathan Neal,
+ * Kroc Camen, and the H5BP dev community and team.
+ */
+/* ==========================================================================
+   Base styles: opinionated defaults
+   ========================================================================== */
+html,
+button,
+input,
+select,
+textarea {
+  color: #222;
+}
+html {
+  font-size: 1em;
+  line-height: 1.4;
+}
+/*
+ * Remove text-shadow in selection highlight: h5bp.com/i
+ * These selection rule sets have to be separate.
+ * Customize the background color to match your design.
+ */
+::-moz-selection {
+  background: #b3d4fc;
+  text-shadow: none;
+}
+::selection {
+  background: #b3d4fc;
+  text-shadow: none;
+}
+/*
+ * A better looking default horizontal rule
+ */
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 1em 0;
+  padding: 0;
+}
+/*
+ * Remove the gap between images, videos, audio and canvas and the bottom of
+ * their containers: h5bp.com/i/440
+ */
+audio,
+canvas,
+img,
+video {
+  vertical-align: middle;
+}
+/*
+ * Remove default fieldset styles.
+ */
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+/*
+ * Allow only vertical resizing of textareas.
+ */
+textarea {
+  resize: vertical;
+}
+/* ==========================================================================
+   Browse Happy prompt
+   ========================================================================== */
+.browsehappy {
+  margin: 0.2em 0;
+  background: #ccc;
+  color: #000;
+  padding: 0.2em 0;
+}
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+/* ==========================================================================
+   Helper classes
+   ========================================================================== */
+/*
+ * Image replacement
+ */
+.ir {
+  background-color: transparent;
+  border: 0;
+  overflow: hidden;
+  /* IE 6/7 fallback */
+  *text-indent: -9999px;
+}
+.ir:before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 150%;
+}
+/*
+ * Hide from both screenreaders and browsers: h5bp.com/u
+ */
+.hidden {
+  display: none !important;
+  visibility: hidden;
+}
+/*
+ * Hide only visually, but have it available for screenreaders: h5bp.com/v
+ */
+.visuallyhidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+/*
+ * Extends the .visuallyhidden class to allow the element to be focusable
+ * when navigated to via the keyboard: h5bp.com/p
+ */
+.visuallyhidden.focusable:active,
+.visuallyhidden.focusable:focus {
+  clip: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  position: static;
+  width: auto;
+}
+/*
+ * Hide visually and from screenreaders, but maintain layout
+ */
+.invisible {
+  visibility: hidden;
+}
+/*
+ * Clearfix: contain floats
+ *
+ * For modern browsers
+ * 1. The space content is one way to avoid an Opera bug when the
+ *    `contenteditable` attribute is included anywhere else in the document.
+ *    Otherwise it causes space to appear at the top and bottom of elements
+ *    that receive the `clearfix` class.
+ * 2. The use of `table` rather than `block` is only necessary if using
+ *    `:before` to contain the top-margins of child elements.
+ */
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  /* 1 */
+  display: table;
+  /* 2 */
+}
+.clearfix:after {
+  clear: both;
+}
+/*
+ * For IE 6/7 only
+ * Include this rule to trigger hasLayout and contain floats.
+ */
+.clearfix {
+  *zoom: 1;
+}
+/* ==========================================================================
+   EXAMPLE Media Queries for Responsive Design.
+   These examples override the primary ('mobile first') styles.
+   Modify as content requires.
+   ========================================================================== */
+@media only screen and (min-width: 35em) {
+  /* Style adjustments for viewports that meet the condition */
+}
+@media print, (-o-min-device-pixel-ratio: 5/4), (-webkit-min-device-pixel-ratio: 1.25), (min-resolution: 120dpi) {
+  /* Style adjustments for high resolution devices */
+}
+/* ==========================================================================
+   Print styles.
+   Inlined to avoid required HTTP connection: h5bp.com/r
+   ========================================================================== */
+@media print {
+  * {
+    background: transparent !important;
+    color: #000 !important;
+    /* Black prints faster: h5bp.com/s */
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+  /*
+     * Don't show links for images, or javascript/internal links
+     */
+  .ir a:after,
+  a[href^="javascript:"]:after,
+  a[href^="#"]:after {
+    content: "";
+  }
+  pre,
+  blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+    /* h5bp.com/t */
+  }
+  tr,
+  img {
+    page-break-inside: avoid;
+  }
+  img {
+    max-width: 100% !important;
+  }
+  @page {
+    margin: 0.5cm;
+  }
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}
+/*===========================================================================*/
+/*  Grid
+/*===========================================================================*/
+.row {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.row .column {
+  margin: 0;
+  float: left;
+}
+.grid-1,
+.grid-2,
+.grid-3,
+.grid-4,
+.grid-5,
+.grid-6,
+.grid-7,
+.grid-8,
+.grid-9,
+.grid-10,
+.grid-11,
+.grid-12 {
+  float: left;
+  margin: 0;
+}
+.row .row {
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  float: left;
+}
+.row .center {
+  float: none;
+  margin: 0 auto;
+}
+.grid-1 {
+  width: 8.33333%;
+}
+.grid-2 {
+  width: 16.66667%;
+}
+.grid-3 {
+  width: 25%;
+}
+.grid-4 {
+  width: 33.33333%;
+}
+.grid-5 {
+  width: 41.66667%;
+}
+.grid-6 {
+  width: 49.99999%;
+}
+.grid-7 {
+  width: 58.33333%;
+}
+.grid-8 {
+  width: 66.66667%;
+}
+.grid-9 {
+  width: 75%;
+}
+.grid-10 {
+  width: 83.33333%;
+}
+.grid-11 {
+  width: 91.66667%;
+}
+.grid-12 {
+  width: 100%;
+}
+/* Xlarge */
+/* Large*/
+/*  Medium */
+@media only screen and (min-width: 601px) and (max-width: 959px) {
+  .row .column {
+    width: 50%;
+  }
+  .row .column.grid-12 {
+    width: 100%;
+  }
+  .row .column.center {
+    width: 100%;
+  }
+  .row .medium-center {
+    float: none;
+    margin: 0 auto;
+    clear: both;
+  }
+  .split-1,
+  .medium-split-1 {
+    width: 100% !important;
+  }
+  .split-2,
+  .medium-split-2 {
+    width: 50% !important;
+  }
+  .split-3,
+  .medium-split-3 {
+    width: 33.33333%  !important;
+  }
+  .split-4,
+  .medium-split-4 {
+    width: 25% !important;
+  }
+  .row .column.center {
+    padding-right: 0;
+  }
+}
+/*  small */
+@media only screen and (max-width: 600px) {
+  .row .column {
+    width: 100%;
+  }
+  .row .column.center {
+    padding-right: 0;
+  }
+  .split-1,
+  .small-split-1 {
+    width: 100% !important;
+  }
+  .split-2,
+  .small-split-2 {
+    width: 50% !important;
+  }
+  .split-3,
+  .small-split-3 {
+    width: 33.33333% !important;
+  }
+  .split-4,
+  .small-split-4 {
+    width: 25% !important;
+  }
+}
+.clear {
+  clear: both;
+}
+/* Nicolas Gallagher's micro clearfix */
+.row:before,
+.row:after,
+.clearfix:before,
+.clearfix:after {
+  content: "";
+  display: table;
+}
+.row:after,
+.clearfix:after {
+  clear: both;
+}
+.row,
+.clearfix {
+  zoom: 1;
+}
+/*===========================================================================*/
+/*  Forms
+/*===========================================================================*/
+.form {
+  overflow: hidden;
+}
+.form textarea:focus,
+.form input:focus {
+  outline: 0;
+  border: 1px solid #999;
+}
+.form input,
+.form textarea,
+.form select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+.form input[type="text"] {
+  height: 38px;
+  padding: 0 10px;
+}
+.form select {
+  outline: none;
+  padding: 0;
+  height: 38px;
+  /*safari padding hack*/
+  text-indent: 5px;
+  line-height: 32px;
+  cursor: pointer;
+}
+.form textarea {
+  min-height: 200px;
+}
+.form span.prefix,
+.form span.postfix {
+  display: block;
+  text-align: center;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-right: none;
+  color: #555;
+  height: 38px;
+  line-height: 36px;
+  overflow: hidden;
+  font-size: 14px;
+  margin: 0;
+}
+.prefix .icon {
+  font-size: 18px;
+  top: 4px;
+  position: relative;
+}
+.form button.postfix,
+.form button.prefix {
+  line-height: 32px;
+  overflow: hidden;
+  font-size: 14px;
+  height: 34px;
+  padding: 0;
+}
+.form span.postfix {
+  border: 1px solid #ccc;
+  border-left: none;
+}
+.form label {
+  display: block;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.form label span.small {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-size: 10px;
+  color: #888;
+  margin-bottom: 2px;
+}
+.form ul.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.form ul.list li {
+  display: block;
+  width: 100%;
+}
+.form ul.list li input,
+.form ul.list li label {
+  padding: 3px;
+  display: block;
+  float: left;
+  font-size: 14px;
+}
+.form ul.list li input {
+  margin-top: 3px;
+  margin-right: 10px;
+  display: block;
+  padding: 0;
+  border: 0;
+}
+.form ul.list li,
+.form ul.list li label {
+  width: 100%;
+  margin: 0;
+}
+/*=== ICONS INSIDE INPUT ===*/
+.icon.inside.input {
+  position: relative;
+  overflow: hidden;
+}
+.icon.inside.input input {
+  width: 100%;
+  padding-right: 45px;
+}
+.icon.inside.input.left input {
+  padding-right: 5px;
+  padding-left: 45px;
+}
+.icon.inside.input .icon {
+  color: #ccc;
+  background: transparent;
+  display: block;
+  position: absolute;
+  border: 1px solid #ccc;
+  right: 0;
+  top: 0;
+  height: 38px;
+  width: 40px;
+  text-align: center;
+  line-height: 2.1;
+  font-size: 22px;
+}
+.icon.inside.input.left .icon {
+  left: 0;
+}
+/*===========================================================================*/
+/*  Buttons
+/*===========================================================================*/
+.button {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  outline: none;
+  border: none;
+  vertical-align: baseline;
+  text-transform: none;
+  text-shadow: none;
+  font-weight: normal;
+  font-style: normal;
+  text-align: center;
+  text-decoration: none;
+  background-image: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-color: #e8e8e8;
+  color: #555;
+  font-size: 14px;
+  margin: 2px;
+  padding: 11px 25px 9px;
+  height: 42px;
+  line-height: 20px;
+  /*default*/
+}
+.button.rounded {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+.button:hover {
+  background-color: #b5b5b5;
+  -webkit-transition: all 300ms linear;
+  -moz-transition: all 300ms linear;
+  -o-transition: all 300ms linear;
+  transition: all 300ms linear;
+}
+.button.green,
+.button.blue,
+.button.red,
+.button.orange {
+  color: #fff;
+}
+.button.blue {
+  background-color: #55acee;
+}
+.button.blue:hover {
+  background-color: #147bc9;
+}
+.button.green {
+  background-color: #2ecc71;
+}
+.button.green:hover {
+  background-color: #1b7943;
+}
+.button.red {
+  background-color: #e74c3c;
+}
+.button.red:hover {
+  background-color: #a82315;
+}
+.button.orange {
+  background-color: #e67e22;
+}
+.button.orange:hover {
+  background-color: #bf6516;
+}
+.button.large {
+  font-weight: 700;
+  padding: 19px 40px 19px;
+  font-size: 18px;
+  height: 60px;
+  line-height: 22px;
+}
+.button.small {
+  height: 32px;
+  font-weight: normal;
+  padding: 9px 12px 7px;
+  font-size: 12px;
+  line-height: 16px;
+}
+/* Buttons with icons */
+.button.with.icon {
+  position: relative;
+  vertical-align: bottom;
+  text-indent: 37px;
+}
+.button.with.icon.right {
+  text-indent: 0 !important;
+  padding-right: 50px;
+  padding-left: 15px;
+}
+.button.with.icon.right span {
+  padding: 0;
+  right: 15px;
+  text-indent: 0 !important;
+  text-align: right;
+  position: absolute;
+  border: none;
+}
+.button.with.icon.right.small {
+  padding-right: 44px;
+  padding-left: 15px;
+}
+.button.with.icon.right.small span {
+  right: 3px;
+}
+.button.with.icon.right.large {
+  padding-right: 80px;
+  padding-left: 20px;
+}
+.button.with.icon.right.large span {
+  right: 20px;
+}
+.button.with.icon span {
+  text-indent: 0;
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: block;
+  position: absolute;
+  font-size: 22px;
+  padding: 0 14px;
+  line-height: 50px;
+  font-family: arial, sans-serif !important;
+}
+.button.with.icon span.green {
+  background: #2ecc71;
+}
+.button.with.icon span.blue {
+  background: #55acee;
+}
+.button.with.icon span.red {
+  background: #e74c3c;
+}
+.button.with.icon span.orange {
+  background: #e67e22;
+}
+.button.with.icon span.green,
+.button.with.icon span.blue,
+.button.with.icon span.red,
+.button.with.icon span.orange {
+  color: #fff;
+}
+.button.with.icon span.separate {
+  border-right: 1px solid #ececec;
+}
+.button.with.icon span.gray {
+  background: #e8e8e8;
+  color: #222;
+}
+.button.with.icon.large {
+  text-indent: 55px;
+  padding-right: 35px;
+  padding-left: 35px;
+}
+.button.with.icon.large span {
+  line-height: 72px;
+  font-size: 40px;
+}
+.button.with.icon.small {
+  min-width: 40px;
+  text-indent: 35px;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+.button.with.icon.small span {
+  line-height: 38px;
+  font-size: 20px;
+  padding: 0 10px;
+}
+.button.with.icon.only {
+  text-indent: 0;
+}
+/*---------------------------------------------------
+    LESS Elements 0.9
+  ---------------------------------------------------
+    A set of useful LESS mixins
+    More info at: http://lesselements.com
+  ---------------------------------------------------*/
+/*===========================================================================*/
+/*                                  Misc Styles                              */
+/*===========================================================================*/
+.video {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+}
+.video iframe,
+.video object,
+.video embed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}

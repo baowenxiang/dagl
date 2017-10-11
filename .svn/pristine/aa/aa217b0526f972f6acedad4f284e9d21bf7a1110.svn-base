@@ -1,0 +1,140 @@
+package cn.proem.dagl.web.eep.controller;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.dagl.web.tools.util.CommonFile;
+import cn.proem.eep.entity.AgentEnt;
+import cn.proem.eep.entity.AgentEntBlock;
+import cn.proem.eep.entity.ArchivalNo;
+import cn.proem.eep.entity.BusEnt;
+import cn.proem.eep.entity.BusEntBlock;
+import cn.proem.eep.entity.ContentDesc;
+import cn.proem.eep.entity.DocData;
+import cn.proem.eep.entity.Document;
+import cn.proem.eep.entity.ElecAttribute;
+import cn.proem.eep.entity.ElecRecdsEncaPkg;
+import cn.proem.eep.entity.EncaContent;
+import cn.proem.eep.entity.Encode;
+import cn.proem.eep.entity.EncodeData;
+import cn.proem.eep.entity.FormalFeature;
+import cn.proem.eep.entity.PrivilegeManagement;
+import cn.proem.eep.entity.RecdData;
+import cn.proem.eep.entity.RecdEntity;
+import cn.proem.eep.entity.RecdEntityBlock;
+import cn.proem.eep.entity.SignedObj;
+import cn.proem.eep.entity.StemFrom;
+import cn.proem.eep.entity.StorageLocation;
+import cn.proem.eep.util.Base64Util;
+import cn.proem.eep.util.EEPUtil;
+import cn.proem.eep.util.JaxbUtil;
+import cn.proem.suw.web.common.constant.Path;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+
+@Controller
+@RequestMapping(value = "/w/example/eep")
+public class EEPController extends BaseCtrlModel{
+    
+    @RequestMapping(value = "/start/{tablename}")
+    public ModelAndView starteep(HttpServletRequest request, @PathVariable("tablename") String tablename){
+        ModelAndView modelAndView =  this.createNormalView("/web/eep/detail.vm");
+        
+        return modelAndView;
+    }
+    
+    @RequestMapping(value = "/doeep")
+    @ResponseBody
+    public ResultModel<CommonFile> doeep(HttpServletRequest request,@RequestBody Map<String,Object> obj){
+    	ResultModel<CommonFile> resultModel = new ResultModel<CommonFile>();
+    	CommonFile commonFile = new CommonFile();
+    	String eepPath = Path.UPLOAD_EEP_PATH;
+    	commonFile.setRealpath(eepPath);
+	    try{
+	    	GregorianCalendar cal = new GregorianCalendar();
+			cal.setTime(new Date());
+			XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
+	    	EEPUtil util = new EEPUtil(EEPUtil.PKG_DESC, new Date());
+			
+			// 立档单位
+			StemFrom stemFrom = util.createStemFrom("三桥");
+			// 电子文件号
+			String elecDocNo = "";
+			// 档号
+			ArchivalNo archiveNo = util.createArchivalNo("全宗号", "目录号", calendar, "保管期限", 
+														  "机构与问题", "类别号", "室案件编号", "馆案件编号", 
+														  new BigInteger("10"), "200");	
+			ContentDesc desc = util.createContentDesc("题名", "责任人", "2017-6-14", "密级");
+			FormalFeature feature = util.createFormalFeature("文件组合类型");
+			// 存储位置
+			List<String> carryers = new ArrayList<String>();
+			carryers.add("载体1");
+			carryers.add("载体2");
+			StorageLocation location = util.createStorageLocation(carryers);
+			// 权限管理
+			PrivilegeManagement privilege = util.createPrivilegeManagement("知识产权说明", "授权对象", "授权行为", "控制标识");
+			// 文件数据
+			List<DocData> datas = new ArrayList<DocData>();
+			List<Encode> encodes = new ArrayList<Encode>();
+			ElecAttribute elec = util.createElecAttribute("webservice系统接口调试文档（温度）.doc", "127 KB");
+			String result = Base64Util.encoder("D:\\Git-2.11.1-64-bit.exe");
+			
+			EncodeData data = util.createEncodeData("A1", null, result.getBytes());
+			encodes.add(util.createEncode(elec, EEPUtil.CODE_DESC, "base64-doc", data));
+			List<Document> docs = new ArrayList<Document>();
+			datas.add(util.creatDocData("A1", encodes));
+			docs.add(util.createDocument("题名", "文档标识符", "文档序号", "文档主从声明", datas));
+			RecdData recddata = util.createRecdData(docs);
+			// 
+			RecdEntity record = util.createRecdEntity("聚合层次", stemFrom, elecDocNo, archiveNo, desc, feature, location, privilege, null, null, recddata);
+			RecdEntityBlock recdEnt = util.createRecdEntityBlock(record);
+			
+			List<BusEnt> busents = new ArrayList<BusEnt>();
+			busents.add(util.createBusEnt("业务标识符", "机构人员标识符", "文件标识符", "业务状态", "业务行为", "行为时间"));
+			BusEntBlock busEnt = util.createBusEntBlock(busents);
+			
+			List<AgentEnt> agents = new ArrayList<AgentEnt>();
+			agents.add(util.createAgentEnt("机构人员标识符", "机构人员名称"));
+			AgentEntBlock agentEnt = util.createAgentEntBlock(agents);
+			
+			// 封包内容
+			EncaContent content = util.createEncaContent(recdEnt, busEnt, agentEnt);
+			// 签名对象
+			SignedObj signedobj = util.createSignedObj(new Date(), "文件创建者", content);
+		    ElecRecdsEncaPkg pkg = util.createElecRecdsEncaPkg(signedobj);
+		    
+		    
+		    PrintWriter pw = new PrintWriter(new FileWriter(this.getFilePath()+eepPath+"cj.eep"));
+		    pw.print(JaxbUtil.convertToxml(pkg));
+		    pw.close();
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			e.printStackTrace();
+		}
+	    commonFile.setFilename("cj.eep");
+	    resultModel.setData(commonFile);
+		return resultModel;
+    }
+    
+    
+    
+}

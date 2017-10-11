@@ -1,0 +1,22 @@
+package cn.proem.dagl.web.eep.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+
+@Controller
+@RequestMapping(value = "/w/example/eep")
+public class EEPController extends BaseCtrlModel{
+    
+    @RequestMapping(value = "/start/{tablename}")
+    public ModelAndView starteep(HttpServletRequest request, @PathVariable("tablename") String tablename, @PathVariable("tablename") String uuid){
+        ModelAndView modelAndView =  this.createNormalView("/web/eep/detail.vm");
+        
+        return modelAndView;
+    }
+}

@@ -1,0 +1,214 @@
+//存储附件的集合
+var dicValueGrid;
+
+$(function(){
+	var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+	initDicValueMethod();
+	
+	initDicValueTable();
+	layer.close(index);
+	
+	
+});
+
+//初试化方法
+function initDicValueMethod(){
+	//增加信息
+	$("button.addDicValueGrid").on("click",function(){
+		//$('[name="messageId"]').val("");
+		$("input").not('[name="dictionaryId"]').val("");
+		if(""== recordId){
+			layer.alert("请选择字典项" ,{  skin: 'layui-layer-lan',closeBtn: 0});
+			return;
+		}
+		$('[name="did"]').val(recordId);
+		//$("button.dataUpdate").show();
+		$("h4.modal-title").text("字典值添加");
+		$("#dicValueUpdate").modal("show");
+	});
+
+	
+	//点击修改事件
+	$("#dicValueTable").on("click","a.update",function(){
+		
+		var id = $(this).attr("data-id");
+//		$("input").removeAttr("readonly");
+//		$("button.dataUpdate").show();
+		$("h4.modal-title").text("字典值修改");
+		$('[name="dicValueId"]').val(id);
+		$("#dicValueUpdate").modal("show");
+		//根据资料收集id获得相应信息
+		$.ajax({
+			url : Util.getRootPath()+"/w/dicmanager/getDicValueById",
+			type:'POST', //GET
+			async:false,
+			data:{
+				id:id
+			},
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				//输入框赋值
+				var dataInfo = data;
+				$('[name="did"]').val(dataInfo.data.dictionary.dno);
+				$('[name="dvno"]').val(dataInfo.data.dvno);
+				$('[name="dvalue"]').val(dataInfo.data.dvalue);
+				$('[name="xsxh"]').val(dataInfo.data.xsxh);
+				
+			},
+			error:function(ex) {}
+		});
+	});
+	
+	//删除信息
+	$("#dicValueTable").on("click","a.delete",function(){
+		var id = $(this).attr("data-id");
+		
+		$.ajax({
+			url : Util.getRootPath()+"/w/dicmanager/deleteDicValue",
+			type:'POST', //GET
+			async:true,
+			data:{
+				id:id
+			},
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				if(data.success){
+					layer.msg(data.msg,{time: 2000});
+					refreshDicValueGrid();
+				}else{
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			},
+			error:function(ex) {
+				layer.alert("删除失败！", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		});
+	});
+	
+	//保存修改后的信息
+	$("button.dicValueDataUpdate").on("click",function(){
+		var id = $.trim($('[name="dicValueId"]').val());
+		
+		//前台校验
+		var did = $.trim($('[name="did"]').val());
+		if(Util.checkNull(did)){
+			layer.alert('字典项编号不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		var dvno = $.trim($('[name="dvno"]').val());
+		if(Util.checkNull(dvno)){
+			layer.alert('内容编号不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		var dvalue = $.trim($('[name="dvalue"]').val());
+		if(Util.checkNull(dvalue)){
+			layer.alert('字典内容不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		var xsxh = $.trim($('[name="xsxh"]').val());
+		if(Util.checkNull(xsxh)){
+			layer.alert('显示序号不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		
+		var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+		var data={"id":id,"did":did,"dvno":dvno,"dvalue":dvalue,"xsxh":xsxh};
+		$.ajax({
+			url : Util.getRootPath()+"/w/dicmanager/updateDicValue",
+			type:'POST', 
+			async:true,
+			data:data,
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				if(data.success){
+					layer.close(index);
+					layer.msg(data.msg,{time: 2000});
+					$(".modal").modal("hide");
+					refreshDicValueGrid();
+				}else{
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			},
+			error:function(ex) {
+				layer.alert("操作失败！", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		});
+	});
+}
+
+
+function initDicValueTable(){
+	dicValueGrid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/dicmanager/getDicValueList",
+	    ajaxLoad : true,
+	    gridContainer : 'dicValueTable',
+	    toolbarContainer : 'pagingDicValue',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 20,
+	    check : true,
+	    pageSizeLimit : [20,50,100,300],
+	    columns : [
+		       		{
+		       			id:'dictionary',
+		       			title : '<b>字典项编号</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				return value.dno;
+		       			}
+		       		},
+		       		{
+		       			id:'dvno',
+		       			title : '<b>内容编号</b>',
+		       			type:"string",
+		       			columnClass:'text-center'
+		       		},
+		       		{
+		       			id:'dvalue',
+		       			title : '<b>字典内容</b>',
+		       			type:"string",
+		       			columnClass:'text-center'
+		       		},
+		       		{
+		       			id:'xsxh',
+		       			title : '<b>显示序号</b>',
+		       			type:"string",
+		       			columnClass:'text-center'
+		       		},
+		       		
+		       		{
+		       			id:'id',
+		       			title : '<b>操作</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       			//存储record类，编辑时使用
+		       				var html = ''; 	
+		       				html += '<div class="btnDiv">';
+		       				//html += '	<a title="查看" class="btn btn-default btn-xs add" data-id="'+value+'">增加</a>';
+	       					html += '	<a title="修改" class="btn btn-info btn-xs update" data-id="'+value+'">修改</a>';
+	       					html += '	<a title="删除" class="btn btn-warning btn-xs delete" data-id="'+value+'">删除</a>';
+		       				html += '</div>';
+			       			
+		       				return html;
+		       			}
+
+		       		}
+		       		]
+	});
+	refreshDicValueGrid();
+}
+
+function refreshDicValueGrid() {
+	dicValueGrid.parameters = getDicValueParameters();
+	dicValueGrid.load();
+}
+function getDicValueParameters() {
+	var id = $('[name="dictionaryId"]').val();
+	return {"id":id};
+}
+
+
+
+

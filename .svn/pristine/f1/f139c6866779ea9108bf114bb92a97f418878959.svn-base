@@ -1,0 +1,33 @@
+package cn.proem.dagl.web.tj.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.dagl.web.tj.service.TJService;
+
+@Service
+public class TJServiceImpl implements TJService {
+    @Resource
+    private GeneralDao generalDao;
+    @Override
+    public List<Map<String, Object>> tjGcl(String company) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select zwm as 'zwm', ndh as 'ndh', count(1) as 'cnt' from (");
+        sql.append("  select t1.zwm, t1.qzh, t1.ndh, t1.company, t1.oldcompany from v_pdagl_gcl t1");
+        sql.append("where company = '" + company + "' and");
+        sql.append("        (oldcompany = '" + company + "' or");
+        sql.append("         oldcompany is null) ");
+        sql.append("  UNION ALL");
+        sql.append("  select t2.zwm, t2.qzh, t2.ndh, t2.company, t2.oldcompany from v_pdagl_gcl t2");
+        sql.append("  where company != '" + company + "' and");
+        sql.append("        oldcompany = '" + company + "' )");
+        sql.append("group by zwm, ndh");
+        sql.append("order by zwm, ndh");
+        return generalDao.getObjectList(sql.toString(), 0, -1);
+    }
+}

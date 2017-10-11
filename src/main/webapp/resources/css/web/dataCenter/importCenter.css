@@ -1,0 +1,27 @@
+/*附件样式*/
+.file-div,.add-file-div{
+	overflow: hidden;
+	padding: 0;
+}
+.file-div>div,.add-file-div>div{
+	display: inline-block;
+	height: 34px;
+	line-height: 34px;
+	border: 1px solid #CCCCCC;
+	margin-bottom: 2px;
+	padding: 0 12px;
+	text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+	/*box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;*/
+}
+.file-div>div>a,.add-file-div>div>a{
+	padding-left: 10px;
+	color: #2C6F89;
+}
+.file-div>div>span.file-remove,.add-file-div>div>span.file-remove{
+	cursor: pointer;
+	position: absolute;
+	right: 10px;
+}
+.file-div>div>span.file-remove:HOVER,.add-file-div>>div>span.file-remove:HOVER{
+	color: #A70000;
+}

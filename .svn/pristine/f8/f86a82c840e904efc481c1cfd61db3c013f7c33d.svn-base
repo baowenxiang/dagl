@@ -1,0 +1,211 @@
+##iframe页面主体
+<section class="content">
+<form class="form-inline">
+  <div class="form-group">
+    <label class="sr-only" for="exampleInputAmount">统计范围</label>
+    <div class="input-group">
+       <select class="form-control input-sm" tabindex="-1" aria-hidden="true">
+                  <option value="all" selected="selected">全部档案</option>
+                  <option value="exp">不包含移入档案</option>
+                </select>
+    </div>
+  </div>
+                <button type="button" class="btn btn-sm btn-default" id="search">开始统计</button>
+</form>
+    <div class="row">
+        <div id="type" class="col-md-4">
+        </div>
+    </div
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <b>室&nbsp;藏&nbsp;量&nbsp;统&nbsp;计</b>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12" >
+            <div class="table-responsive" data-pattern="priority-columns">
+                    <table cellspacing="0" id="ledger" class="table table-small-font table-bordered">
+                        <thead>
+                            <tr id="header">
+                            </tr>
+                        </thead>
+                        <tbody id="body">
+                        </tbody>
+                        <tfoot id="foot">
+                        </tfoot>
+                    </table>
+                </div>
+        </div>
+    </div>
+</section>
+     <script>
+        $(function(){
+            clearTable();
+            $.ajax({
+                url:Util.getRootPath() + "/w/tj/gcl" + "?type=all",
+                async:false,
+                success: function(data){
+                    drawTj(data);
+                },
+                error: function(){
+                    layer.msg("不存在统计数据");                
+                }
+            });
+                    
+            $("#search").click(function(){
+                clearTable();
+                if($("#type").val() == "all"){
+                    $.ajax({
+                        url:Util.getRootPath() + "/w/tj/gcl" + "?type=all",
+                        async:false,
+                        success: function(data){
+                            drawTj(data);
+                        },
+                        error: function(error){
+                            layer.msg("不存在统计数据");                
+                        }
+                    });
+                }else{
+                    $.ajax({
+                        url:Util.getRootPath() + "/w/tj/gcl" + "?type=exp",
+                        async:false,
+                        success: function(data){
+                            drawTj(data);
+                        },
+                        error: function(error){
+                            layer.msg("不存在统计数据");                
+                        }
+                    });
+                }
+            });
+        });
+        
+        function drawTj(jsondata){
+            layer.msg("绘制中...");
+            var data = jsondata;
+            var headers = data.ndhArea;
+            var wjrows = data.gclwj;
+            var ajrows = data.gclaj;
+            drawTable(headers, wjrows, "总计文件", "");
+            drawTable(headers, ajrows, "总计案卷", "background-color:#D6D3D6;");
+            $("#header").append("<th style='padding:0px;'>"
+                              + "<div id='line' style='border-top:40px #D6D3D6 solid;width:0px;height:0px;position:relative;'>" 
+                              + "<b style='font-style:normal;display:block;position:absolute;top:-35px;left:-40px;width:35px;'>年&nbsp;&nbsp;度</b>" 
+                              + "<em style='font-style:normal;display:block;position:absolute;top:-18px;left:-70px;width:55x;'>档案类型</em>" 
+                              + "</div>" 
+                              + "</th>");
+            // 构建表格标题
+            for(var idx=0;idx<headers.length;idx++){
+                $("#header").append("<th>" + headers[idx].ndh + "</th>");
+                if(idx == (headers.length -1)){
+                    $("#header").append("<th style='color:red;'>总计</th>");
+                }else{
+                    $("#header").append("<th style='color:red;'>小计</th>");
+                }
+            }
+            
+            
+            $("#line").css("border-left", $("#body tr:eq(0) td:eq(0)").outerWidth() + "px #BDBABD solid");
+            $("em").css("left", -$("#body tr:eq(0) td:eq(0)").outerWidth() + 5);
+            layer.close(layer.index);
+        
+        }
+        
+        function getCols(arr, colnum){
+            var rowcnt = arr.length;
+            var colcnt = 0;
+            if(arr.length > 0) colcnt = arr[0].length;
+            var cols = [];
+            if(colnum < colcnt){
+                for(var i =0; i < rowcnt; i++){
+                    cols.push(arr[i][colnum]);
+                }
+               
+            }
+            return cols;
+        }
+        
+        function drawTd(val, style){
+                var temp = "  <td"
+                if(style != "") temp = temp + " style='" + style + "'";
+                temp = temp + ">" + val + "</td>";
+                return temp;
+        }
+        
+        function drawTh(val, style){
+                var temp = "  <th"
+                if(style != "") temp = temp + " style='" + style + "'";
+                temp = temp + ">" + val + "</th>";
+                return temp;
+        }
+        
+        function drawTable(headers, rows, title, style){
+            var tjNdCnt = (function tjNdCnt(gcl){
+                var obj = {};
+                obj.rows = gcl;
+                obj.point = 0;
+                obj.find = function(lx, ndh){
+                    for(var i=obj.point; i < obj.rows.length; i++){
+                        if(obj.rows[i].zwm == lx && obj.rows[i].ndh == ndh){
+                            obj.point = i;
+                            return obj.rows[i].cnt;
+                        }
+                    }
+                    return 0;                   
+                }
+                return obj;
+            })(rows);
+            
+            var lx = [];
+            var total = 0;
+            var arr1 = [];
+            var arr1n = [];
+            for(var jdx=0;jdx<rows.length;jdx++){
+                    var row = "<tr>";
+                    var arr2 = [];
+                    var arr2n = [];
+                    if(lx.indexOf(rows[jdx].zwm)!=-1) continue;
+                    lx.push(rows[jdx].zwm);
+                    row = row + drawTd(rows[jdx].zwm, style);
+                    for(var idx=0;idx<headers.length;idx++){
+                        var cnt = tjNdCnt.find(rows[jdx].zwm, headers[idx].ndh);
+                        row = row + drawTd(cnt, style);
+                        total = total + cnt;
+                        row = row + drawTd(total, style + "color:red;");
+                        arr2.push(total);
+                        arr2n.push(cnt);
+                    }
+                    arr1.push(arr2);
+                    arr1n.push(arr2n);
+                    row = row + "</tr>";
+                    total = 0;
+                    $("#body").append(row);
+            }
+            var footer = "<tr>";
+            footer = footer + drawTh(title, style);
+            for(var idx=0;idx<headers.length;idx++){
+                var cols = getCols(arr1, idx);
+                var colsn = getCols(arr1n, idx);
+                var total = 0;
+                var totaln = 0;
+                for(var c=0; c < cols.length; c++){
+                    total = total + cols[c];
+                    totaln = totaln + colsn[c];
+                }
+                footer = footer + drawTh(totaln, style);
+                footer = footer + drawTh(total, style + "color:red;");
+            }
+            
+            footer = footer + "</tr>"
+            $("#foot").append(footer);
+        }
+        
+        function clearTable(){
+            $("#header").empty();
+            $("#body").empty();
+            $("#foot").empty();
+        }
+        
+     </script>
+
+    

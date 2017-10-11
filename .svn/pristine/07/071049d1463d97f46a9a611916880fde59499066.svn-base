@@ -1,0 +1,148 @@
+package cn.proem.dagl.web.fileTransfer.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.fileTransfer.entity.TransferRecorder;
+import cn.proem.dagl.web.fileTransfer.service.FileTransferService;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.util.StringUtil;
+
+@Service
+public class FileTransferServiceImpl implements FileTransferService {
+	
+	@Autowired
+	private GeneralDao generalDao;
+	
+	@Override
+	@Transactional
+	@LogService(description = "保存文档移交记录")
+	public void save(TransferRecorder transferRecorder) throws ServiceException {
+		generalDao.saveOrUpdate(transferRecorder);
+
+	}
+
+	@Override
+	public DataGrid<TransferRecorder> getTransferedFileDataGrid(QueryBuilder queryBuilder, int nowPage, int pageSize) {
+		DataGrid<TransferRecorder> dataGrid = new DataGrid<TransferRecorder>(nowPage,pageSize);
+		dataGrid.setRecordCount(generalDao.countByCriteria(TransferRecorder.class, queryBuilder));
+		
+		List<TransferRecorder> list = generalDao.queryByCriteria(TransferRecorder.class, queryBuilder, null, dataGrid.getStartRecord(), dataGrid.getPageSize());
+		
+		
+		
+		dataGrid.setExhibitDatas(list);
+		return dataGrid;
+		
+		
+	}
+	
+	
+	@Override
+	public DataGrid<Map<String,Object>> getTransferedFileDataGrid(String tablename,String condition, int nowPage, int pageSize) {
+		DataGrid<Map<String,Object>> dataGrid = new DataGrid<Map<String,Object>>(nowPage,pageSize);
+		
+		
+		
+		
+		String SELECTPAGING = 
+				  " SELECT * FROM ( "
+				+ " 	SELECT "
+				+ " 		ROW_NUMBER () OVER (ORDER BY uuid) AS num,TM,uuid,RECEICOMPANY_ID,TRANSFCOMPANY_ID,STATE "
+				+ "		FROM "
+				+ "		( "
+				+ "			SELECT DISTINCT (DAID) AS UUID,TM,RECEICOMPANY_ID,TRANSFCOMPANY_ID,STATE "
+				+ "			FROM %s P "
+				+ "			WHERE "
+				+ "				%s  AND  END_TIME IS NULL"
+				+ " 	) "
+				+ " ) A "
+				+ " WHERE "
+				+ " num <  %d "
+				+ " AND num > %d ";
+		
+		String SELECT = "SELECT DISTINCT TM, DAID FROM %s WHERE %s AND  END_TIME IS NULL";
+		
+		dataGrid.setRecordCount(generalDao.getObjectList(String.format(SELECT,tablename,condition),0, -1, new Object[]{}).size());
+		
+		List<Map<String,Object>> list = generalDao.getObjectList(String.format(SELECTPAGING,tablename,condition,dataGrid.getStartRecord()+dataGrid.getPageSize(),dataGrid.getStartRecord()),0, -1, new Object[]{});
+		dataGrid.setExhibitDatas(list);
+		
+		return dataGrid;
+	}
+	
+
+	
+	public List<TransferRecorder> getTransferRecords(String daid){
+		QueryBuilder queryBuilder = new QueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("daid", daid, ConditionType.EQ, FieldType.STRING));
+		
+		return generalDao.queryByCriteria(TransferRecorder.class, queryBuilder, null, 0, -1);
+		
+		
+	}
+
+	@Override
+	public DataGrid<Map<String, Object>> getAllTransferedFileDataGrid(String tablename, int nowPage, int pageSize) {
+
+		DataGrid<Map<String,Object>> dataGrid = new DataGrid<Map<String,Object>>(nowPage,pageSize);
+		
+		
+		
+		
+		String SELECTPAGING = 
+				  " SELECT * FROM ( "
+				+ " 	SELECT "
+				+ " 		ROW_NUMBER () OVER (ORDER BY uuid) AS num,TM,uuid,RECEICOMPANY_ID,TRANSFCOMPANY_ID,STATE,CREATE_ID,START_TIME,END_TIME "
+				+ "		FROM "
+				+ "		( "
+				+ "			SELECT DISTINCT (DAID) AS UUID,TM,RECEICOMPANY_ID,TRANSFCOMPANY_ID,STATE,CREATE_ID,START_TIME,END_TIME "
+				+ "			FROM %s P "
+				+ " 	) "
+				+ " ) A "
+				+ " WHERE "
+				+ " num <  %d "
+				+ " AND num > %d ";
+		
+		String SELECT = "SELECT DISTINCT TM, DAID FROM %s  ";
+		
+		dataGrid.setRecordCount(generalDao.getObjectList(String.format(SELECT,tablename),0, -1, new Object[]{}).size());
+		
+		List<Map<String,Object>> list = generalDao.getObjectList(String.format(SELECTPAGING,tablename,dataGrid.getStartRecord()+dataGrid.getPageSize(),dataGrid.getStartRecord()),0, -1, new Object[]{});
+		dataGrid.setExhibitDatas(list);
+		
+		return dataGrid;
+	
+	}
+
+	@Override
+	public List<Map<String, Object>> getAllTransferedFileDataGrid(
+			String tablename, String condition) {
+		String SELECTPAGING = 
+				  " 	SELECT "
+				+ " 		ROW_NUMBER () OVER (ORDER BY uuid) AS num,TM,uuid,RECEICOMPANY_ID,TRANSFCOMPANY_ID,STATE,CREATE_ID,START_TIME,END_TIME "
+				+ "		FROM "
+				+ "		( "
+				+ "			SELECT DISTINCT (DAID) AS UUID,TM,RECEICOMPANY_ID,TRANSFCOMPANY_ID,STATE,CREATE_ID,START_TIME,END_TIME "
+				+ "			FROM %s P "
+				+ " 	) ";
+			if(StringUtil.isNotEmpty(condition)){
+				SELECTPAGING += " WHERE uuid in "+condition;
+			}
+		
+		List<Map<String,Object>> list = generalDao.getObjectList(String.format(SELECTPAGING,tablename),0, -1, new Object[]{});
+		return list;
+	}
+}

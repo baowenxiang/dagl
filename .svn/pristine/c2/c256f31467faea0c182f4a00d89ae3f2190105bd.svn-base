@@ -1,0 +1,33 @@
+@CHARSET "UTF-8";
+#slide{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 15%;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 15px;
+    text-align: right;
+    background-color: #333333;
+    border: 1px solid #333333;
+    border-left: none;
+}
+#slide>span{
+    font-size: 24px;
+    color: #c5c5c5;
+}
+#slide:hover{
+    cursor: pointer;
+}
+#slide:hover>span{
+	color: #747474;
+}
+#slide.slideActive{
+    width: 50px;
+}
+
+
+
+
+
+

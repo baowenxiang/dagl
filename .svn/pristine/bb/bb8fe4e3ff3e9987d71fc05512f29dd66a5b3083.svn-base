@@ -1,0 +1,89 @@
+
+##iframe页面主体
+<section class="content">
+
+
+   <form class="layui-form" method="post" action="searchIndex">
+   
+   	 <div class="layui-form-item">
+     <label class="layui-form-label">关键词</label>
+	    <div class="layui-input-block" ">
+	      <input type="text" style="width:300px" id="key" name="key" required  lay-verify="required" placeholder="请输入检索关键词" autocomplete="off" class="layui-input" value="$!{key}">
+	    </div>
+     </div>
+     
+     <div class="layui-form-item">
+	    <div class="layui-input-block">
+	      <button class="layui-btn submit" lay-submit lay-filter="formDemo">检索</button>
+	      <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+	    </div>
+     </div>
+     
+   </form>
+   
+   <div id="content_left">
+   	#foreach($result in $!{results})
+   		<div class="result c_container" style="width:60%;margin-top:50px;">
+   			<a href="#" class="preview" id="$!{result.fileId}"><span style="border-bottom:2px solid blue;margin-top:10px;color:blue">文件标题：$!{result.title}</span></a>
+   			<div class="abstract" style="margin-top:10px;">
+   				文件内容摘要：$!{result.content}...
+   			</div>
+   			#if($!{result.dm})
+   			<div class="path" style="margin-top:10px;">
+   			  <table class="dt-grid table table-bordered table-hover table-responsive">
+   			      <thead><tr><th>档案类型</th><th>档号</th></tr></thead>
+   			      <tbody><tr><td>$!{result.dm}</td><td>$!{result.dh}</td></tr><tbody>
+   			  </table>
+   			</div>
+   			#end
+   			<div class="fileCreateTime" style="margin-top:10px;">
+   				文件上传时间：<span style="color:gray">$!{result.fileCreateTime}</span>
+   			</div>
+   		</div>
+	#end
+		
+   </div>
+   
+</section>
+
+<!-- layer -->
+<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+<link href="${rc.contextPath}/resources/css/web/common/import.css" rel="stylesheet">
+<!--<script src="https://unpkg.com/vue/dist/vue.js"></script>-->
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<!--<script src="${rc.contextPath}/resources/plugins/vue/vue.min.js" type="text/javascript"></script>-->
+<script src="${rc.contextPath}/resources/js/web/table/import.js"></script>
+	
+<script>
+$(function(){
+   //点击预览内容
+   $(".preview").on("click",function(){
+	   //alert();
+	   var id = $(this).attr("id");
+	   var url = "";
+	   var fileName = "";
+	   var options = {};
+   		$.ajax({
+             type: "GET",
+             contentType: "application/json",
+             url: Util.getRootPath() + "/w/preview/" + id,
+             dataType: 'json',
+             async: false,
+             success: function(result) {
+            	 url = result.cache;
+            	 fileName = result.name;
+             },
+   		});
+   	options.url = url;
+   	options.title = fileName;
+   	window.parent.showModal(options);
+	   
+
+   });
+		
+});
+	
+	
+</script>
+
+	

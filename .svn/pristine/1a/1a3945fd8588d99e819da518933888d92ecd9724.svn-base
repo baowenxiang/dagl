@@ -1,0 +1,136 @@
+
+##iframe页面主体
+<section class="content">
+   <form method="post" action="searchIndex">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text"  id="key" name="key" class="form-control" value="$!{key}">
+                <span class="input-group-btn">
+                    <button type="submit" class="btn btn-info btn-flat">全文搜索</button>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs">
+              <li role="presentation" id="wj" class="active"><a href="#">文件</a></li>
+              <li role="presentation" id="da"><a href="#">档案</a></li>
+            </ul>
+        </div>
+    </div>
+    
+ <!--  	 <div class="layui-form-item">
+     <label class="layui-form-label">关键词</label>
+	    <div class="layui-input-block" ">
+	      <input type="text" style="width:300px" id="key" name="key" required  lay-verify="required" placeholder="请输入检索关键词" autocomplete="off" class="layui-input" value="$!{key}">
+	    </div>
+     </div>
+     
+     <div class="layui-form-item">
+	    <div class="layui-input-block">
+	      <button class="layui-btn submit" lay-submit lay-filter="formDemo">检索</button>
+	      <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+	    </div>
+     </div> -->
+     
+   </form>
+   <div id="content_left">
+   	#foreach($result in $!{results})
+   		<div class="result c_container" style="width:60%;margin-top:50px;">
+   			<a href="#" class="preview" id="$!{result.fileId}"><span style="border-bottom:2px solid blue;margin-top:10px;color:blue">文件标题：$!{result.title}</span></a>
+   			<div class="abstract" style="margin-top:10px;">
+   				文件内容摘要：$!{result.content}...
+   			</div>
+   			#if($!{result.dm})
+   			<div class="path" style="margin-top:10px;">
+   			  <table class="dt-grid table table-bordered table-hover table-responsive">
+   			      <thead><tr><th>档案类型</th><th>档号</th></tr></thead>
+   			      <tbody><tr><td>$!{result.dm}</td><td>$!{result.dh}</td></tr><tbody>
+   			  </table>
+   			</div>
+   			#end
+   			<div class="fileCreateTime" style="margin-top:10px;">
+   				文件上传时间：<span style="color:gray">$!{result.fileCreateTime}</span>
+   			</div>
+   		</div>
+	#end
+	test
+   </div>
+   
+   <div id="content_da">
+    #foreach($result in $!{results})
+        <div class="result c_container" style="width:60%;margin-top:50px;">
+            <a href="#" class="preview" id="$!{result.fileId}"><span style="border-bottom:2px solid blue;margin-top:10px;color:blue">文件标题：$!{result.title}</span></a>
+            <div class="abstract" style="margin-top:10px;">
+                文件内容摘要：$!{result.content}...
+            </div>
+            #if($!{result.dm})
+            <div class="path" style="margin-top:10px;">
+              <table class="dt-grid table table-bordered table-hover table-responsive">
+                  <thead><tr><th>档案类型</th><th>档号</th></tr></thead>
+                  <tbody><tr><td>$!{result.dm}</td><td>$!{result.dh}</td></tr><tbody>
+              </table>
+            </div>
+            #end
+            <div class="fileCreateTime" style="margin-top:10px;">
+                文件上传时间：<span style="color:gray">$!{result.fileCreateTime}</span>
+            </div>
+        </div>
+    #end
+    test2
+   </div>
+   
+</section>
+<script>
+$(function(){
+   $("#content_da").hide();
+   $("form").submit(function(){
+        var keyword = $("#key").val();
+        if($.trim(keyword)==""){
+            window.location = Util.getRootPath() + "/w/fuzzyQuery/init";
+            return false;
+        }
+   });
+   //点击预览内容
+   $(".preview").on("click",function(){
+	   var id = $(this).attr("id");
+	   var url = "";
+	   var fileName = "";
+	   var options = {};
+   		$.ajax({
+             type: "GET",
+             contentType: "application/json",
+             url: Util.getRootPath() + "/w/preview/" + id,
+             dataType: 'json',
+             async: false,
+             success: function(result) {
+            	 url = result.cache;
+            	 fileName = result.name;
+             },
+   		});
+   	options.url = url;
+   	options.title = fileName;
+   	window.parent.showModal(options);
+   });
+   
+   // tab选择
+   $('[role="presentation"]').click(function(){
+        $('li.active').removeClass("active");
+        $(this).addClass("active");
+        if($(this).attr("id") == "da"){
+            $("#content_left").hide();
+            $("#content_da").show();
+        }else{
+            $("#content_da").hide();
+            $("#content_left").show();
+        }
+   });  
+        
+});
+	
+	
+</script>
+
+	

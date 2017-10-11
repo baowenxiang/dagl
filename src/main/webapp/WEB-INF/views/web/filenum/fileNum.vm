@@ -1,0 +1,207 @@
+<section class="content">
+	<div class="box box-default">
+		<div class="box-body">
+			##title区域
+      		<ul class="layui-nav" id="plat">
+		  		<li class="layui-nav-item">
+		  			<p>档号规则</p>
+		  			<span class="btns">
+		            	##<button type="button" class="btn btn-primary test">测试</button>
+		            	<button type="button" class="btn btn-primary saveDah">提交</button>
+		            	<button type="button" class="btn btn-primary addColum">添加字段</button>
+		            	<button type="button" class="btn btn-primary addDate">添加年月日</button>
+		            </span>
+		  		</li>
+			</ul>
+			##按钮区域
+			
+			##档案类型区域
+			<div class="left">
+				
+				<form class="typeForm form-horizontal" role="form">
+					
+				    ##字典值展示DTgrid
+		 		    <div style="" id="dicValueCollectContext">
+			    		##增加按钮
+				    	##<button title="增加记录" type="button" class="btn btn-info btn-sm addDicValueGrid"><i class="fa fa-plus"></i></button>
+				    	##查询条件
+				    	<div id="conditionDataCollect">
+				    	</div>
+				    	##列表
+				    	<div id="dicValueTable" class="dt-grid-container"></div>
+				    	##分页栏
+				    	<div id="pagingDicValue" class="dt-grid-toolbar-container"></div>
+		    	    </div>
+				    
+				</form>
+			</div>
+			<div class="right">
+				<form class="dahForm form-horizontal" role="form">
+					<input name="type" value="" class="hidden">
+					<div class="form-group colum">
+						<label class="col-sm-2 control-label" for="username">自定义字符串</label>
+				    	<div class="col-sm-6">
+				        	<input name="colum1" class="form-control">
+				    	</div>
+				    	<div class="col-sm-4">
+				    		##<span type="button" class="spanBtns glyphicon glyphicon-plus addColum"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-minus remove"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-up up"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-down down"></span>
+				    	</div>
+				    </div>
+					
+					<div class="form-group colum">
+						<label class="col-sm-2 control-label" for="telphone">自定义字符串</label>
+				    	<div class="col-sm-6">
+				        	<input name="colum2" class="form-control">
+				    	</div>
+				    	<div class="col-sm-4">
+				    		##<span type="button" class="spanBtns glyphicon glyphicon-plus" onclick="removeSort(this)"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-minus remove"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-up up"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-down down"></span>
+				    	</div>
+				    </div>
+					<div class="form-group colum year">
+						<label class="col-sm-2 control-label" for="username">年份</label>
+				    	<div class="col-sm-6">
+				    		<input name="colum3" class="form-control" value="当前年份" readonly>
+				        	#*<select class="select form-control" name="colum3">
+						        <option value="0" selected>留白</option>
+						        <option value="1">当前年份</option>
+						    </select>
+						    *#
+				    	</div>
+				    	<div class="col-sm-4">
+				    		##<span type="button" class="spanBtns glyphicon glyphicon-plus" onclick="removeSort(this)"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-minus remove"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-up up"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-down down"></span>
+				    	</div>
+				    </div>
+				    <div class="form-group colum month">
+						<label class="col-sm-2 control-label" for="username">月份</label>
+				    	<div class="col-sm-6">
+				    		<input name="colum4" class="form-control" value="当前月份" readonly>
+				    	</div>
+				    	<div class="col-sm-4">
+				    		##<span type="button" class="spanBtns glyphicon glyphicon-plus" onclick="removeSort(this)"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-minus remove"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-up up"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-down down"></span>
+				    	</div>
+				    </div>
+				    <div class="form-group colum date">
+						<label class="col-sm-2 control-label" for="username">日期</label>
+				    	<div class="col-sm-6">
+				    		<input name="colum5" class="form-control" value="当前日期" readonly>
+				    	</div>
+				    	<div class="col-sm-4">
+				    		<span type="button" class="spanBtns glyphicon glyphicon-minus remove"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-up up"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-down down"></span>
+				    	</div>
+				    </div>
+				    <div class="form-group colum">
+						<label class="col-sm-2 control-label" for="telphone">流水号位数</label>
+				    	<div class="col-sm-6">
+				        	<input name="colum6" class="form-control number">
+				    	</div>
+				    	<div class="col-sm-4">
+				    		##<span type="button" class="spanBtns glyphicon glyphicon-plus" onclick="removeSort(this)"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-minus remove"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-up up"></span>
+				    		<span type="button" class="spanBtns glyphicon glyphicon-arrow-down down"></span>
+				    	</div>
+				    </div>
+				    
+				    
+				    <div class="form-group dahPreview">
+						<label class="col-sm-2 control-label" for="telphone">格式预览</label>
+				    	<div class="col-sm-10 preContent">
+				        	##<label class="col-sm-1 control-label" for="telphone">字符串1</label>
+					    	<div class="headDiv colum1">
+					        	<p class="title">自定义字符串</p>
+					        	<p class="cont">无</p>
+					    	</div>
+					    	
+					    	<div class="headDiv colum2">
+					        	<p class="title">自定义字符串</p>
+					        	<p class="cont">无</p>
+					    	</div>
+					    	
+					    	<div class="headDiv colum3">
+					        	<p class="title">年份</p>
+					        	<p class="cont">当前年份</p>
+					    	</div>
+					    	<div class="headDiv colum4">
+					        	<p class="title">月份</p>
+					        	<p class="cont">当前月份</p>
+					    	</div>
+					    	<div class="headDiv colum5">
+					        	<p class="title">日期</p>
+					        	<p class="cont">当前日期</p>
+					    	</div>
+					    	
+					    	<div class="headDiv colum6">
+					        	<p class="title">流水号位数</p>
+					        	<p class="cont">无</p>
+					    	</div>
+				    	</div>
+				    	<label class="col-sm-2 control-label" for="telphone">档号预览</label>
+				    	<div class="col-sm-10 prePContent">
+				    		<span class="preP colum1"></span>
+				    		<span class="preP colum2"></span>
+				    		<span class="preP colum3"></span>
+				    		<span class="preP colum4"></span>
+				    		<span class="preP colum5"></span>
+				    		<span class="preP colum6"></span>
+				    	</div>
+				    </div>
+					
+					
+				</form>
+			</div>
+      	</div>
+    </div>
+    
+    ##新增档案类型模态框模态框
+	#*<div class="modal" id="dalx" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+				
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1">新增档案类型</h4>
+                </div>
+				
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">档案名称</label>
+    				    	<div class="col-sm-7">
+    				        	<input name="daName" class="form-control">
+    				    	</div>
+    				    </div>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">档案标识</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" name="daType">
+    				    	</div>
+    				    </div>
+                     </form>
+                </div>
+				
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default saveDalx" data-dismiss="modal">提交</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>*#
+</section>
+##引入CSS
+<link href="${rc.contextPath}/resources/css/web/filenum/fileNum.css" rel="stylesheet">
+##引入JS
+<script src="${rc.contextPath}/resources/js/web/filenum/fileNum.js"></script>

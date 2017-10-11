@@ -1,0 +1,44 @@
+package cn.proem.dagl.web.fileTransfer.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.dagl.web.fileControl.entity.FileControl;
+import cn.proem.dagl.web.fileTransfer.entity.TransferRecorder;
+import cn.proem.dagl.web.fileTransfer.service.FileTransferService;
+import cn.proem.suw.web.common.exception.ServiceException;
+
+@Service
+public class FileTransferServiceImpl implements FileTransferService {
+	
+	@Autowired
+	private GeneralDao generalDao;
+
+	@Override
+	@Transactional
+	@LogService(description = "保存文档移交记录")
+	public void save(TransferRecorder transferRecorder) throws ServiceException {
+		generalDao.save(transferRecorder);
+
+	}
+
+	@Override
+	public DataGrid<TransferRecorder> getTransferedFileDataGrid(QueryBuilder queryBuilder, int nowPage, int pageSize) {
+		DataGrid<TransferRecorder> dataGrid = new DataGrid<TransferRecorder>(nowPage,pageSize);
+		dataGrid.setRecordCount(generalDao.countByCriteria(TransferRecorder.class, queryBuilder));
+		
+		List<TransferRecorder> list = generalDao.queryByCriteria(TransferRecorder.class, queryBuilder, null, dataGrid.getStartRecord(), dataGrid.getPageSize());
+		dataGrid.setExhibitDatas(list);
+		return dataGrid;
+	}
+	
+	
+
+}

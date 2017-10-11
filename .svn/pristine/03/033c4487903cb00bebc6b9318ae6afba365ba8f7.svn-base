@@ -1,0 +1,457 @@
+#if(${multisearch})
+<button type="button" class="btn btn-default btn-sm multisearch btn-icon">
+    <svg class="icon" aria-hidden="true">
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-search"></use>
+    </svg>
+    <b hidden>精确查询</b>&nbsp;
+</button>
+#end
+#if(${batchdelete} || ${addGrid})
+<div class="btn-group">
+    #if(${batchdelete})
+    <button type="button" class="btn btn-default btn-sm btn-icon batchdelete">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-delete_database"></use>
+        </svg>
+        <b hidden>删除</b>&nbsp;
+    </button>
+    #end
+    #if(${addGrid})
+    <button type="button" class="btn btn-default btn-sm addGrid btn-icon">
+         <svg class="icon" aria-hidden="true">
+             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+         </svg>
+         <b hidden>增加</b>&nbsp;
+    </button>
+    #end
+</div>
+#end
+#if(${downloadTemplet} || ${import} || ${export})
+<div class="btn-group">
+    #if(${downloadTemplet})
+    <button type="button" class="btn btn-default btn-sm downloadTemplet btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-template"></use>
+        </svg>
+        <b hidden>模板</b>&nbsp;
+    </button>
+    #end
+    #if(${import})
+    <button type="button" class="btn btn-default btn-sm import btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-upload"></use>
+        </svg>
+        <b hidden>导入</b>&nbsp;
+    </button>
+	#end
+	<button type="button" class="btn btn-default btn-sm exportExcel btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-download"></use>
+        </svg>
+        <b hidden>导出</b>&nbsp;
+    </button>
+    #if(${export})
+    <button type="button" class="btn btn-default btn-sm export btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-export"></use>
+        </svg>
+        <b hidden>批量下载</b>&nbsp;
+    </button>
+    #end
+</div>
+#end
+#if(${report})
+<!--
+    <div class="btn-group">
+        <button type="button" class="btn btn-default report btn-sm btn-icon">
+            <svg class="icon" aria-hidden="true">
+                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-mind_map"></use>
+            </svg>
+            <b hidden>报表</b>&nbsp;
+        </button>
+    </div>
+-->
+#end
+#if(${loanApplication})
+<button type="button" class="btn btn-default btn-sm checkbox-toggle loanApplication btn-icon">
+   <svg class="icon" aria-hidden="true">
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-registered_trademark"></use>
+   </svg>
+   <b hidden>登记</b>&nbsp;
+</button>
+#end
+#if(${batchHook})
+<button type="button" class="btn btn-default btn-sm checkbox-toggle batchHook btn-icon">
+    <svg class="icon" aria-hidden="true">
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-file"></use>
+    </svg>
+    <b hidden>批量挂接</b>&nbsp;
+</button>
+#end
+#if(${eepPackage} || ${eepReader})
+<div class="btn-group">
+#if(${eepPackage})
+<button type="button" class="btn btn-default btn-sm checkbox-toggle eepPackage btn-icon">
+    <svg class="icon" aria-hidden="true">
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-gallery"></use>
+    </svg>
+    <b hidden>EEP封包</b>&nbsp;
+</button>
+#end
+#if(${eepReader})
+<button type="button" class="btn btn-default btn-sm checkbox-toggle eepReader btn-icon">
+    <svg class="icon" aria-hidden="true">
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-reading_ebook"></use>
+    </svg>
+    <b hidden>EEP查看</b>&nbsp;
+</button>
+#end
+</div>
+#end
+
+#if(${stamp})
+<button type="button" class="btn btn-default btn-sm checkbox-toggle stamp btn-icon">
+    <svg class="icon" aria-hidden="true">
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-signature"></use>
+    </svg>
+    <b hidden>档号章</b>&nbsp;
+</button>
+#end
+
+<div class="btn-group">
+    <button type="button" class="btn btn-default btn-sm checkbox-toggle refresh btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-refresh"></use>
+        </svg>
+        <b hidden>刷新</b>&nbsp;
+    </button>
+</div>
+
+<script >
+	$(function(){
+        $(".btn-icon").on("mouseenter", function(){
+           $this = $(this);
+           $this.find('b').show();
+        });
+        
+        $(".btn-icon").on("mouseleave", function(){
+           $this = $(this);
+           $this.find('b').hide();
+        });
+        
+		//批量删除
+		$("button.batchdelete").on("click",function(){
+			var tablename = $('[name="tablename"]').val();
+			var files = grid.getCheckedRecords();
+			if(files.length==0){
+				layer.alert("请勾选档案删除！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+			
+			layer.confirm('确定要批量删除档案吗?', {
+    		  skin: 'layui-layer-lan',
+    		  btn: ['确定','取消'] //按钮
+    		}, function(index){
+			
+        		var fileids = [];
+        		for(var i=0;i<files.length;i++){
+        			fileids.push(files[i].uuid);
+        		}
+			
+    			
+    			$.ajax({
+        			type: "GET",
+        			contentType: false,
+        			url: Util.getRootPath()+"/w/example/table/batchdelete",
+    				data:{
+    					tablename : tablename,
+    					fileids:fileids
+    				},
+        			dataType:'json',
+        			success:function(result){
+        				layer.close(index);
+        				if(result.success){
+						
+        					layer.msg(result.msg,{time: 2000});
+        					refreshGrid();
+        				}else{
+        					layer.alert(result.msg, {skin: 'layui-layer-lan',closeBtn: 0});
+        				}
+        			}
+        		
+        		});
+			},function(index){
+				layer.close(index);
+			});
+			
+		})
+	
+		//点击增加记录
+		$('button.addGrid').on("click",function(){
+			var tablename = $('[name="tablename"]').val();
+        	var options = {}
+        	var url = Util.getRootPath() + "/w/example/table/adddetail/"+tablename;
+        	options.url = url;
+        	options.title = "增加记录";
+        	window.parent.showModal(options);
+		});
+		
+		//点击下载模版
+		$("button.downloadTemplet").on("click",function(){
+			var tablename = $.trim($('[name="tablename"]').val());
+			location.href = Util.getRootPath() + "/w/example/tools/downloadTempletDef/"+tablename;
+			
+		});
+		
+		
+		//点击导入
+		$('button.import').on("click",function(){
+			var tablename = $('[name="tablename"]').val();
+        	var options = {}
+        	var url = Util.getRootPath() + "/w/example/table/importView/"+tablename;
+        	options.url = url;
+        	options.title = "导入文件";
+        	window.parent.showModal(options);
+		});
+		
+		//点击导出(无附件)
+		$("button.exportExcel").on("click",function(){
+			var records = grid.getCheckedRecords();
+			
+			var tablename = $('[name="tablename"]').val();//表名
+			if(records.length==0){
+			
+				var pager = new Object();
+    			pager.parameters = grid.parameters;
+    			pager.advanceQueryConditions = grid.getAdvanceQueryConditions();
+    			pager.advanceQuerySorts =  grid.getAdvanceSortConditions();
+    			var dtGridPager = JSON.stringify(pager);//筛选、排序条件
+			
+				location.href = Util.getRootPath() + "/w/example/tools/exportExcelDef/"+tablename+'/'+3+'/'+dtGridPager;
+			
+			}else{
+			
+    			var ids = [];
+    			for(var i = 0;i<records.length;i++){
+    				ids.push(records[i].uuid);
+    			}
+    			ids = ids.join(',');
+				
+				location.href = Util.getRootPath() + "/w/example/tools/exportExcelDef/"+tablename+'/'+ids;
+			}
+			
+		
+		
+		});
+		
+		
+		//点击批量下载
+		$('button.export').on("click",function(){
+			//判断是否是案卷级
+			var records = grid.getCheckedRecords();
+			
+			if($('[name="flag"]').val() === 'true'){
+				if(records.length === 0){
+					layer.alert("请勾选案卷级档案！", {skin: 'layui-layer-lan',closeBtn: 0});
+					return;
+				}
+				if(records.length > 1){
+					layer.alert("案卷级档案只能勾选一条记录！", {skin: 'layui-layer-lan',closeBtn: 0});
+					return;
+				}
+			}
+			
+			if(records.length == 0){
+				layer.alert("请勾选档案进行导出！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+		
+			var isarchive = 1;//0代表未归档
+		
+			var tablename = $('[name="tablename"]').val();
+			if(records.length == 0){
+				location.href = Util.getRootPath() + "/w/example/tools/exportFileDef/"+tablename+'/'+isarchive;
+			}else{
+				var ids = [];
+				for(var i = 0;i<records.length;i++){
+					ids.push(records[i].uuid);
+				}
+				ids = ids.join(',');
+				location.href = Util.getRootPath() + "/w/example/tools/exportFileDef/"+tablename+"/"+isarchive+'/'+ids;
+			}
+			
+		});
+		
+		//点击报表
+		$('button.report').on("click",function(){
+		var tablename = $('[name="tablename"]').val();
+			var pager = new Object();
+			pager.parameters = grid.parameters;
+			pager.advanceQueryConditions = grid.getAdvanceQueryConditions();
+			pager.advanceQuerySorts =  grid.getAdvanceSortConditions();
+			var params = {};
+			params.dtGridPager = JSON.stringify(pager);
+			var url = '/dagl/w/example/tools/jump/'+tablename;
+			$.ajax({
+				type:'post',
+				url:url,
+				data:params,
+				contentType: "application/x-www-form-urlencoded; charset=utf-8",
+				beforeSend: function(xhr) {xhr.setRequestHeader("__REQUEST_TYPE", "AJAX_REQUEST");},
+				success:function(html){
+					parent.layer.open({
+	                    type: 1,
+	                    title:'选择字段',
+	                    area: ['700px', '530px'],
+	                    fixed: false, //不固定
+	                    maxmin: true,
+	                    content: html
+	           		});
+				},
+				error:function(XMLHttpRequest, textStatus, errorThrown){
+					
+				}
+			});
+			
+		});
+		
+		
+		//精确查询
+		$('button.exactquery').on("click",function(){
+			var tablename = $('[name="tablename"]').val();
+			var options = {}
+        	var url = Util.getRootPath() + "/w/example/query/exactqueryView/"+tablename;
+        	options.url = url;
+        	options.title = "精确查询";
+        	window.parent.showModal(options);
+		});
+		
+		//档号章
+		$('button.stamp').on("click",function(){
+			var tablename = $('[name="tablename"]').val();
+			var files = grid.getCheckedRecords();
+			if(files.length==0){
+				layer.alert("请勾选档案！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+            window.parent.layer.open({
+            	type: 2,
+             	title:"档号章",
+            	area: ['700px', '530px'],
+             	fixed: false, //不固定
+             	maxmin: true,
+             	content: Util.getRootPath() + "/w/fileStamp/toFileStampView/"+tablename,
+            });
+			
+		});
+		
+		//借阅申请
+		$("button.loanApplication").on("click",function(){
+			var files = grid.getCheckedRecords();	
+			if(files.length==0){
+				layer.alert("请勾选档案！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+			if(files.length>1){
+				layer.alert("只能选择一条！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+			
+			layer.confirm('是否借阅文件', {
+			  skin: 'layui-layer-lan',
+			  btn: ['确定','取消'] //按钮
+			}, function(){
+				Util.ajaxJsonSync(
+					Util.getRootPath() + "/w/example/flow/loanApplication",
+					{	
+						id : files[0].uuid,
+						tablename: $.trim($('[name="tablename"]').val())
+					},
+					function(result){
+						if (result.success) {
+							layer.msg(result.msg,{time: 2000});
+							
+							var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+							parent.layer.close(index);
+							
+							$(window.parent.document).find("ul.leftMenu li").removeClass("act").removeClass("active");
+							$(window.parent.document).find("ul.leftMenu ul.treeview-menu").css('display','none');
+							$(window.parent.document).find('ul.leftMenu li[dagl-location="借阅文件"]').addClass("act").parent("ul").css('display','block').addClass("menu-open");
+							$(window.parent.document).find('ul.leftMenu li[dagl-location="电子借阅"]').addClass("active");
+							
+							window.parent.setLocation($(window.parent.document).find('ul.leftMenu li[dagl-location="借阅文件"]'));
+							window.parent.refresh(Util.getRootPath() + "/w/fileuse/electronicLend/initView");
+							
+						} else {
+							layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+						}
+					}, function (ex) {
+						layer.alert("登记失败", {  skin: 'layui-layer-lan',closeBtn: 0});
+					}
+				);
+				
+				
+				
+			}, function(){});
+		});
+		
+		//点击刷新页面
+		$("button.refresh").on("click",function(){
+			refreshGrid();
+		});
+		
+		// 多条件查询
+        $(".multisearch").on("click", function(){
+             grid.advanceQuery();
+        });
+		
+		//批量挂接
+		$("button.batchHook").on("click",function(){
+			var tablename = $.trim($('[name="tablename"]').val());
+			var options = {}
+        	var url = Util.getRootPath() + "/w/example/table/toBatchHookView/"+tablename;
+        	options.url = url;
+        	options.title = "批量挂接";
+        	window.parent.showModal(options);
+		});
+		
+		//eep封包
+		$("button.eepPackage").on("click",function(){
+			var tablename = $.trim($('[name="tablename"]').val());
+			var files = grid.getCheckedRecords();
+			if(files.length==0){
+				layer.alert("请选择档案！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+			
+			var options = {}
+        	var url = Util.getRootPath() + "/w/example/eep/start/"+tablename;
+			parent.layer.open({
+              type: 2,
+			  title:"EEP封包",
+              area: ['1000px', '500px'],
+              fixed: false, //不固定
+              maxmin: true,
+              content: url,
+            });
+		});
+		
+		
+		//eep查看
+		$("button.eepReader").on("click",function(){
+			var tablename = $.trim($('[name="tablename"]').val());
+			var files = grid.getCheckedRecords();
+			var options = {}
+        	var url = Util.getRootPath() + "/w/example/eep/read/"+tablename;
+			parent.layer.open({
+              type: 2,
+			  title:"EEP查看",
+              area: ['1000px', '500px'],
+              fixed: false, //不固定
+              maxmin: true,
+              content: url,
+            });
+		});
+		
+	});
+</script>

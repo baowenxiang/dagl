@@ -1,0 +1,252 @@
+ var grid;
+$(function(){
+	 /*$(".btn-icon").on("mouseenter", function(){
+         $this = $(this);
+         $this.find('b').show();
+      });
+      
+      $(".btn-icon").on("mouseleave", function(){
+         $this = $(this);
+         $this.find('b').hide();
+      });*/
+	$("button b").show();
+//	var index = layer.load(1, {shade: [1,'#FFFFFF']});
+	initTable();
+	initBtn();
+//    layer.close(index);
+});
+function initTable() {
+	//初始化grid
+	grid = $.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/temperature/getRecordList",
+	    ajaxLoad : true,
+	    gridContainer : 'tableDataCollect',
+	    toolbarContainer : 'pagingDataCollect',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 10,
+	    check : true,
+	    pageSizeLimit : [10, 20,50],
+	    tableStyle:'table-layout: fixed;word-break: break-all; word-wrap: break-word;',
+	    columns : [
+	       		{
+	       			id:'jlrq',
+	       			title : '<b>记录日期</b>',
+	       			type:"string",
+	       			columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+	       			columnClass:'text-center',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       			
+	       		},
+	       		{
+	       			id:'wsdsj',
+	       			title : '<b>时间</b>',
+	       			type:"string",
+	       			columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+	       			columnClass:'text-center',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}	
+	       		},
+	       		{
+	       			id:'tq',
+	       			title : '<b>天气</b>',
+	       			type:"string",
+	       			columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+	       			columnClass:'text-center',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'jlr',
+	       			title : '<b>记录人</b>',
+	       			type:"string",
+	       			columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+	       			columnClass:'text-center',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'wd',
+	       			title : '<b>温度</b>',
+	       			type:"string",
+	       			columnClass:'text-center',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'sd',
+	       			title : '<b>湿度</b>',
+	       			type:"string",
+	       			columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+	       			columnClass:'text-center',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'id',
+	       			title : '<b>操作</b>',
+	       			type:"string",
+//	       			headerStyle: "width: 25%",
+	       			columnClass:'text-center',
+	       			resolution: function(value, record, column, grid, dataNo, columnNo) {
+	       				var html = ''; 	
+	       				html += '<div class="btnDiv">';
+	       				html += '	<a title="查看" class="btn btn-default btn-xs detail" data-id="'+record.id+'">查看</a>';
+//	       				html += '	<a title="编辑" class="btn btn-warning btn-xs edit" data-id="'+record.id+'">编辑</a>';
+    					html += '	<a title="删除" class="btn btn-danger btn-xs delete" data-id="'+record.id+'">删除</a>';
+	       				html += '</div>';
+	       				return html;
+	       			}
+	       		}]
+	});
+	refreshGrid();
+}
+function refreshGrid() {
+	grid.parameters = getParameters();
+	grid.load();
+}
+function getParameters() {
+	return{
+	}
+}
+//按钮的点击事件
+function initBtn(){
+	//点击下载模版
+	$("button.downloadTemplet").on("click",function(){
+		window.location.href = Util.getRootPath() + "/w/temperature/downloadTemplet";
+		
+	});
+	
+	//点击导入
+	$('button.import').on("click",function(){
+		var tablename = $('[name="tablename"]').val();
+    	var options = {}
+    	var url = Util.getRootPath() + "/w/temperature/importView";
+    	options.url = url;
+    	options.title = "导入文件";
+    	window.parent.showModal(options);
+	});
+	
+	//点击导出
+	$('button.export').on("click",function(){
+		var records = grid.getCheckedRecords();
+		var ids = [];
+		for(var i = 0;i<records.length;i++){
+			ids.push(records[i].id);
+		}
+		if(records.length>0){
+			ids = ids.join();
+		}else{
+			ids = "null";
+		}
+		
+		
+		
+		location.href = Util.getRootPath() + "/w/temperature/exportFile/"+ids;
+		
+	});
+	//弹出模态框查看详情
+    $("#tableDataCollect").on("click","a.detail",function(){
+    	var id = $.trim($(this).attr("data-id"));
+    	var options = {}
+    	var url = Util.getRootPath() + "/w/temperature/toDetailPage/"+id;
+    	options.url = url;
+    	options.title = "详情展示";
+    	parent.layer.open({
+    		type: 2,
+			title:options.title,
+            area: ['700px', '530px'],
+            fixed: false, //不固定
+            maxmin: true,
+            content: options.url,
+    	});
+    });
+    
+  //弹出模态框查看详情
+    $("button.addGrid").on("click",function(){
+    	var options = {}
+    	var url = Util.getRootPath() + "/w/temperature/toAddDetailPage";
+    	options.url = url;
+    	options.title = "增加温度";
+    	parent.layer.open({
+    		type: 2,
+			title:options.title,
+            area: ['700px', '530px'],
+            fixed: false, //不固定
+            maxmin: true,
+            content: options.url,
+    	});
+    });
+    
+    //点击删除内容
+    $("#tableDataCollect").on("click","a.delete",function(){
+    	var id = $.trim($(this).attr("data-id"));
+    	
+    	layer.confirm('确定要删除档案吗?', {
+  		  skin: 'layui-layer-lan',
+  		  btn: ['确定','取消'] //按钮
+  		}, function(index){
+	    	Util.ajaxSync(
+				Util.getRootPath()+"/w/temperature/delete",
+				{
+					id : id
+				},
+				function(result){
+					if(result.success){
+						layer.msg("删除成功", {  skin: 'layui-layer-lan',closeBtn: 0});
+						layer.close(index);
+						refreshGrid();
+					}else {
+						layer.alert("删除失败", {  skin: 'layui-layer-lan',closeBtn: 0});
+					}
+				}, function(ex){
+	                layer.alert("删除请求失败", {  skin: 'layui-layer-lan',closeBtn: 0});
+	            }
+			)
+  		},function(index){
+			 layer.close(index);
+		});
+    });
+    
+    $("button.batchdelete").on("click",function(){
+		var files = grid.getCheckedRecords();
+		if(files.length==0){
+			layer.alert("请勾选温度记录删除！", {skin: 'layui-layer-lan',closeBtn: 0});
+			return;
+		}
+		var fileids = [];
+		for(var i=0;i<files.length;i++){
+			fileids.push(files[i].id);
+		}
+		
+		
+		$.ajax({
+			type: "POST",
+			url: Util.getRootPath()+"/w/temperature/batchdelete",
+			data:{
+				fileids:fileids
+			},
+			dataType:'json',
+			success:function(result){
+			
+				if(result.success){
+					layer.msg(result.msg,{time: 2000});
+					refreshGrid();
+				}else{
+					layer.alert(result.msg, {skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			}
+		
+		});
+		
+		
+	})
+
+}

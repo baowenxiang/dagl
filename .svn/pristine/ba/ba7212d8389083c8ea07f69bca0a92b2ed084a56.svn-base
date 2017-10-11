@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- layer -->
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/common/detail.css" rel="stylesheet">	
+	<link href="${rc.contextPath}/resources/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<span class="attention">注：红色*为必填项</span>
+<div id="daglapp" class="site-text site-block">
+	##资料id
+	<input type="hidden" name="tablename" value=$!{tablename}>	
+    <form class="layui-form" method="post" action='#'>
+        EEP数据收集
+    </form>
+</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script>
+    //日期控件
+    layui.use('laydate', function(){
+    	var laydate = layui.laydate;
+    });
+</script>
+
+</html>
+	

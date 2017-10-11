@@ -1,0 +1,274 @@
+package cn.proem.dagl.web.fileBorrowing.controller;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.fileBorrowing.entity.FileBorrowing;
+import cn.proem.dagl.web.fileBorrowing.service.FileBorrowingService;
+import cn.proem.suw.util.StringUtil;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+
+@Controller
+@RequestMapping("/w/fileBorrowing")
+public class FileBorrowingController extends BaseCtrlModel {
+	
+	@Autowired
+	private FileBorrowingService fileBorrowingSerivce;
+	@Autowired
+	private CommonService commonService;
+	
+	/**
+	 * 跳转借阅信息页面
+	 * @return
+	 */
+	@RequestMapping("/jyxx/initview")
+	public ModelAndView initFileBorrowingJyPage(){
+		ModelAndView view = this.createNormalView("/web/fileBorrowing/jYinitView.vm");
+		
+		return view;
+		
+	}
+	/**
+	 * 跳转归还信息页面
+	 * @return
+	 */
+	@RequestMapping("/ghxx/initview")
+	public ModelAndView initFileBorrowingGhPage(){
+		ModelAndView view = this.createNormalView("/web/fileBorrowing/gHinitView.vm");
+		
+		return view;
+		
+	}
+	/**
+	 * 跳转查询页面
+	 * @param request
+	 * @param tablename
+	 * @return
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/jyxxQueryView")
+	public ModelAndView jyxxQueryView(HttpServletRequest request) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileBorrowing/jyxxQueryView.vm");
+		//modelAndView.addObject("tablename", tablename);
+		return modelAndView;
+	}
+	
+	@RequestMapping(value = "/ghxxQueryView")
+	public ModelAndView ghxxQueryView(HttpServletRequest request,String jyzt) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileBorrowing/ghxxQueryView.vm");
+		modelAndView.addObject("jyzt", jyzt);
+		return modelAndView;
+	}
+	
+	/**
+	 * 查询借阅信息列表
+	 * @param dtGridPager
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/getJyxxList")
+	@ResponseBody
+	@LogService(description = "查询借阅信息列表")
+	public String getJyxxList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		String tm = (String)query.getParameters().get("tm");
+		if(StringUtil.isNotEmpty(tm)){
+			queryBuilder.addCondition(new QueryCondition("tm",tm,ConditionType.LIKE,FieldType.STRING,null));
+		}
+		queryBuilder.addCondition(new QueryCondition("delFlag",0,ConditionType.EQ,FieldType.INTEGER,null));
+		queryBuilder.addCondition(new QueryCondition("jyzt","0",ConditionType.EQ,FieldType.STRING,null));
+		DataGrid<FileBorrowing> dataGrid = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		
+		return JSON.toJSONStringWithDateFormat(dataGrid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+	}
+	
+	/**
+	 * 查询归还信息列表
+	 * @param dtGridPager
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/getGhxxList")
+	@ResponseBody
+	@LogService(description = "查询归还信息列表")
+	public String getGhxxList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("delFlag",0,ConditionType.EQ,FieldType.INTEGER,null));
+		//题名查询
+		String tm = String.valueOf(query.getParameters().get("tm"));
+		if(StringUtil.isNotEmpty(tm)){
+			queryBuilder.addCondition(new QueryCondition("tm",tm,ConditionType.LIKE,FieldType.STRING,null));	
+		}
+		//获取借阅状态
+		String jyzt = String.valueOf(query.getParameters().get("jyzt"));
+		if("2".equals(jyzt) || "0".equals(jyzt)){
+			queryBuilder.addCondition(new QueryCondition("jyzt","0",ConditionType.EQ,FieldType.STRING,null));
+			queryBuilder.addCondition(new QueryCondition("nghsj",new Date(),ConditionType.LT,FieldType.DATE,null));
+			
+		}else{
+			queryBuilder.addCondition(new QueryCondition("jyzt","1",ConditionType.EQ,FieldType.STRING,null));
+		}
+		
+		DataGrid<FileBorrowing> dataGrid = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		
+		return JSON.toJSONStringWithDateFormat(dataGrid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+	}
+	/**
+	 * 借阅归还
+	 * @return
+	 */
+	@RequestMapping("/fileReturn")
+	@ResponseBody
+	@LogService(description = "借阅归还")
+	public ResultModel<String> flieReturn(String businessStr,String jyxg){
+		ResultModel<String> rs = new ResultModel<String>();
+		String[] ids = businessStr.split(",");
+		for(String id : ids){
+			try {
+				fileBorrowingSerivce.fileReturn(id,jyxg);
+				
+			} catch (ServiceException e) {
+				rs.setMsg("归还失败");
+				e.printStackTrace();
+			}
+		}
+		return rs;
+	}
+	/**
+	 * 添加借阅信息
+	 * @return
+	 */
+	@RequestMapping("/saveJyxx")
+	@ResponseBody
+	@LogService(description = "添加借阅信息")
+	public ResultModel<String> saveJyxx(HttpServletRequest request){
+		ResultModel<String> rs = new ResultModel<String>();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		FileBorrowing fb = new FileBorrowing();
+		try {
+				if(StringUtil.isNotEmpty(request.getParameter("id"))){
+					fb = commonService.findById(request.getParameter("id"), FileBorrowing.class);
+//					fb.setJyzt("1");
+				}else{
+					fb.setJyzt("0");
+					fb.setLrsj(new Date());
+
+				}
+				
+				if(StringUtil.isNotEmpty(request.getParameter("tm"))){
+					fb.setTm(request.getParameter("tm"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("dh"))){
+					fb.setDh(request.getParameter("dh"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jyrid"))){
+					fb.setJyrid(request.getParameter("jyrid"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("wh"))){
+					fb.setWh(request.getParameter("wh"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("fh"))){
+					fb.setFh(Integer.parseInt(request.getParameter("fh")));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jymd"))){
+					fb.setJymd(request.getParameter("jymd"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jyr"))){
+					fb.setJyr(request.getParameter("jyr"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("pzr"))){
+					fb.setPzr(request.getParameter("pzr"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jbr"))){
+					fb.setJbr(request.getParameter("jbr"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jyxg"))){
+					fb.setJyxg(request.getParameter("jyxg"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jgmc"))){
+					fb.setJgmc(request.getParameter("jgmc"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("qwbs"))){
+					fb.setQwbs(request.getParameter("qwbs"));
+				}
+					
+				if(StringUtil.isNotEmpty(request.getParameter("jysj"))){
+					fb.setJysj(sdf.parse(request.getParameter("jysj")));
+				}
+				
+				if(StringUtil.isNotEmpty(request.getParameter("nghsj"))){
+					fb.setNghsj(sdf.parse(request.getParameter("nghsj")));
+				}
+			
+				fileBorrowingSerivce.saveJyxx(fb);
+				
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ServiceException e){
+				rs.setSuccess(false);
+				rs.setMsg("借阅信息保存失败");
+			}
+		return rs;
+	}
+	/**
+	 * 删除借阅信息
+	 * @param ids
+	 * @return
+	 */
+	@RequestMapping("/deleteJyxx")
+	@ResponseBody
+	@LogService(description = "删除借阅信息")
+	public ResultModel<String> deleteJyxx(String id){
+		
+		ResultModel<String> rs = new ResultModel<String>();
+		
+		try {
+			fileBorrowingSerivce.deleteJyxx(id);
+		} catch (ServiceException e) {
+			rs.setSuccess(false);
+			rs.setMsg("删除失败");
+			e.printStackTrace();
+		}
+		return rs;
+	}
+	/**
+	 * 获取借阅信息详情
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping("/getJyxxById")
+	@ResponseBody
+	@LogService(description = "获取借阅信息详情")
+	public ResultModel<FileBorrowing> getJyxxById(String id){
+		ResultModel<FileBorrowing> rm  = new ResultModel<FileBorrowing>();
+		FileBorrowing fb = commonService.findById(id, FileBorrowing.class);
+		rm.setData(fb);
+		return rm;
+	}
+}

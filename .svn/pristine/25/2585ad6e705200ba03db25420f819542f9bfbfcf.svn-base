@@ -1,0 +1,165 @@
+package cn.proem.eep.util;
+
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import com.sun.tools.javac.util.Convert;
+
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+
+public class Base64Util {
+	/**
+	 * @Method: encoder 
+	 * @Description: 文件Base64进行编码
+	 * @param @param file
+	 * @param @return
+	 * @return String
+	 * @throws
+	 */
+	@SuppressWarnings("restriction")
+    public static String encoder(String path) throws Exception{
+		String fileString = null;
+		FileInputStream inputStream = null;
+		try {
+			File file = new File(path);
+			inputStream = new FileInputStream(file);
+			byte[] fileByte = new byte[inputStream.available()];
+			inputStream.read(fileByte);
+			fileString = new BASE64Encoder().encode(fileByte);
+			return fileString;
+		} catch (FileNotFoundException e) {
+			throw new Exception("文件不存在");
+		} catch (IOException e) {
+			throw new Exception("文件读取错误");
+		} finally {
+			if(inputStream != null){
+				try{
+					inputStream.close();
+				} catch (IOException e){
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	/**
+     * @Method: encoder 
+     * @Description: 文件Base64进行编码
+     * @param @param file
+     * @param @return
+     * @return String
+     * @throws
+     */
+    @SuppressWarnings("restriction")
+    public static String encoder2(String path) throws Exception{
+        FileInputStream fis = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            File file = new File(path);
+            fis = new FileInputStream(file);
+            byte[] fileBytes;
+            baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int count;
+            while((count=fis.read(buf))!=-1)
+            {
+            baos.write(buf,0,count); //实际上，如果文件体积比较大的话，不用转码，在这一步就可能OOM了
+            }
+            fileBytes= baos.toByteArray();
+            return new BASE64Encoder().encode(fileBytes);
+            
+        } catch (FileNotFoundException e) {
+            throw new Exception("文件不存在");
+        } catch (IOException e) {
+            throw new Exception("文件读取错误");
+        } finally {
+            if(fis != null){
+                try{
+                    fis.close();
+                } catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+            
+            if(baos != null){
+                try{
+                    baos.close();
+                } catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+	
+	/**
+	 * @Method: decoder 
+	 * @Description: 字符串Base64解码
+	 * @param @param fileString
+	 * @param @param file
+	 * @return void
+	 * @throws
+	 */
+	@SuppressWarnings("restriction")
+    public static void decoder(String fileString, String path) throws Exception{
+		byte[] file2Byte;
+		BufferedOutputStream stream = null;
+		try {
+			File file = new File(path);
+			FileOutputStream fstream = new FileOutputStream(file);
+			file2Byte = new BASE64Decoder().decodeBuffer(fileString);
+			stream = new BufferedOutputStream(fstream);
+			stream.write(file2Byte);
+		} catch (IOException e) {
+			throw new Exception("文件写入错误");
+		} finally {
+			if(stream != null){
+				try {
+					stream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	}
+	
+	/**
+     * @Method: decoder2 
+     * @Description: 字符串Base64解码
+     * @param @param fileString
+     * @param @param file
+     * @return void
+     * @throws
+     */
+    @SuppressWarnings("restriction")
+    public static void decoder2(byte[] filebyte, String path) throws Exception{
+        byte[] file2Byte;
+        BufferedOutputStream stream = null;
+        try {
+            File file = new File(path);
+            FileOutputStream fstream = new FileOutputStream(file);
+            file2Byte = new BASE64Decoder().decodeBuffer(new String(filebyte));
+            stream = new BufferedOutputStream(fstream);
+            stream.write(file2Byte);
+        } catch (IOException e) {
+            throw new Exception("文件写入错误");
+        } finally {
+            if(stream != null){
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+    }
+}

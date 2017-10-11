@@ -1,0 +1,29 @@
+package cn.proem.dagl.web.tj.service;
+
+import java.util.List;
+import java.util.Map;
+
+import cn.proem.dagl.web.tj.dto.CheckDto;
+import cn.proem.dagl.web.tj.entity.GclOrder;
+
+public interface TJService {
+    List<Map<String, Object>> tjNdhArea(String company);
+    List<Map<String, Object>> tjWjGcl(String company);
+    List<Map<String, Object>> tjAjGcl(String company);
+    
+    List<Map<String, Object>> tjWjGclA(String company);
+    List<Map<String, Object>> tjAjGclA(String company);
+    List<Map<String, Object>> tjNdhAreaA(String company);
+    
+    void tjGclSaveOrUpdate(List<String> ord, String type, String company);
+    List<GclOrder> tjGclFind(String type, String company);
+    
+    
+    List<CheckDto> designMl(String company);
+    List<String> designNd(String company);
+    List<CheckDto> designMj(String company);
+    List<CheckDto> designBgqx(String company);
+    
+    List<Map<String, Object>> designDalxReport(String from, String to, String company, List<String> mls, List<String> bgqxs);
+    
+}

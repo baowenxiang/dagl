@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- layer -->
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/common/detail.css" rel="stylesheet">	
+	<link href="${rc.contextPath}/resources/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div  class="site-text site-block">
+    <form class="layui-form"> <!-- 提示：如果你不想用form，你可以换成div等任何一个普通元素 -->
+		<input type="hidden" name="tablename" value="$!{tablename}">
+        <div class="layui-form-item yw">
+            <label class="layui-form-label">题名</label>
+            <div class="layui-input-block">
+				<input type="text" name="tm" placeholder="请输入题名" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+		<div class="layui-form-item yw">
+			<div class="layui-input-block">
+				<button class="layui-btn layui-btn-default" lay-submit lay-filter="confirm">确定</button>
+				<a class="layui-btn layui-btn-primary closeup" >关闭</a>
+			</div>
+		</div>
+    </form>
+</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script>
+	$(function(){
+	//关闭弹出层
+			$("a.closeup").on("click",function(){
+				 var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+				 parent.layer.close(index);
+			})
+		layui.use(['form','jquery'], function(){
+    	    var $ = layui.jquery,
+    	    form = layui.form();
+    		//监听提交
+    		form.on('submit(confirm)', function(data){
+    			var tm = data.field.tm;
+				
+				
+				parent.mainIframe.grid.parameters = {
+					
+					tm:tm
+				}
+				parent.mainIframe.grid.load();
+				
+				
+				var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+       			 parent.layer.close(index);
+				
+				return false;
+    		});
+		});
+	});
+</script>
+</html>
+	

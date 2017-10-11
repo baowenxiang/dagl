@@ -1,0 +1,26 @@
+ ##iframe页面主体
+ <section class="content">
+ 
+ 			##表名展示DTgrid
+		    <div id="openedFileControlCollectContext">
+		    	##增加按钮
+		    	<button title="控制" type="button" class="btn btn-info back">控制</button>	    
+		    	##查询条件
+		    	<div id="conditionDataCollect">
+		    	</div>
+		    	##列表
+		    	<div id="openedFileControlTable" class="dt-grid-container"></div>
+		    	##分页栏
+		    	<div id="pagingOpenedFileControl" class="dt-grid-toolbar-container"></div>
+		   </div>
+ 		
+ 		
+</section>     
+        
+##CSS
+##<link href="${rc.contextPath}/resources/css/web/zlzl/zlsj/dataCollect.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/fileControl/openedFileControl.js"></script>
+
+

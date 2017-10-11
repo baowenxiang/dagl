@@ -1,0 +1,157 @@
+ ##iframe页面主体
+ <section class="content">
+ <div class="box box-default">
+   <div class="box-body" id="list">
+ 	<div class="row">
+ 		<div class="col-xs-6">
+ 			<div class="btn-group">
+ 				<button type="button" class="btn btn-default btn-sm btn-icon addDicGrid">
+	                <svg class="icon" aria-hidden="true">
+	                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+	                </svg>
+	                <b hidden>添加档案表</b>&nbsp;
+                </button>
+ 			</div>
+ 			##字典项展示DTgrid
+		    <div style="" id="dicCollectContext">
+		    	##增加按钮
+		    	##<button title="增加记录" type="button" class="btn btn-info btn-sm addDicGrid"><i class="fa fa-plus"></i></button>
+		    	##查询条件
+		    	<div id="conditionDataCollect">
+		    	</div>
+		    	##列表
+		    	<div id="dictionaryTable" class="dt-grid-container"></div>
+		    	##分页栏
+		    	<div id="pagingDictionary" class="dt-grid-toolbar-container"></div>
+		    </div>
+ 		</div>
+ 		<div class="col-xs-6">
+ 			<div class="btn-group">
+ 				<button type="button" class="btn btn-default btn-sm btn-icon addDicValueGrid">
+	                <svg class="icon" aria-hidden="true">
+	                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+	                </svg>
+	                <b hidden>添加档案表</b>&nbsp;
+                </button>
+ 			</div>
+ 		    ##字典值展示DTgrid
+ 		    <div style="" id="dicValueCollectContext">
+	    		##增加按钮
+		    	##<button title="增加记录" type="button" class="btn btn-info btn-sm addDicValueGrid"><i class="fa fa-plus"></i></button>
+		    	##查询条件
+		    	<div id="conditionDataCollect">
+		    	</div>
+		    	##列表
+		    	<div id="dicValueTable" class="dt-grid-container"></div>
+		    	##分页栏
+		    	<div id="pagingDicValue" class="dt-grid-toolbar-container"></div>
+    	    </div>
+ 		</div>
+ 	</div>
+  </div>
+</div>   
+	##字典项修改资料收集模态框
+	<div class="modal" id="dictionaryUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog" style="width: 800px;">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1">字典项查看</h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+						<input name="dictionaryId" type="hidden"/>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">字典项编号</label>
+    				    	<div class="col-sm-7">
+    				        	<input name="dno" class="form-control">
+    				    	</div>
+    				    </div>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">字典项名称</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" name="dname">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">字典项描述</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="ddescr">
+    				    	</div>
+    				    </div>
+    				
+                     </form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+                    <button type="button" class="btn btn-primary dataUpdate">保存</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+	
+	##查看资料收集模态框
+	
+	##字典项修改资料收集模态框
+	<div class="modal" id="dicValueUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog" style="width: 800px;">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1">字典项查看</h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+						<input name="dicValueId" type="hidden"/>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">字典项编号</label>
+    				    	<div class="col-sm-7">
+    				        	<input name="did" class="form-control">
+    				    	</div>
+    				    </div>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">内容编号</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" name="dvno">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">字典内容</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="dvalue">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">显示序号</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="xsxh">
+    				    	</div>
+    				    </div>
+    				
+                     </form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+                    <button type="button" class="btn btn-primary dicValueDataUpdate">保存</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+	
+	##查看资料收集模态框
+	
+</section>     
+        
+##CSS
+##<link href="${rc.contextPath}/resources/css/web/zlzl/zlsj/dataCollect.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/dicManager/dictionary.js"></script>
+<script src="${rc.contextPath}/resources/js/web/dicManager/dicValue.js"></script>
+

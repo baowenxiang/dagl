@@ -1,0 +1,6 @@
+/* form外的提醒字体样式*/
+.attention {
+	color:red;
+	font-size:12px;
+	padding-left:5px;
+}

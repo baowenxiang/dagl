@@ -1,0 +1,55 @@
+
+##iframe页面主体
+<section class="content">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h3>馆藏量</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive" data-pattern="priority-columns">
+                    <table cellspacing="0" id="ledger" class="table table-small-font table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>门类</th>
+                                <th>保管期限</th>
+                                <th>数量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th rowspan=3>基建档案</th>
+                                <td>10年</td>
+                                <td>10</td>
+                            </tr>
+                            <tr>
+                                <td>20年</td>
+                                <td>10</td>
+                            </tr>
+                            <tr>
+                                <td>30年</td>
+                                <td>10</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                        
+                        </tfoot>
+                    </table>
+                </div>
+        </div>
+    </div>
+</section>
+     <script>
+        $(function(){
+            $("form").submit(function(){
+                var keyword = $("#key").val();
+                if($.trim(keyword)==""){
+                    window.location.reload();
+                    return false;
+                }
+            });
+        });
+     </script>
+
+    

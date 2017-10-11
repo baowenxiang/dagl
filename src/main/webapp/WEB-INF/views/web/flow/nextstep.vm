@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- layer -->
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/common/exactquery.css" rel="stylesheet">
+</head>
+<body>
+	<input type="hidden" name="processId" value="$!{processId}"/>
+	<input type="hidden" name="tablename" value="$!{tablename}"/>
+	<input type="hidden" name="ids" value="$!{ids}"/>	
+	<input type="hidden" name="flag" value="$!{flag}"/>	
+	
+    <div class="site-text site-block">
+    		<div class="scroll next-content-fixed next-fixed-left">
+        		<div style="padding: 2px;overflow: hidden;">
+					<div id="nextstepUserTableDiv" class="datatable"></div>
+					##分页栏
+					<div id="nextstepUserPagingDiv" class="dt-grid-toolbar-container"></div>
+				</div>
+			</div>
+			
+			<div class="modal-footer">
+                <button type="button" class="btn btn-default closeup" >关闭</button>
+                <button type="button" class="btn btn-primary btn_hand">执行流程</button>
+            </div>
+	</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/flow/nextstep.js" type="text/javascript"></script>
+<script >
+	
+</script>
+</html>
+	

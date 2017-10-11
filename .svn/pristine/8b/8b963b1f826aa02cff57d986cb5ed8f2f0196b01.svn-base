@@ -1,0 +1,329 @@
+var grid;
+var fileGrid;
+$(function(){
+	$(".btn-icon").on("mouseenter", function(){
+        $this = $(this);
+        $this.find('b').show();
+     });
+     
+     $(".btn-icon").on("mouseleave", function(){
+        $this = $(this);
+        $this.find('b').hide();
+     });
+     
+     initMethod();
+     
+     initGrid();
+     initFileGrid();
+});
+
+
+function initMethod(){
+	//点击添加附件
+	$("#compileResultTableDiv").on("click","a.addFile",function(){
+		var id = $.trim($(this).attr("data-id"));
+		var options = {}
+    	var url = Util.getRootPath()+"/w/compilation/compileResult/toAddFileFormView?id="+id;
+    	options.url = url;
+    	options.title = "增加附件";
+    	window.parent.showModal(options);
+	});
+	
+	
+	$("button.view").on("click",function(){
+		var files = grid.getCheckedRecords();
+		if(files.length==0){
+			layer.alert("请选择编研目录！", {skin: 'layui-layer-lan',closeBtn: 0});
+			return;
+		}
+		
+		var compileResultIds = [];
+		var records = grid.getCheckedRecords();
+		for(var i = 0;i<records.length;i++){
+			compileResultIds.push(records[i].id);
+		}
+		
+		fileGrid.parameters = {compileResultIds:compileResultIds};
+		fileGrid.load();
+	});
+	
+	$("button.delete").on("click",function(){
+			var files = grid.getCheckedRecords();
+			if(files.length==0){
+				layer.alert("请选择编研目录！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+    		var fileids = [];
+    		for(var i=0;i<files.length;i++){
+    			fileids.push(files[i].id);
+    		}
+			
+    		layer.confirm('确定删除所选'+files.length+'项', {
+  			  skin: 'layui-layer-lan',
+  			  btn: ['确定','取消'] //按钮
+  			}, function(){
+	    		Util.ajaxJsonSync(
+	                Util.getRootPath()+"/w/compilation/batchdelete",
+	                {
+	                	fileids:fileids
+	                },
+	                function(result){
+	                    if(result.success){
+	                    	layer.msg(result.msg,{time: 2000});
+	    					refreshGrid();
+	                    }else{
+	                    	layer.alert(result.msg, {skin: 'layui-layer-lan',closeBtn: 0});
+	                    }
+	                }, function(ex){
+	                    layer.alert("删除请求失败", {  skin: 'layui-layer-lan',closeBtn: 0});
+	                }
+	            );
+  			},function(index){
+				 layer.close(index);
+			});
+	});
+	
+	
+	$("#compileResultTableDiv").on("click", "img", function(){
+		var fileid = $(this).attr("dagl-uuid");
+		var filename = $(this).attr("title");
+		$.ajax({
+	        type: "GET",
+	        url: Util.getRootPath() + "/w/preview/" + fileid,
+	        dataType: 'json',
+	        async: false,	
+	        success: function(result) {
+	        	var option = {};
+	        	option.title = filename;
+	        	if(result.type == 'flv'){
+	        		option.url = Util.getRootPath() + "/w/preview/video/" + filename + "/" + result.cache;
+	        		window.parent.showModal(option);
+	        	}else{
+	        		option.url = result.cache;
+	        		window.parent.showModal(option);
+	        	}
+	        },
+	        error:function(XMLHttpRequest, textStatus, errorThrown){
+	        	
+	        	layer.msg("文件不存在或被删除");
+	        },
+		});
+	});
+
+}
+
+
+function initGrid(){
+	grid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/compilation/getCompileResultByPage",
+	    ajaxLoad : true,
+	    gridContainer : 'compileResultTableDiv',
+	    toolbarContainer : 'compileResultPagingDiv',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 20,
+	    check : true,
+	    pageSizeLimit : [20,50,100,300],
+	    tableClass:'table table-bordered table-hover table-responsive table-fixed',
+	    columns : [
+		       		{
+		       			id:'tm',
+		       			title : '<b>题名</b>',
+		       			type:"string",
+		       			columnClass:'text-center text-fixed',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+							return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+						}
+		       		},
+		       		{
+		       			id:'byrq',
+		       			title : '<b>编研日期</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+							return value.substr(0,10);
+						}
+		       		},
+		       		{
+		       			id:'byr',
+		       			title : '<b>编研人姓名</b>',
+		       			type:"string",
+		       			columnClass:'text-center text-fixed',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+							return '<span title="'+value.name+'" style="cursor: pointer;">'+value.name+'</span>';
+						}
+		       		},
+		       		{
+		       			id:'bz',
+		       			title : '<b>备注</b>',
+		       			type:"string",
+		       			columnClass:'text-center text-fixed',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+							return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+						}
+		       			
+		       		},
+		       		{
+		       			id:'id',
+		       			title : '<b>预览</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+
+	           				 var html = "";
+	           				 Util.ajaxJsonSync(
+	       						 Util.getRootPath()+"/w/example/flow/getYwgj",
+	       	                        {
+	       							 id : value
+	       	                        },
+	       	                        function(result){
+	       								if(result.success){
+	       									
+	       									var datas = result.datas;
+	       									if(datas.length>0){
+	           									for(var i = 0;i<datas.length;i++){
+	           										var wjlx = datas[i].wjlx;
+	           										var wjm = datas[i].wjm;
+	           										if(wjlx == 'pdf'){
+	           											html += '<img dagl-uuid="' + datas[i].id + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/pdf.svg" />';
+	           										}else if(wjlx == 'doc' || wjlx == 'docx'){
+	           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/word.svg" />';
+	           										}else if(wjlx == 'xlsx' || wjlx == 'xls'){
+	           											html += '<img dagl-uuid="' + datas[i].id + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/excel.svg" />';
+	           										}else if(Util.isAudio(wjlx)){
+	           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/audio.svg" />';
+	           										}else if(Util.isVedio(wjlx)){
+	           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/视频.svg" />';
+	           										}else if(Util.isPIC(wjlx)){
+	           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/pic.svg" />';
+	           										}else if(wjlx == 'txt'){
+	           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/txt.svg" />';
+
+	           										}
+	           					
+	           										else{
+	           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/文件.svg" />';
+	           										}
+	           									}
+	       									}
+	       								}
+	       	                        }
+	           				 )
+	           				 return html;
+	           			 
+			       			}
+		       		},
+		       		{
+		       			id:'id',
+		       			title : '<b>操作</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				//存储record类，编辑时使用
+		       				var html = ''; 	
+		       				html += '<div class="btnDiv">';
+	       					html += '	<a title="添加附件" class="btn btn-primary btn-xs addFile" data-id="'+value+'">附件</a>';
+		       				html += '</div>';
+			       			
+		       				return html;
+		       			}
+		       			
+		       		}
+		       		]
+	});
+	refreshGrid();
+}
+
+function refreshGrid() {
+	grid.parameters = getParameters();
+	grid.load();
+}
+function getParameters() {
+	return{}
+}
+
+
+function initFileGrid(){
+	fileGrid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/compilation/getFileCompileResultByPage",
+	    ajaxLoad : true,
+	    gridContainer : 'compileFileTableDiv',
+	    toolbarContainer : 'compileFilePagingDiv',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 20,
+	    check : false,	//表格插件，复选框，true显示，false,不显示
+	    pageSizeLimit : [20,50,100,300],
+	    tableClass:'table table-bordered table-hover table-responsive table-fixed',
+	    columns : [
+	       		{
+	       			id:'tm',
+	       			title : '<b>题名</b>',
+	       			type:"string",
+	       			columnClass:'text-center text-fixed',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'wh',
+	       			title : '<b>文号</b>',
+	       			type:"string",
+	       			hide:true,
+	       			columnClass:'text-center text-fixed',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'zrz',
+	       			title : '<b>责任者</b>',
+	       			type:"string",
+	       			columnClass:'text-center text-fixed',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'mj',
+	       			title : '<b>密级</b>',
+	       			type:"string",
+	       			columnClass:'text-center text-fixed',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       			
+	       		},
+	       		{
+	       			id:'bgqx',
+	       			title : '<b>保管期限</b>',
+	       			type:"string",
+	       			columnClass:'text-center text-fixed',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+
+	       		},
+	       		{
+	       			id:'cwrq',
+	       			title : '<b>成文日期</b>',
+	       			type:"string",
+	       			columnClass:'text-center text-fixed',
+	       			resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+	       		},
+	       		{
+	       			id:'bm',
+	       			title : '<b>所属表名</b>',
+	       			hide:true,
+	       			type:"string",
+	       			columnClass:'text-center',
+	       		}
+	       		]
+	});
+	fileGrid.parameters = {};
+	fileGrid.load();
+}
+
+

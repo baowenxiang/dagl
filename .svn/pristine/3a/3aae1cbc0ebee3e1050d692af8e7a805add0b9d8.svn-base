@@ -1,0 +1,92 @@
+@CHARSET "UTF-8";
+body{
+	background-color: #FFFFFF;
+	background: #FFFFFF url('../../../img/login_bg.jpg') no-repeat;
+	height: 100%;
+    width: 100%;
+    background-size:100%; 
+}
+.login-warpper{
+	width: 100%;
+	padding: 0 160px;
+}
+.login-head{
+	height: 80px;
+}
+.login-form-div{
+	overflow: hidden;
+	margin-top: 40px;
+	margin-bottom: 40px;
+}
+.login-time{
+	overflow: hidden;
+}
+.form-title{
+	border-bottom: 1px solid #d2d2d2;margin-bottom: 6px;
+	height: 56px;line-height: 56px;
+	font-size:20px;padding: 0 10px;
+	background-color: #efefef;
+}
+form{
+	margin: 20px 16px 2px !important;
+}
+.form-group{
+	margin-bottom: 10px !important;
+}
+input.form-control{
+	height: 44px;font-size: 16px;
+	border-radius: 2px !important;
+	padding-left: 48px;
+}
+.btn{
+	border-radius: 2px !important;
+}
+.time-div{
+	font-size: 42px;height: 42px;line-height: 42px;padding-left: 10px;margin-bottom: 2px; 
+	color: #FFFFFF;
+}
+.day-div{
+	font-size: 25px;
+    height: 25px;
+    line-height: 25px;
+    padding-left: 16px;
+    color: #FFFFFF;
+}
+
+.ue{
+	background: #FFFFFF url('../../../img/uname.png') 13px center no-repeat;
+}
+.ud{
+	background: #FFFFFF url('../../../img/upwd.png') 13px center no-repeat;
+}
+.miao{
+	font-size: 20px;
+}
+.verifycodeClass{
+	padding-left: 0 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

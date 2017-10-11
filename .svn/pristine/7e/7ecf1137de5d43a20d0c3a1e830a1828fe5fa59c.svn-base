@@ -1,0 +1,52 @@
+$(function() {
+	var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+	initBtn();
+	layer.close(index);
+});
+function initBtn() {
+	//关闭
+	$(".closeup").on("click",function(){
+		var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+        parent.layer.close(index);
+	});
+	//提交
+	$(".sub").on("click",function() {
+		var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+		var startDate = $.trim($('[name="startDate"]').val());
+		var endDate = $.trim($('[name="endDate"]').val());
+		if(startDate.length == 0) {
+			layer.alert('请选择起始日期', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		if(startDate.length == 0) {
+			layer.alert('请选择结束日期', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		Util.ajaxSync(
+			Util.getRootPath()+"/w/OAService/getOaDataByDate",
+                {
+				startDate : startDate,
+				endDate : endDate
+                },
+                function(result){
+					if(result.success){
+						layer.close(index);
+						var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+				        parent.layer.close(index);
+				        parent.mainIframe.refreshGrid();
+//						layer.alert("OA接口数据对接成功", {  skin: 'layui-layer-lan',closeBtn: 0});
+					}
+                }
+		 )
+	});
+//	layui.use(['form','jquery'], function(){
+//	    var $ = layui.jquery,
+//	    form = layui.form();
+//		//监听提交
+//		form.on('submit(sub)', function(data){
+//			var startDate = $.trim($('[name="startDate"]').val());
+//			var endDate = $.trim($('[name="endDate"]').val());
+//			alert(startDate + "," + endDate);
+//		});
+//	});
+}

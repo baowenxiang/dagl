@@ -1,0 +1,18 @@
+package cn.proem.dagl.web.eep.service;
+
+import java.util.List;
+
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.dagl.web.fileBorrowing.entity.FileBorrowing;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.eep.entity.DocData;
+import cn.proem.eep.entity.Document;
+import cn.proem.eep.util.EEPUtil;
+import cn.proem.suw.web.common.exception.ServiceException;
+
+public interface EEPService {
+    public List<DocData> getDocs(EEPUtil util, String uuid) throws ServiceException;
+    public BaseEntityInf getArchiveDetail(String archivetype, String uuid) throws ServiceException;
+    public String getProp(String prop);
+}

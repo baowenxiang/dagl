@@ -1,0 +1,375 @@
+package cn.proem.dagl.web.eep.controller;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.apache.commons.io.FileUtils;
+import org.glassfish.jersey.internal.util.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.core.entity.User;
+import cn.proem.dagl.core.ca.PCS;
+import cn.proem.dagl.web.dicManager.entity.DictionaryValue;
+import cn.proem.dagl.web.dicManager.service.DicManagerService;
+import cn.proem.dagl.web.eep.service.EEPService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.dagl.web.tools.util.CommonFile;
+import cn.proem.eep.entity.AgentEnt;
+import cn.proem.eep.entity.AgentEntBlock;
+import cn.proem.eep.entity.ArchivalNo;
+import cn.proem.eep.entity.BusEnt;
+import cn.proem.eep.entity.BusEntBlock;
+import cn.proem.eep.entity.CertiBlock;
+import cn.proem.eep.entity.ContentDesc;
+import cn.proem.eep.entity.DocData;
+import cn.proem.eep.entity.Document;
+import cn.proem.eep.entity.ElecAttribute;
+import cn.proem.eep.entity.ElecRecdsEncaPkg;
+import cn.proem.eep.entity.ElecSignature;
+import cn.proem.eep.entity.ElecsignatureBlock;
+import cn.proem.eep.entity.EncaContent;
+import cn.proem.eep.entity.Encode;
+import cn.proem.eep.entity.EncodeData;
+import cn.proem.eep.entity.FormalFeature;
+import cn.proem.eep.entity.LockSignature;
+import cn.proem.eep.entity.PrivilegeManagement;
+import cn.proem.eep.entity.RecdData;
+import cn.proem.eep.entity.RecdEntity;
+import cn.proem.eep.entity.RecdEntityBlock;
+import cn.proem.eep.entity.SignedObj;
+import cn.proem.eep.entity.StemFrom;
+import cn.proem.eep.entity.StorageLocation;
+import cn.proem.eep.util.Base64Util;
+import cn.proem.eep.util.EEPUtil;
+import cn.proem.eep.util.JaxbUtil;
+import cn.proem.suw.web.common.constant.Path;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.util.ConfigReader;
+
+@Controller
+@RequestMapping(value = "/w/example/eep")
+public class EEPController extends BaseCtrlModel{
+    
+    @Autowired
+    private EEPService eepservice;
+    
+    @RequestMapping(value = "/start/{tablename}")
+    public ModelAndView starteep(HttpServletRequest request, @PathVariable("tablename") String tablename){
+        ModelAndView modelAndView =  new ModelAndView("/web/eep/detail");
+        modelAndView.addObject("tablename", tablename);
+        return modelAndView;
+    }
+    
+    @SuppressWarnings({ "deprecation", "null" })
+    @RequestMapping(value = "/doeep")
+    @ResponseBody
+    public ResultModel<CommonFile> doeep(HttpServletRequest request){
+        String tablename = request.getParameter("tablename");
+        String[] uuids = request.getParameterValues("uuids[]");
+        String sign = request.getParameter("sign");
+    	// 立档单位
+        String lddw = eepservice.getProp("lddw");
+        if(lddw == null) lddw = "立档单位-无";
+        
+        // 档号相关
+    	// 全宗号
+    	String qzh = "全宗号-无";
+    	// 目录号
+    	String mlh = "目录号-无";
+    	// 年度
+    	String nd = "2017";
+    	// 保管期限
+    	String bgqx = "保管期限-无";
+    	// 机构与问题
+    	String jgywt = "机构与问题-无";
+    	// 类别号
+    	String lbh = "类别号-无";
+    	// 室案件编号
+    	String sajbh = "室案件编号-无";
+    	// 馆案件编号
+    	String gajbh = "管案件编号-无";
+    	// 室编件号
+        String sbjh = "0";
+    	// 馆编件号
+    	String gbjh = "0";
+    	// 页号
+    	String yh = "页号-无";
+    	
+    	// 题名
+    	String tm = "题名-无";
+    	// 责任人
+    	String zrr = "责任人-无";
+    	// 日期
+    	String rq = "日期-无";
+    	// 密级
+    	String mj = "密级-无";
+    	
+    	// 文件组合类型
+    	String wjzhlx = "文件组合类型-无";
+    	
+    	// 载体数组
+    	String zt[] = {"载体1", "载体2"};
+    	
+    	// 知识产权说明
+    	String zscqsm = "知识产权说明-无";
+    	// 授权对象
+    	String sqdx = "授权对象-无";
+    	// 授权行为
+    	String sqxw = "授权行为-无";
+    	// 控制标识
+    	String kzbs = "授权行为-无";
+    	
+    	// 文档标识符
+        String wdbsf = "文档标识符-无";
+        // 组从文档声明
+        String zcwdsm = "文档组从说明-无";
+        // 文档序号
+        String wdxh = "0";
+        // 电子文件号
+        String elecDocNo = "电子文件号-无";
+        String jhcc = "聚合层次-无";
+        ResultModel<CommonFile> resultModel = new ResultModel<CommonFile>();
+        List<CommonFile> commonFiles = new ArrayList<CommonFile>();
+	    try{
+	        
+	        for(int idx=0; idx < uuids.length; idx++){
+	            System.out.println("档案标识: " + uuids[idx]);
+	            BaseEntityInf archive = null;
+	            try {
+                    archive = this.eepservice.getArchiveDetail(tablename, uuids[idx]);
+                    // 全宗号
+                    if(archive.get("qzh") != null) qzh = archive.get("qzh");
+                    // 目录号
+                    if(archive.get("mlh") != null) mlh = archive.get("mlh");
+                    // 年度
+                    if(archive.get("nd") != null) nd = archive.get("ndh");
+                    // 保管期限
+                    if(archive.get("bgqx") != null) bgqx = archive.get("bgqx");
+                    // 机构与问题
+                    if(archive.get("jgwtdh") != null) jgywt = archive.get("jgwtdh");
+                    // 类别
+                    if(archive.get("dalbdm") != null) lbh = archive.get("dalbdm");
+                    // 室编案卷号
+                    if(archive.get("sajbh") != null) sajbh = archive.get("sajbh");
+                    // 馆编案卷号
+                    if(archive.get("gajbh") != null) gajbh = archive.get("gajbh");
+                    // 室编件号
+                    if(archive.get("sbjh") != null) sbjh = archive.get("sbjh");
+                    // 馆编件号
+                    if(archive.get("wjbh") != null) gbjh = archive.get("wjbh");
+                    // 页号
+                    if(archive.get("szyh") != null) yh = archive.get("szyh");
+                    // 题名
+                    if(archive.get("tm") != null) tm = archive.get("tm");
+                    // 责任人
+                    if(archive.get("zrz") != null) zrr = archive.get("zrz");
+                    // 密级
+                    if(archive.get("mj") != null) mj = archive.get("mj");
+                    // 日期
+                    if(archive.get("cwrq") != null) rq = archive.get("cwrq");
+                    // 文档序号
+                    if(archive.get("xh") != null) wdxh = archive.get("xh");
+                    // 文档标识
+                    if(archive.get("dh") != null ) wdbsf = "修改0-文档" + wdxh;
+                    // 电子文档号
+                    if(archive.get("dzwdh") != null) elecDocNo = archive.get("dzwdh");
+                } catch (ServiceException e1) {
+                    resultModel.setSuccess(false);
+                    resultModel.setMsg(e1.getMessage());
+                }
+	            // 年度
+	            GregorianCalendar cal = new GregorianCalendar();
+	            cal.set(Integer.parseInt(nd), 1, 1);
+	            XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
+	            Calendar c = Calendar.getInstance();//获取一个日历实例  
+	            c.set(2009, 1, 1);//设定日历的日期  
+	            Date version = c.getTime();
+	            EEPUtil util = new EEPUtil(EEPUtil.PKG_DESC, version);
+
+	            // 立档单位
+	            StemFrom stemFrom = util.createStemFrom(lddw);
+	            
+	            // 档号
+	            ArchivalNo archiveNo = util.createArchivalNo(qzh, mlh, calendar, bgqx, 
+	                                                          jgywt, lbh, sajbh, gajbh, 
+	                                                          new BigInteger(gbjh), yh);    
+	            ContentDesc desc = util.createContentDesc(tm, zrr, rq, mj);
+	            FormalFeature feature = util.createFormalFeature(wjzhlx);
+	            // 存储位置
+	            List<String> carryers = new ArrayList<String>();
+	            for(int i = 0; i < zt.length ; i++){
+	                carryers.add(zt[i]);
+	            }
+	            StorageLocation location = util.createStorageLocation(carryers);
+	            // 权限管理
+	            PrivilegeManagement privilege = util.createPrivilegeManagement(zscqsm, sqdx, sqxw, kzbs);
+	            RecdEntityBlock recdEnt = null;
+	            // 文件数据
+	            // 档案原文获得
+                try {
+                    List<DocData> datas = eepservice.getDocs(util, uuids[idx]);
+                    List<Document> docs = new ArrayList<Document>();
+                    
+                    docs.add(util.createDocument(tm, wdbsf, wdxh, zcwdsm, datas));
+                    RecdData recddata = util.createRecdData(docs);
+                    
+                    RecdEntity record = util.createRecdEntity("单件", stemFrom, elecDocNo, archiveNo, desc, feature, location, privilege, null, null, recddata);
+                    recdEnt = util.createRecdEntityBlock(record);
+                } catch (ServiceException e) {
+                    resultModel.setSuccess(false);
+                    resultModel.setMsg(e.getMessage());
+                }
+	            
+	            List<BusEnt> busents = new ArrayList<BusEnt>();
+	            String ywbsf = "业务标识符-无";
+	            // 机构人员标识符
+	            String jgrybsf = "机构人员标识符-无";
+	            // 文件标识符
+	            String wjbsf = "文件标识符-无";
+	            // 业务状态
+	            String ywzt = "业务状态-无";
+	            // 业务行为
+	            String ywxw = "业务行为-无";
+	            // 行为时间
+	            String xwsj = "行为时间-无";
+	            busents.add(util.createBusEnt(ywbsf, jgrybsf, wjbsf, ywzt, ywxw, xwsj));
+	            BusEntBlock busEnt = util.createBusEntBlock(busents);
+	            
+	            // 机构标识符
+	            String jgbsf = "机构标识符-无";
+	            String jgrymc = "机构人员名称-无";
+	            List<AgentEnt> agents = new ArrayList<AgentEnt>();
+	            agents.add(util.createAgentEnt(jgbsf, jgrymc));
+	            AgentEntBlock agentEnt = util.createAgentEntBlock(agents);
+	            
+	            User user = this.getCurrentUser(request);
+	            // 文件创建者
+	            String wjcjz = user.getUsername();
+	            // 封包内容
+	            EncaContent content = util.createEncaContent(recdEnt, busEnt, agentEnt);
+	            // 签名对象
+	            SignedObj signedobj = util.createSignedObj(new Date(), wjcjz, content);
+	            ElecRecdsEncaPkg pkg = null;
+	            if("0".equals(sign)){
+	                pkg = util.createElecRecdsEncaPkg(signedobj);
+	            }else{
+	                PCS pcs = new PCS(ConfigReader.readCAHost(), ConfigReader.readCAPort());
+	                String keyid = ConfigReader.readCAKeyid();
+	                String password = ConfigReader.readCAPassword();
+	                byte[] cert = pcs.getCertByKeyID(keyid).getBytes();
+	                List<byte[]> certs = new ArrayList<byte[]>();
+                    certs.add(cert);
+                    // 证书块
+                    List<CertiBlock> certblocks = new ArrayList<CertiBlock>();
+                    certblocks.add(util.createCertiBlock(certs));
+                    // 签名标识符
+	                String signid = "修改0-签名1";
+	                String locksignid = signid;
+	                // 签名规则
+	                String rule = "PKCS#1";
+	                String lockrule = "PKCS#1";
+	                // 签名时间
+	                GregorianCalendar signcal = new GregorianCalendar();
+	                signcal.setTime(new Date());
+	                XMLGregorianCalendar time = DatatypeFactory.newInstance().newXMLGregorianCalendar(signcal);
+	                // 签名人
+	                String people = eepservice.getProp("qmr");
+	                // 签名算法标识
+	                String algo = "RSA-SHA1";
+	                // 签名结果
+	                System.out.println(JaxbUtil.convertToxml(signedobj));
+	                String pks1 = pcs.createPKCS1(keyid, password, replaceBlank(signedobj.toString()), "1", "0");
+	                	                List<ElecSignature> elecsignatures = new ArrayList<ElecSignature> ();
+	                ElecSignature elecSignature = util.createElecSignature(signid, rule, time, people, Base64.encode(pks1.getBytes()), certblocks, algo);
+	                elecsignatures.add(elecSignature);
+	                ElecsignatureBlock elecsignatureBlock = util.createElecsignatureBlock(elecsignatures);
+	                System.out.println(JaxbUtil.convertToxml(elecsignatureBlock));
+	                signcal.setTime(new Date());
+                    time = DatatypeFactory.newInstance().newXMLGregorianCalendar(signcal);
+                    String lockpks1 = pcs.createPKCS1(keyid, password, replaceBlank(elecsignatureBlock.toString()), "1", "0");
+	                LockSignature lockSignature = util.createLockSignature(elecSignature, lockrule, time, people, Base64.encode(lockpks1.getBytes()), certblocks, algo);
+	                pkg = util.createElecRecdsEncaPkg(signedobj, elecsignatureBlock, lockSignature);
+	            }
+	            
+	            
+	            String filename = "新文件";
+	            if(archive.get("dh") != null){
+	                filename = archive.get("dh");
+	            }else{
+	                filename = uuids[idx];
+	            }
+	            String eepfile = ConfigReader.readAppHome() + Path.UPLOAD_EEP_PATH + filename + ".eep";
+	            System.out.print("开始输出EEP文件: '" + eepfile +"' ...");
+	            PrintWriter pw = new PrintWriter(eepfile);
+	            System.out.println("输出EEP文件： '" + eepfile + "'完成。");
+	            pw.print(JaxbUtil.convertToxml(pkg));
+	            pw.close();
+	            
+	            CommonFile commonFile = new CommonFile();
+	            commonFile.setRealpath(ConfigReader.readAppHome() + Path.UPLOAD_EEP_PATH);
+	            commonFile.setFilename(filename + ".eep");
+	            commonFiles.add(commonFile);
+	        }
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+		}
+	    
+	    resultModel.setSuccess(true);
+	    resultModel.setDatas(commonFiles);
+	    
+		return resultModel;
+    }
+    
+    @RequestMapping("/download")
+    public ResponseEntity<byte[]> download(HttpServletRequest request, String filename) throws IOException {
+        String path=ConfigReader.readAppHome() + Path.UPLOAD_EEP_PATH;  
+        File file=new File(path + filename);  
+        HttpHeaders headers = new HttpHeaders();    
+        String fileName=new String(filename.getBytes("UTF-8"),"iso-8859-1");//为了解决中文名称乱码问题  
+        headers.setContentDispositionFormData("attachment", fileName);   
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);   
+        return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file),    
+                                          headers, HttpStatus.CREATED);
+    }
+    
+    private static String replaceBlank(String str) {
+        String dest = "";
+        if (str!=null) {
+            Pattern p = Pattern.compile("\\s*|\t|\r|\n");
+            Matcher m = p.matcher(str);
+            dest = m.replaceAll("");
+        }
+        return dest;
+    }
+}

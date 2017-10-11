@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:cxf="http://cxf.apache.org/core"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+                        http://www.springframework.org/schema/context 
+                        http://www.springframework.org/schema/context/spring-context-3.0.xsd 
+                        http://www.springframework.org/schema/tx 
+                        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+                        http://www.springframework.org/schema/aop 
+                        http://www.springframework.org/schema/aop/spring-aop.xsd
+                        http://www.springframework.org/schema/task 
+                        http://www.springframework.org/schema/task/spring-task-3.0.xsd 
+                        http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd
+                        http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd">
+ 
+    <bean id="exportDataImpl" class="cn.proem.suw.webservice.impl.ExportDataImpl"></bean>
+    <!--<bean id="InstantiationTracingBeanPostProcessor" class="cn.proem.dagl.web.systemSetting.controller.InstantiationTracingBeanPostProcessor"/>-->
+	<jaxws:server id="exportData" serviceClass="cn.proem.suw.webservice.ExportData"  
+	    address="/exportData">  
+	    <!-- 添加实现类 -->  
+	    <jaxws:serviceBean>  
+	        <ref bean="exportDataImpl" />  
+	    </jaxws:serviceBean>  
+	    <!-- 添加协议 使用MTOM附件-->
+	    <jaxws:properties>
+	        <entry key="mtom-enabled" value="true" />  
+	    </jaxws:properties>  
+	</jaxws:server>
+	
+	
+	
+</beans>

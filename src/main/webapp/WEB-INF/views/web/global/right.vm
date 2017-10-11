@@ -1,0 +1,19 @@
+<div class="content-wrapper">
+    <iframe id="mainIframe" 
+        name="mainIframe" 
+        src="${rc.contextPath}/w/welcome"
+        #*scrolling="no"*#
+        frameborder="no" 
+        height="100%" 
+        width="100%"
+        marginheight="0" 
+        marginwidth="0"
+        dagl-location="<i class='fa fa-home'></i> 首页">
+    </iframe>
+</div>
+<script>
+    $(document).ready(function(){
+        cheight = $(".content-wrapper").height();
+        $("#mainIframe").height(cheight);
+    });
+</script>

@@ -1,0 +1,9 @@
+@CHARSET "UTF-8";
+.table-fixed{
+	table-layout: fixed
+}
+
+.text-fixed{
+	-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;
+}
+

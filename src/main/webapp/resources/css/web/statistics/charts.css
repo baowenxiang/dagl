@@ -1,0 +1,49 @@
+/* body */
+#charts_body{
+	margin-top: 5px;
+	margin-left:10%; 
+	margin-right:10%; 
+	padding: 0px;
+	width: 100%;
+	height: 100%;
+	border: 1px 
+}
+
+/* 选择表样式 */
+#charts_body .charts_biaoSel{
+	width: 60%;
+	
+}
+
+/* 选择输出表里样式 */
+#charts_body .charts_params{
+	width: 60%;
+	display: none;
+}
+/* 去掉table线 */
+#charts_body .charts_params table.table tr td,
+#charts_body .charts_params table.table tr th,
+#charts_body .charts_type table.table tr td,
+#charts_body .charts_type table.table tr th{
+	border-top:0px solid white;
+}
+
+/* 按钮样式 */
+#charts_body .btn_zu{
+	display: inline-block;
+	float: right;
+	margin-top: 10px;
+}
+
+/* 选择列出图像类型样式 */
+#charts_body .charts_type{
+	width: 60%;
+	display: none;
+}
+
+/* 显示图标 */
+#charts_body .charts_tu{
+	width: 60%;
+	display: none;
+}
+

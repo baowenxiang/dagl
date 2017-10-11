@@ -1,0 +1,414 @@
+//存储附件的集合
+var tableFieldGrid;
+
+$(function(){
+	initTableFieldMethod();
+	
+	initTableFieldTable();
+	
+	
+	
+});
+
+//初试化方法
+function initTableFieldMethod(){
+	//增加信息
+	$("button.addTableFieldGrid").on("click",function(){
+		$('[name="tableFieldId"]').val("");
+		$("input").not('[name="tableNameId"]').val("");
+		if(selectid == ""){
+			layer.alert("请先选中表名", {  skin: 'layui-layer-lan',closeBtn: 0});
+			return;
+		}
+		//$("#zdlx option:first").prop("selected", 'selected');
+		$("#zdlx").find("option[value='0']").prop("selected",true);
+		$('[name="tableName"]').val(selectid);
+		$('[name="zdcd"]').val(255);
+		$('[name="sfcxx"]').prop("checked",false);
+		$('[name="sfgyxxx"]').prop("checked",false);
+		$('[name="sfkzzd"]').prop("checked",false);
+		$('[name="sfsy"]').prop("checked",false);
+		$('[name="sfkbj"]').prop("checked",false);
+		$('[name="sfbbxxx"]').prop("checked",false);
+		$('[name="sfdjl"]').prop("checked",false);
+		$('[name="sfbtx"]').prop("checked",false);
+		$('[name="sfkxg"]').prop("checked",false);
+		//$("button.dataUpdate").show();
+		$("h4.modal-title").text("表字段添加");
+		$("#tableFieldUpdate").modal("show");
+	});
+
+	
+	//点击修改事件
+	$("#tableFieldTable").on("click","a.update",function(){
+		
+		var id = $(this).attr("data-id");
+//		$("input").removeAttr("readonly");
+//		$("button.dataUpdate").show();
+		$("input").not('[name="tableNameId"]').val("");
+		$('[name="sfcxx"]').prop("checked",false);
+		$('[name="sfgyxxx"]').prop("checked",false);
+		$('[name="sfkzzd"]').prop("checked",false);
+		$('[name="sfsy"]').prop("checked",false);
+		$('[name="sfkbj"]').prop("checked",false);
+		$('[name="sfbbxxx"]').prop("checked",false);
+		$('[name="sfdjl"]').prop("checked",false);
+		$('[name="sfbtx"]').prop("checked",false);
+		$('[name="sfkxg"]').prop("checked",false);
+		$("h4.modal-title").text("表字段修改");
+		$('[name="tableFieldId"]').val(id);
+		$("#tableFieldUpdate").modal("show");
+		//根据资料收集id获得相应信息
+		$.ajax({
+			url : Util.getRootPath()+"/w/customarchive/getDTableFieldById",
+			type:'POST', //GET
+			async:false,
+			data:{
+				id:id
+			},
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				//输入框赋值
+				var dataInfo = data;
+				$('[name="tableName"]').val(dataInfo.data.tableName.bm);
+				$('[name="zdywm"]').val(dataInfo.data.zdywm);
+				$('[name="zdzwm"]').val(dataInfo.data.zdzwm);
+				//$('[name="zdlx"]').val(dataInfo.data.zdlx);
+				var option = dataInfo.data.zdlx;
+				$("#zdlx option[value='"+option+"']").prop("selected", "selected");
+				$('[name="zdcd"]').val(dataInfo.data.zdcd);
+				$('[name="mrz"]').val(dataInfo.data.mrz);
+				$('[name="width"]').val(dataInfo.data.width);
+				$('[name="align"]').val(dataInfo.data.align);
+				$('[name="did"]').val(dataInfo.data.did);
+				$('[name="xsxh"]').val(dataInfo.data.xsxh);
+				$('[name="sm"]').val(dataInfo.data.sm);
+				$('[name="rqgs"]').val(dataInfo.data.rqgs);
+				$('[name="zyls"]').val(dataInfo.data.zyls);
+				$('[name="zyhs"]').val(dataInfo.data.zyhs);
+				$('[name="pxlx"]').val(dataInfo.data.pxlx);
+				
+				if(dataInfo.data.sfcxx=="1"){
+					$('[name="sfcxx"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfgyxxx=="1"){
+					$('[name="sfgyxxx"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfkzzd=="1"){
+					$('[name="sfkzzd"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfsy=="1"){
+					$('[name="sfsy"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfkbj=="1"){
+					$('[name="sfkbj"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfbbxxx=="1"){
+					$('[name="sfbbxxx"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfdjl=="1"){
+					$('[name="sfdjl"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfbtx=="1"){
+					$('[name="sfbtx"]').prop("checked",true);
+				}
+				if(dataInfo.data.sfkxg=="1"){
+					$('[name="sfkxg"]').prop("checked",true);
+				}
+				
+			},
+			error:function(ex) {}
+		});
+	});
+	
+	//删除信息
+	$("#tableFieldTable").on("click","a.delete",function(){
+		var id = $(this).attr("data-id");
+		
+		$.ajax({
+			url : Util.getRootPath()+"/w/customarchive/deleteDTableField",
+			type:'POST', //GET
+			async:true,
+			data:{
+				id:id
+			},
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				if(data.success){
+					layer.msg(data.msg,{time: 2000});
+					refreshTableFieldGrid();
+				}else{
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			},
+			error:function(ex) {
+				layer.alert("删除失败！", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		});
+	});
+	
+	//保存修改后的信息
+	$("button.tableFieldDataUpdate").on("click",function(){
+		
+		var id = $.trim($('[name="tableFieldId"]').val());
+		
+		//前台校验
+		var tableName = $.trim($('[name="tableName"]').val());
+		
+		if(Util.checkNull(tableName)){
+			layer.alert('对应表名不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		var zdywm = $.trim($('[name="zdywm"]').val());
+		if(Util.checkNull(zdywm)){
+			layer.alert('字段英文名不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		var zdzwm = $.trim($('[name="zdzwm"]').val());
+		if(Util.checkNull(zdzwm)){
+			layer.alert('字段中文名不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		//var zdlx = $.trim($('[name="zdlx"]').val());
+		var zdlx = $("#zdlx option:selected").val();
+		if(Util.checkNull(zdlx)){
+			layer.alert('请选择字段类型', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		var zdcd = $.trim($('[name="zdcd"]').val());
+		if(Util.checkNull(zdcd)){
+			layer.alert('字段长度不能为空', {skin: 'layui-layer-lan',closeBtn: 0,anim: 5});
+			return;
+		}
+		var mrz = $.trim($('[name="mrz"]').val());
+		var width = $.trim($('[name="width"]').val());
+		var align = $.trim($('[name="align"]').val());
+		var did = $.trim($('[name="did"]').val());
+		var xsxh = $.trim($('[name="xsxh"]').val());
+		debugger;
+		var sm = $.trim($('[name="sm"]').val());
+		var rqgs = $.trim($('[name="rqgs"]').val());
+		var zyls = $.trim($('[name="zyls"]').val());
+		var zyhs = $.trim($('[name="zyhs"]').val());
+		var pxlx = $.trim($('[name="pxlx"]').val());
+		
+		
+		var sfcxx = "0";
+		var sfgyxxx = "0";
+		var sfkzzd = "0";
+		var sfsy = "0";
+		var sfkbj = "0";
+		var sfbbxxx = "0";
+		var sfdjl = "0";
+		var sfbtx = "0";
+		var sfkxg = "0";
+		if($('[name="sfcxx"]').is(':checked')){
+			sfcxx = "1";
+		}
+		if($('[name="sfgyxxx"]').is(':checked')){
+			sfgyxxx = "1";
+		}
+		if($('[name="sfkzzd"]').is(':checked')){
+			sfkzzd = "1";
+		}
+		if($('[name="sfsy"]').is(':checked')){
+			sfsy = "1";
+		}
+		if($('[name="sfkbj"]').is(':checked')){
+			sfkbj = "1";
+		}
+		if($('[name="sfbbxxx"]').is(':checked')){
+			sfbbxxx = "1";
+		}
+		if($('[name="sfdjl"]').is(':checked')){
+			sfdjl = "1";
+		}
+		if($('[name="sfbtx"]').is(':checked')){
+			sfbtx = "1";
+		}
+		if($('[name="sfkxg"]').is(':checked')){
+			sfkxg = "1";
+		}
+		
+		
+		var data={"id":id,"tableName":tableName,"zdywm":zdywm,"zdzwm":zdzwm,"zdlx":zdlx,"zdcd":zdcd,"mrz":mrz,"width":width,"align":align,
+				"did":did,"xsxh":xsxh,"sm":sm,"rqgs":rqgs,"zyls":zyls,"zyhs":zyhs,"pxlx":pxlx,"sfcxx":sfcxx,"sfgyxxx":sfgyxxx,
+				"sfkzzd":sfkzzd,"sfsy":sfsy,"sfkbj":sfkbj,"sfbbxxx":sfbbxxx,"sfdjl":sfdjl,"sfbtx":sfbtx,"sfkxg":sfkxg};
+		console.log(data);
+		$.ajax({
+			url : Util.getRootPath()+"/w/customarchive/updateDTableField",
+			type:'POST', 
+			async:true,
+			data:data,
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				if(data.success){
+					layer.msg(data.msg,{time: 2000});
+					$(".modal").modal("hide");
+					refreshTableFieldGrid();
+					layer.alert("修改或者保存表字段需要重构后生效!", {  skin: 'layui-layer-lan',closeBtn: 0});
+				}else{
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			},
+			error:function(ex) {
+				layer.alert("操作失败！", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		});
+	});
+}
+
+
+function initTableFieldTable(){
+	tableFieldGrid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/customarchive/getTableFieldList",
+	    ajaxLoad : true,
+	    gridContainer : 'tableFieldTable',
+	    toolbarContainer : 'pagingTableField',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 10,
+	    check : false,
+	    pageSizeLimit : [10,20,50],
+	    columns : [
+		       		{
+		       			id:'tableName',
+		       			title : '<b>表名称</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				return value.bm;
+		       			}
+		       		},
+		       		{
+		       			id:'zdywm',
+		       			title : '<b>字段英文名</b>',
+		       			type:"string",
+		       			columnClass:'text-center'
+		       		},
+		       		{
+		       			id:'zdzwm',
+		       			title : '<b>字段中文名</b>',
+		       			type:"string",
+		       			columnClass:'text-center'
+		       		},
+		       		{
+		       			id:'zdlx',
+		       			title : '<b>字段类型</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				if("0"==value){
+		       					return "字符型";
+		       				}
+		       				if("1"==value){
+		       					return "日期型";
+		       				}
+		       				if("2"==value){
+		       					return "下拉框";
+		       				}
+		       				if("3"==value){
+		       					return "文本框";
+		       				}
+		       				if("4"==value){
+		       					return "复选框";
+		       				}
+		       				if("5"==value){
+		       					return "数字型";
+		       				}
+		       				if("6"==value){
+		       					return "可输入下拉框";
+		       				}
+		       				if(""==value){
+		       					return "";
+		       				}
+		       			}
+		       		},
+		       		{
+		       			id:'sfbtx',
+		       			title : '<b>是否必填项</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				if("0"==value){
+		       					return "否";
+		       				}
+		       				if("1"==value){
+		       					return "是";
+		       				}
+		       				if(""==value){
+		       					return "";
+		       				}
+		       			}
+		       		},
+		       		{
+		       			id:'sfcxx',
+		       			title : '<b>是否查询项</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				if("0"==value){
+		       					return "否";
+		       				}
+		       				if("1"==value){
+		       					return "是";
+		       				}
+		       				if(""==value){
+		       					return "";
+		       				}
+		       			}
+		       		},
+		       		{
+		       			id:'sfgyxxx',
+		       			title : '<b>是否显示项</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				if("0"==value){
+		       					return "否";
+		       				}
+		       				if("1"==value){
+		       					return "是";
+		       				}
+		       				if(""==value){
+		       					return "";
+		       				}
+		       			}
+		       		},
+		       		
+		       		{
+		       			id:'id',
+		       			title : '<b>操作</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       			//存储record类，编辑时使用
+		       				var html = ''; 	
+		       				html += '<div class="btnDiv">';
+		       				//html += '	<a title="查看" class="btn btn-default btn-xs add" data-id="'+value+'">增加</a>';
+	       					html += '	<a title="修改" class="btn btn-info btn-xs update" data-id="'+value+'">修改</a>';
+	       					html += '	<a title="删除" class="btn btn-warning btn-xs delete" data-id="'+value+'">删除</a>';
+		       				html += '</div>';
+			       			
+		       				return html;
+		       			}
+
+		       		}
+		       		]
+	});
+	refreshTableFieldGrid();
+}
+
+function refreshTableFieldGrid() {
+	tableFieldGrid.parameters = getTableFieldParameters();
+	tableFieldGrid.load();
+}
+function getTableFieldParameters() {
+	var id = $('[name="tableNameId"]').val();
+	
+	return {"id":id};
+}
+
+
+
+

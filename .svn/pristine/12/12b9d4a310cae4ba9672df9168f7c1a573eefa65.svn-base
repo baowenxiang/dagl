@@ -1,0 +1,37 @@
+
+##iframe页面主体
+<section class="content">
+
+
+   <form class="layui-form" method="post" action="searchIndex" style="margin:150px auto;width:50%">
+   
+   	 <div class="layui-form-item">
+     <label class="layui-form-label">关键词</label>
+	    <div class="layui-input-block" ">
+	      <input type="text" id="key" name="key" required  lay-verify="required" placeholder="请输入检索关键词" autocomplete="off" class="layui-input">
+	    </div>
+     </div>
+     
+   	 <div class="layui-form-item">
+	    <div class="layui-input-block">
+	      <button class="layui-btn submit" lay-submit lay-filter="formDemo">检索</button>
+	      <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+	    </div>
+     </div>
+     
+   </form>
+</section>
+
+<!-- layer -->
+<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+<link href="${rc.contextPath}/resources/css/web/common/import.css" rel="stylesheet">
+<!--<script src="https://unpkg.com/vue/dist/vue.js"></script>-->
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<!--<script src="${rc.contextPath}/resources/plugins/vue/vue.min.js" type="text/javascript"></script>-->
+<script src="${rc.contextPath}/resources/js/web/table/import.js"></script>
+	
+<script>
+	
+</script>
+
+	

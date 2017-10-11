@@ -1,0 +1,91 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>StartUpWeb</groupId>
+  <artifactId>StartUpWeb</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <dependencies>
+		<!--start 编译需要，Tomcat有 -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet.jsp</groupId>
+			<artifactId>javax.servlet.jsp-api</artifactId>
+			<version>2.3.1</version>
+			<scope>provided</scope>
+		</dependency>
+		<!--end 编译需要，Tomcat有 -->
+		<dependency>
+			<groupId>cn.proem.platform</groupId>
+			<artifactId>proem-core</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>cn.proem.platform</groupId>
+			<artifactId>proem-bpm</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<!--start JDBC -->
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>sqljdbc</artifactId>
+			<version>4</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.24</version>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<version>11.2.0.1.0</version>
+		</dependency>
+		<!--end JDBC -->
+		<dependency>
+	   		<groupId>org.apache.cxf</groupId>
+	   		<artifactId>cxf-api</artifactId>
+	   		<version>2.5.0</version>
+	  	</dependency>
+	  	<dependency>
+	   		<groupId>org.apache.cxf</groupId>
+	   		<artifactId>cxf-rt-frontend-jaxws</artifactId>
+	   		<version>2.5.0</version>
+	  	</dependency>
+	  	<dependency>
+	   		<groupId>org.apache.cxf</groupId>
+	   		<artifactId>cxf-rt-bindings-soap</artifactId>
+	   		<version>2.5.0</version>
+	  	</dependency>
+	  	<dependency>
+	  		<groupId>org.apache.cxf</groupId>
+	   		<artifactId>cxf-rt-transports-http</artifactId>
+	   		<version>2.5.0</version>
+	  	</dependency>
+	  	<dependency>
+	   		<groupId>org.apache.cxf</groupId>
+	   		<artifactId>cxf-rt-ws-security</artifactId>
+	   		<version>2.5.0</version>
+	  	</dependency>
+	  	<dependency>
+        	<groupId>javax.mail</groupId>
+        	<artifactId>mail</artifactId>
+        	<version>1.4</version>
+           	<exclusions>
+            	<exclusion>
+            		<groupId>javax.activation</groupId>
+           			<artifactId>activation</artifactId>
+           		</exclusion>
+            </exclusions>
+    	</dependency>
+	  	
+	</dependencies>
+  
+  <build>
+    <finalName>StartUpWeb</finalName>
+  </build>
+</project>

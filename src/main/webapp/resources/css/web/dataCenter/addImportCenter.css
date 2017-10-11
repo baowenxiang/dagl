@@ -1,0 +1,60 @@
+@CHARSET "UTF-8";
+/*附件样式*/
+.file-div,.yw-file-div{
+	overflow: hidden;
+	padding: 0;
+}
+.file-div>div,.yw-file-div>div{
+	width:100%,
+   	display: inline-block;
+   	height: 34px;
+   	line-height: 34px;
+   	border: 1px solid #CCCCCC;
+   	margin-bottom: 2px;
+   	padding: 0 12px;
+   	//text-overflow: ellipsis; 
+	//white-space: nowrap; 
+	//overflow: hidden;
+}
+.file-div>div>div,.yw-file-div>div>div{
+	width:70%;
+   	display: inline-block;
+   	height: 34px;
+   	line-height: 34px;
+   	//border: 1px solid #CCCCCC;
+   	margin-bottom: 2px;
+   	//padding: 0 12px;
+   	text-overflow: ellipsis; 
+	white-space: nowrap; 
+	overflow: hidden;
+   }
+
+
+   .file-div>div>div>a,.yw-file-div>div>div>a{
+	cursor: pointer;
+   	padding-left: 10px;
+	text-decoration:none;
+   	color: #2C6F89;
+   }
+   .file-div>div>div>span.file-remove,.yw-file-div>div>div>span.file-remove{
+   	cursor: pointer;
+   	position: absolute;
+   	right: 10px;
+   }
+.file-div>div>div>span.file-download{
+   	cursor: pointer;
+   	position: absolute;
+   	right: 35px;
+   }
+
+.file-div>div>div>span.file-size,.yw-file-div>div>div>span.file-size{
+   	position: absolute;
+   	right: 60px;
+   }
+
+   .file-div>div>div>span.file-remove:HOVER,.yw-file-div>div>div>span.file-remove:HOVER{
+   	color: #A70000;
+   }
+.file-div>div>div>span.file-download:HOVER{
+   	color: #A70000;
+   }

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/filenum/addColumn.css" rel="stylesheet">
+</head>
+<body>
+<div class="site-text site-block">
+	
+    <form class="layui-form" method="post">
+	    <div class="layui-form-item">
+			<label class="layui-form-label">选择添加字段</label>
+	        <div class="layui-input-block">
+				<input type="radio" name="column" value="tableField" title="表字段">
+	          	<input type="radio" name="column" value="text" title="自定义字符串">
+	          	<input type="radio" name="column" value="number" title="流水号">
+	        </div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+				<a  class="layui-btn layui-btn-default add" >确定</a>
+				<a class="layui-btn layui-btn-primary closeup" >关闭</a>
+			</div>
+		</div>
+    </form>
+</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/filenum/fileNum.js"></script>
+<script>
+	layui.use('form', function(){
+	  var form = layui.form();
+	});
+</script>
+
+</html>
+	

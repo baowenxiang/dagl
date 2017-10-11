@@ -1,0 +1,1145 @@
+package cn.proem.eep.util;
+
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import cn.proem.eep.entity.AgentEnt;
+import cn.proem.eep.entity.AgentEntBlock;
+import cn.proem.eep.entity.AgentEntRelation;
+import cn.proem.eep.entity.ArchivalNo;
+import cn.proem.eep.entity.Authorization;
+import cn.proem.eep.entity.BusEnt;
+import cn.proem.eep.entity.BusEntBlock;
+import cn.proem.eep.entity.ContentDesc;
+import cn.proem.eep.entity.DigitalAttribute;
+import cn.proem.eep.entity.DocData;
+import cn.proem.eep.entity.Document;
+import cn.proem.eep.entity.ElecAttribute;
+import cn.proem.eep.entity.ElecRecdsEncaPkg;
+import cn.proem.eep.entity.ElecsignatureBlock;
+import cn.proem.eep.entity.EncaContent;
+import cn.proem.eep.entity.Encode;
+import cn.proem.eep.entity.EncodeData;
+import cn.proem.eep.entity.FormalFeature;
+import cn.proem.eep.entity.LockSignature;
+import cn.proem.eep.entity.ObjectFactory;
+import cn.proem.eep.entity.PrivilegeManagement;
+import cn.proem.eep.entity.RecdData;
+import cn.proem.eep.entity.RecdEntRelation;
+import cn.proem.eep.entity.RecdEntity;
+import cn.proem.eep.entity.RecdEntityBlock;
+import cn.proem.eep.entity.SignedObj;
+import cn.proem.eep.entity.StemFrom;
+import cn.proem.eep.entity.StorageLocation;
+import cn.proem.eep.entity.SubWord;
+
+public class EEPUtil {
+	// EEP对象创建方法
+	private static ObjectFactory factory = new ObjectFactory();
+	
+	public static final String PKG_DESC = "本EEP根据中华人民共和国档案行业标准DA/T 48-2009《基于XML的电子文件封装规范》生成";
+	public static final String CODE_DESC = "本封装包中“编码数据”元素存储的是计算机文件二进制流的Base64编码，"
+										 + "有关Base64编码规则参见IETF RFC 2045多用途邮件扩展（MIME）"
+										 + "第一部分：互联网信息体格式。当提取和显现封装在编码数据元素中的计算机文"
+										 + "件时，应对Base64编码进行反编码，并依据封装包中“反编码关键字”元素中记录的值还原计算机文件的扩展名";
+	public static final String PKG_NEW = "原始型";
+	public static final String PKG_FIXED = "修改型";
+	
+	public static final String PKG_NEW_DESC = "本封装包包含电子文件数据及其元数据，原始封装，未经修改";
+	public static final String PKG_FIXED_DESC = "本封装包包含电子文件数据及其元数据，系修改封装，在保留原封装包的基础上，添加了修改层";
+	
+	// 封装包格式描述
+	private String pkgdesc;
+	// 版本
+	private XMLGregorianCalendar version;
+	
+	/**
+	 * @Description: 电子文件封装包
+	 * @param pkgdesc
+	 * @param version
+	 * @throws Exception
+	 */
+	public EEPUtil(String pkgdesc, Date version) throws Exception{
+		this.pkgdesc = pkgdesc;
+		XMLGregorianCalendar calendar = null;
+		try {
+			GregorianCalendar cal = new GregorianCalendar();
+			cal.setTime(version);
+			calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
+		} catch (DatatypeConfigurationException e) {
+			throw new Exception("设置版本失败");
+		}
+		this.version = calendar;
+	}
+	
+	public ElecRecdsEncaPkg createElecRecdsEncaPkg(SignedObj signedobj){
+		ElecRecdsEncaPkg elecRecdsEncaPkg = factory.createElecRecdsEncaPkg();
+		// 封装包格式描述
+		elecRecdsEncaPkg.setEncaPkgFormatDesc(this.pkgdesc);
+		// 版本
+		elecRecdsEncaPkg.setVersion(this.version);
+		// 被签名对象
+		elecRecdsEncaPkg.setSignedObj(signedobj);
+		return elecRecdsEncaPkg;
+	}
+	
+	/**
+	 * @Method: createSignedObj 
+	 * @Description: 创建签名对象
+	 * @param createtime 封装包创建时间
+	 * @param creater  封装包创建单位
+	 * @param content  封装内容
+	 * @throws Exception
+	 * @return SignedObj
+	 * @throws
+	 */
+	public SignedObj createSignedObj(Date createtime, String creater, EncaContent content) throws Exception{
+		return this.createSignedObj(PKG_NEW, createtime, creater, content);
+	}
+	
+	/**
+	 * @Method: createSignedObj 
+	 * @Description: 创建签名对象
+	 * @param pkgtype 封装包类型
+	 * @param createtime 封装包创建时间
+	 * @param creater 封装包创建单位
+	 * @param content 封装内容/修改封装内容
+	 * @throws Exception
+	 * @return SignedObj
+	 * @throws
+	 */
+	public SignedObj createSignedObj(String pkgtype, Date createtime, String creater, EncaContent content) throws Exception{
+		return this.createSignedObj(PKG_NEW, PKG_NEW_DESC, createtime, creater, content, this.version);
+	}
+	
+	/**
+	 * @Method: createSignedObj 
+	 * @Description: 创建被签名对象
+	 * @param pkgtype 封装包类型
+	 * @param pkgdesc 封装包类型描述
+	 * @param createtime 封装包创建时间
+	 * @param creater 封装包创建单位
+	 * @param content 封装内容/修改封装内容
+	 * @param version eep版本
+	 * @throws Exception
+	 * @return SignedObj
+	 * @throws
+	 */
+	public SignedObj createSignedObj(String pkgtype, String pkgdesc, Date createtime, String creater, EncaContent content, XMLGregorianCalendar version) throws Exception{
+		XMLGregorianCalendar calendar = null;
+		GregorianCalendar cal = new GregorianCalendar();
+
+		try{
+			cal.setTime(createtime);
+			calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
+		} catch (DatatypeConfigurationException e) {
+			throw new Exception("签名对象日期设置错误");
+		}
+		
+		SignedObj obj = factory.createSignedObj();
+		// 封装包类型
+		obj.setEncaPkgType(pkgtype);
+		// 封装包类型描述
+		obj.setEncaPkgTypeDesc(pkgdesc);
+		// 封装包创建时间
+		obj.setEncaPkgCreateTime(calendar);
+		// 封装包创建单位
+		obj.setEncaPkgCreator(creater);
+		// 封装内容或修改内容
+		obj.setEncaContent(content);
+		// eep版本
+		obj.setEEPVersion(version);
+		return obj;
+	}
+	
+	
+	public ElecsignatureBlock createElecsignatureBlock(){
+		return null;
+	}
+	
+	public LockSignature createLockSignature(){
+		return null;
+	}
+	
+	/**
+	 * @Method: createEncaContent 
+	 * @Description: 创建封装内容
+	 * @param @param recdEnt 文件实体块
+	 * @param @param busEnt 业务实体块
+	 * @param @param agentEnt  机构人员实体块
+	 * @param @return 封装内容
+	 * @return EncaContent
+	 * @throws
+	 */
+	public EncaContent createEncaContent(RecdEntityBlock recdEnt, BusEntBlock busEnt, AgentEntBlock agentEnt){
+		EncaContent content = factory.createEncaContent();
+		// 文件实体块
+		content.setBusEntBlock(busEnt);
+		// 业务实体块
+		content.setRecdEntityBlock(recdEnt);
+		// 机构人员实体块
+		content.setAgentEntBlock(agentEnt);
+		return content;
+	}
+	
+	/**
+	 * @Method: createBusEntBlock 
+	 * @Description: 创建业务实体
+	 * @param busents 业务实体
+	 * @return BusEntBlock
+	 * @throws
+	 */
+	public BusEntBlock createBusEntBlock(List<BusEnt> busents){
+		BusEntBlock busEntBlock = factory.createBusEntBlock();
+		for(BusEnt busent : busents){
+			busEntBlock.getBusEnt().add(busent);
+		}
+		return busEntBlock;
+	}
+	
+	/**
+	 * @Method: createBusEnt 
+	 * @Description: 创建业务实体
+	 * @param busid 业务标识符
+	 * @param peopleid 机构人员标识符
+	 * @param fileid 文件标识符
+	 * @param stateid 业务状态
+	 * @param behaviorid 业务行为
+	 * @param time 行为时间
+	 * @return BusEnt
+	 * @throws
+	 */
+	public BusEnt createBusEnt(String busid, String peopleid, String fileid, 
+			   String stateid, String behaviorid, String time){
+		return this.createBusEnt(busid, peopleid, fileid, stateid, behaviorid, time, null, null);
+	}
+	
+	/**
+	 * @Method: createBusEnt 
+	 * @Description: 创建业务实体
+	 * @param @param busid 业务标识符
+	 * @param @param peopleid 机构人员标识符
+	 * @param @param fileid 文件标识符
+	 * @param @param stateid 业务状态
+	 * @param @param behaviorid 业务行为
+	 * @param @param time 行为时间
+	 * @param @param reason 行为依据
+	 * @param @param desc 行为描述
+	 * @param @return
+	 * @return BusEnt
+	 * @throws
+	 */
+	public BusEnt createBusEnt(String busid, String peopleid, String fileid, 
+							   String stateid, String behaviorid, String time,
+							   String reason, String desc){
+		BusEnt busEnt = factory.createBusEnt();
+		// 业务标识符
+		busEnt.setBusEntId(busid);
+		// 机构人员标识符
+		busEnt.setAgentEntId(peopleid);
+		// 文件标识符
+		busEnt.setRecdId(fileid);
+		// 业务状态
+		busEnt.setBusState(stateid);
+		// 业务行为
+		busEnt.setBusBehavior(behaviorid);
+		// 行为时间
+		busEnt.setBehaviorTime(time);
+		// 行为依据
+		if(reason != null) busEnt.setBehaviorReason(reason);
+		// 行为描述
+		if(desc != null) busEnt.setBehaviorDesc(desc);
+		return busEnt;
+	}
+	
+	/**
+	 * @Method: createAgentEntBlock 
+	 * @Description: 机构人员实体块
+	 * @param agents 机构人员实体
+	 * @return AgentEntBlock
+	 * @throws
+	 */
+	public AgentEntBlock createAgentEntBlock(List<AgentEnt> agents){
+		return this.createAgentEntBlock(agents, null);
+	}
+	/**
+	 * @Method: createAgentEntBlock 
+	 * @Description: 机构人员实体块
+	 * @param agents 机构人员实体
+	 * @param relations 机构人员实体关系
+	 * @return AgentEntBlock
+	 * @throws
+	 */
+	public AgentEntBlock createAgentEntBlock(List<AgentEnt> agents, List<AgentEntRelation> relations){
+		AgentEntBlock agentEntBlock = factory.createAgentEntBlock();
+		// 机构人员实体
+		for(AgentEnt agent: agents){
+			agentEntBlock.getAgentEnt().add(agent);
+		}
+		// 机构人员实体关系
+		if(relations != null){
+			for(AgentEntRelation relation : relations){
+				agentEntBlock.getAgentEntRelation().add(relation);
+			}
+		}
+		return agentEntBlock;
+	}
+	
+	/**
+	 * @Method: createAgentEnt 
+	 * @Description: 机构人员实体
+	 * @param agentid 机构人员标识符
+	 * @param agenttype 机构人员类型
+	 * @param agentname 机构人员名称
+	 * @param unitcode 组织机构代码
+	 * @param position 个人职位
+	 * @return AgentEnt
+	 * @throws
+	 */
+	public AgentEnt createAgentEnt(String agentid, String agenttype, String agentname, String unitcode, String position){
+		AgentEnt agentEnt = factory.createAgentEnt();
+		// 机构人员标识符
+		agentEnt.setAgentEntId(agentid);
+		// 机构人员类型
+		if(agenttype != null) agentEnt.setInstPeopleType(agenttype);
+		// 机构人员名称
+		agentEnt.setInstPeopleName(agentname);
+		// 组织机构代码
+		if(unitcode != null) agentEnt.setInstUnitCode(unitcode);
+		// 个人职位
+		if(position != null) agentEnt.setPeoplePosition(position);
+		return agentEnt;
+	}
+
+	/**
+	 * @Method: createAgentEnt 
+	 * @Description: 机构人员实体
+	 * @param agentid 机构人员标识符
+	 * @param agentname 机构人员名称
+	 * @return AgentEnt
+	 * @throws
+	 */
+	public AgentEnt createAgentEnt(String agentid, String agentname){
+		return this.createAgentEnt(agentid, null, agentname, null, null);
+	}
+	
+	/**
+	 * @Method: createAgentEntRelation 
+	 * @Description: 机构人员实体关系
+	 * @param agentid 机构人员标识符
+	 * @param relatedid 被关联机构人员标识符
+	 * @return AgentEntRelation
+	 * @throws
+	 */
+	public AgentEntRelation createAgentEntRelation(String agentid, String relatedid, String relationtype){
+		return this.createAgentEntRelation(agentid, relatedid, null, null, null);
+	}
+
+	
+	/**
+	 * @Method: createAgentEntRelation 
+	 * @Description: 机构人员实体关系
+	 * @param agentid 机构人员标识符
+	 * @param relatedid 被关联机构人员标识符
+	 * @param relationtype 关系类型
+	 * @param relation 关系
+	 * @param relationdesc 关系描述
+	 * @return AgentEntRelation
+	 * @throws
+	 */
+	public AgentEntRelation createAgentEntRelation(String agentid, String relatedid, String relationtype, String relation, String relationdesc){
+		AgentEntRelation agentEntRelation = factory.createAgentEntRelation();
+		// 机构人员标识符
+		agentEntRelation.setAgentEntId(agentid);
+		// 被关联机构人员标识符
+		agentEntRelation.setRelationAgentId(relatedid);
+		// 关系类型
+		if(relationtype != null) agentEntRelation.setRelationType(relationtype);
+		// 关系
+		if(relation != null) agentEntRelation.setRelation(relation);
+		// 关系描述
+		if(relationdesc != null) agentEntRelation.setRelationDesc(relationdesc);
+		
+		return agentEntRelation;
+	}
+	/**
+	 * 
+	 * @Method: createRecdEntityBlock 
+	 * @Description: 创建文件实体块
+	 * @param record 文件实体
+	 * @param relations 文件关系实体
+	 * @return RecdEntityBlock
+	 * @throws
+	 */
+	public RecdEntityBlock createRecdEntityBlock(RecdEntity record, List<RecdEntRelation> relations){
+		RecdEntityBlock recdEntityBlock = factory.createRecdEntityBlock();
+		recdEntityBlock.setRecdEntity(record);
+		for(RecdEntRelation relation : relations){
+			recdEntityBlock.getRecdEntRelation().add(relation);
+		}
+		return recdEntityBlock ;
+	}
+	
+	/**
+	 * @Method: createRecdEntityBlock 
+	 * @Description: 创建文件实体块
+	 * @param @param record
+	 * @param @return
+	 * @return RecdEntityBlock
+	 * @throws
+	 */
+	public RecdEntityBlock createRecdEntityBlock(RecdEntity record){
+		RecdEntityBlock recdEntityBlock = factory.createRecdEntityBlock();
+		recdEntityBlock.setRecdEntity(record);
+		return recdEntityBlock ;
+	}
+	
+	/**
+	 * @Method: createRecdEntity 
+	 * @Description: 创建文件实体
+	 * @param arrgs 聚合层次
+	 * @param stemFrom 来源
+	 * @param elecDocNo 电子文件号
+	 * @param archiveNo 档号
+	 * @param desc 内容描述
+	 * @param feature 形式特征
+	 * @param location 存储位置
+	 * @param privilege 权限管理
+	 * @param doc 文件数据
+	 * @return RecdEntity
+	 * @throws
+	 */
+	public RecdEntity createRecdEntity(String arrgs, StemFrom stemFrom, String elecDocNo,
+			ArchivalNo archiveNo, ContentDesc desc, FormalFeature feature,
+			StorageLocation location, PrivilegeManagement privilege, RecdData doc){
+				RecdEntity recordEntity = factory.createRecdEntity();
+				// 聚合层次
+				recordEntity.setAggrhierarchy(arrgs);
+				// 来源
+				recordEntity.setStemFrom(stemFrom);
+				// 电子文件号
+				recordEntity.setElecDocNo(elecDocNo);
+				// 档号
+				recordEntity.setArchivalNo(archiveNo);
+				// 内容描述
+				recordEntity.setContentDesc(desc);
+				// 形式特征
+				recordEntity.setFormalFeature(feature);
+				// 存储位置
+				recordEntity.setStorageLocation(location);
+				// 权限管理
+				recordEntity.setPrivilegeManagement(privilege);
+				// 文件数据
+				recordEntity.setRecdData(doc);
+				return recordEntity;
+	}										
+	
+	/**
+	 * @Method: createRecdEntity 
+	 * @Description: 创建文件实体
+	 * @param arrgs 聚合层次
+	 * @param stemFrom 来源
+	 * @param elecDocNo 电子文件号
+	 * @param archiveNo 档号
+	 * @param desc 内容描述
+	 * @param feature 形式特征
+	 * @param location 存储位置
+	 * @param privilege 权限管理
+	 * @param systeminfos 信息系统描述
+	 * @param remarks 附注
+	 * @param doc 文件数据
+	 * @return RecdEntity
+	 * @throws
+	 */
+	public RecdEntity createRecdEntity(String arrgs, StemFrom stemFrom, String elecDocNo,
+									ArchivalNo archiveNo, ContentDesc desc, FormalFeature feature,
+									StorageLocation location, PrivilegeManagement privilege, List<String> systeminfos,
+									List<String> remarks, RecdData doc){
+		RecdEntity recordEntity = factory.createRecdEntity();
+		// 聚合层次
+		recordEntity.setAggrhierarchy(arrgs);
+		// 来源
+		recordEntity.setStemFrom(stemFrom);
+		// 电子文件号
+		recordEntity.setElecDocNo(elecDocNo);
+		// 档号
+		recordEntity.setArchivalNo(archiveNo);
+		// 内容描述
+		recordEntity.setContentDesc(desc);
+		// 形式特征
+		recordEntity.setFormalFeature(feature);
+		// 存储位置
+		recordEntity.setStorageLocation(location);
+		// 权限管理
+		recordEntity.setPrivilegeManagement(privilege);
+		// 信息系统描述
+		if(systeminfos != null){
+			for(String sys : systeminfos){
+				recordEntity.getInfoSysDesc().add(sys);
+			}
+		}
+		// 附注
+		if(remarks != null){
+			for(String remark : remarks){
+				recordEntity.getRemark().add(remark);
+			}
+		}
+		// 文件数据
+		recordEntity.setRecdData(doc);
+		return recordEntity;
+	}
+	
+	/**
+	 * @Method: getRecdData 
+	 * @Description: 创建文件数据
+	 * @param docs
+	 * @return RecdData
+	 * @throws
+	 */
+	public RecdData createRecdData(List<Document> docs){
+		RecdData recdData = factory.createRecdData();
+		// 文档
+		for(Document doc : docs){
+			recdData.getDocument().add(doc);
+		}
+		return recdData;
+	}
+	
+	/**
+	 * @Method: createDocument 
+	 * @Description: 创建文档
+	 * @param title 题名
+	 * @param docid 文档标识符
+	 * @param docno 文档序号
+	 * @param attach 文档主从声明
+	 * @param datas 文档数据
+	 * @return Document
+	 * @throws
+	 */
+	public Document createDocument(String title, String docid, String docno, String attach, List<DocData> datas){
+		Document doc = factory.createDocument();
+		// 文档标识符
+		doc.setDocumentId(docid);
+		// 文档序号
+		if(docno != null) doc.setRecdNo(docno);
+		// 文档主从声明
+		if(attach != null) doc.setStateOnMainOrAttament(attach);
+		// 题名
+		if(title != null) doc.setTitle(title);
+		// 文档数据
+		for(DocData data : datas){
+			doc.getDocData().add(data);
+		}
+		return doc;
+	}
+	
+	/**
+	 * @Method: creatDocData 
+	 * @Description: 创建文档数据
+	 * @param dataid 文档数据ID
+	 * @param encodes 编码
+	 * @return DocData
+	 * @throws
+	 */
+	public DocData creatDocData(String dataid, List<Encode> encodes){
+		DocData doc = factory.createDocData();
+		// 编码
+		for(Encode encode : encodes){
+			doc.getEncode().add(encode);
+		}
+		// 文档数据ID
+		doc.setRecdDataId(dataid);
+		return doc;
+	}
+	
+	/**
+	 * @Method: createEncode 
+	 * @Description: 创建编码
+	 * @param elec 电子属性
+	 * @param desc 编码描述
+	 * @param renderKey 反编码关键字
+	 * @param data 编码数据
+	 * @return Encode
+	 * @throws
+	 */
+	public Encode createEncode(ElecAttribute elec, String desc, String renderKey, EncodeData data){
+		return this.createEncode(elec, null, desc, renderKey, data);
+	}
+	
+	/**
+	 * @Method: createEncode 
+	 * @Description: 创建编码
+	 * @param elec 电子属性
+	 * @param attr 数字化属性
+	 * @param desc 编码描述
+	 * @param renderKey 反编码关键字
+	 * @param data 编码数据
+	 * @return Encode
+	 * @throws
+	 */
+	public Encode createEncode(ElecAttribute elec, DigitalAttribute attr, String desc, String renderKey, EncodeData data){
+		Encode encode = factory.createEncode();
+		
+		// 电子属性
+		encode.setElecAttribute(elec);
+		// 数字化属性
+		if(attr != null) encode.setDigitalAttribute(attr);
+		// 编码描述
+		encode.setRenderKey(desc);
+		// 反编码关键字
+		encode.setEocodeDesc(renderKey);
+		// 编码数据
+		encode.setEncodeData(data);
+		
+		return encode;
+	}
+	
+	/**
+	 * @Method: createDigitalAttribute 
+	 * @Description: 创建数字化属性
+	 * @param scanradio 扫描分辨率
+	 * @param scancol 扫描色彩模式
+	 * @return DigitalAttribute
+	 * @throws
+	 */
+	public DigitalAttribute createDigitalAttribute(String scanradio,String scancol){
+		return this.createDigitalAttribute(null, scanradio, scancol, null);
+	}
+	
+	/**
+	 * @Method: createDigitalAttribute 
+	 * @Description: 创建数字化属性
+	 * @param format 数字化对象形态
+	 * @param scanradio 扫描分辨率
+	 * @param scancol 扫描色彩模式
+	 * @param scancom 图像压缩方案
+	 * @return DigitalAttribute
+	 * @throws
+	 */
+	public DigitalAttribute createDigitalAttribute(String format, String scanradio,String scancol,String scancom){
+		DigitalAttribute attr = factory.createDigitalAttribute();
+		// 数字化对象形态
+		if(format != null) attr.setDigitalFormat(format);
+		// 扫描分辨率
+		attr.setScanRatio(scanradio);
+		// 扫描色彩模式
+		attr.setScanClrMode(scancol);
+		// 图像压缩方案
+		if(format != null) attr.setScanCompressSchema(scancom);
+		return attr;
+	}
+	
+	/**
+	 * @Method: createElecAttribute 
+	 * @Description: 创建电子属性
+	 * @param filename 计算机文件名
+	 * @param filesize 计算机文件大小
+	 * @return ElecAttribute
+	 * @throws
+	 */
+	public ElecAttribute createElecAttribute(String filename, String filesize){
+		return this.createElecAttribute(null, filename, filesize, null);
+	}
+	
+	/**
+	 * @Method: createElecAttribute 
+	 * @Description: 创建电子属性
+	 * @param formatInfo 格式信息
+	 * @param filename 计算机文件名
+	 * @param filesize 计算机文件大小
+	 * @param prog 文档创建程序
+	 * @return ElecAttribute
+	 * @throws
+	 */
+	public ElecAttribute createElecAttribute(String formatInfo, String filename, String filesize, String prog){
+		ElecAttribute elecAttribute = factory.createElecAttribute();
+		// 格式信息
+		if(formatInfo != null) elecAttribute.setFormatInfo(formatInfo);
+		// 计算机文件名
+		elecAttribute.setCompFileName(filename);
+		// 计算机文件大小
+		elecAttribute.setCompFileSize(filesize);
+		// 文档创建程序
+		if(prog != null) elecAttribute.setDocCreateProg(prog);
+		return elecAttribute;
+	}
+	
+	/**
+	 * @Method: createEncodeData 
+	 * @Description: 创建编码数据
+	 * @param @param dataid
+	 * @param @param relatedid
+	 * @param @param bytes
+	 * @param @return
+	 * @return EncodeData
+	 * @throws
+	 */
+	public EncodeData createEncodeData(String dataid, String relatedid, byte[] bytes){
+		EncodeData data = factory.createEncodeData();
+		// 编码数据ID
+		data.setCodedDataId(dataid);
+		// 引用编码数据ID
+		data.setRefCodedDataId(relatedid);
+		// BASE64值
+		data.setValue(bytes);
+		return data;
+	}
+	/**
+	 * @Method: createPrivilegeManagement 
+	 * @Description: TODO
+	 * @param desc 知识产权说明
+	 * @param authobj 授权对象
+	 * @param authbehavior 授权行为
+	 * @param controlid 控制标识
+	 * @return PrivilegeManagement
+	 * @throws
+	 */
+	public PrivilegeManagement createPrivilegeManagement(String desc, String authobj, String authbehavior, String controlid){
+		PrivilegeManagement privilegeManagement = factory.createPrivilegeManagement();
+		// 知识产权说明
+		if(desc != null) privilegeManagement.setIntePropRightDesc(desc);
+		// 授权
+		if((authobj != null) && (authbehavior != null)){
+			Authorization authorization = factory.createAuthorization();
+			authorization.setAuthorizedObject(authobj);
+			authorization.setAuthorizedBehavior(authbehavior);
+			privilegeManagement.getAuthorization().add(authorization);
+		}
+		// 控制标识
+		if(controlid != null) privilegeManagement.setControlId(controlid);
+		return privilegeManagement;
+	}
+	
+	/**
+	 * @Method: createFormalFeature 
+	 * @Description: 创建形式特征
+	 * @param @param fileGroupType
+	 * @param @return
+	 * @return FormalFeature
+	 * @throws
+	 */
+	public FormalFeature createFormalFeature(String fileGroupType){
+		return this.createFormalFeature(fileGroupType, null, null, null);
+	}
+	/**
+	 * @Method: createFormalFeature 
+	 * @Description: 创建形式特征
+	 * @param @param fileGroupType 文件组合类型
+	 * @param @param pageNum 页数
+	 * @param @param lang 语种
+	 * @param @param script 稿本
+	 * @param @return
+	 * @return FormalFeature
+	 * @throws
+	 */
+	public FormalFeature createFormalFeature(String fileGroupType, BigInteger pageNum, String lang, String script){
+		FormalFeature formalFeature = factory.createFormalFeature();
+		// 文件组合类型
+		formalFeature.setRecdGroupType(fileGroupType);
+		// 页数
+		if(pageNum != null) formalFeature.setPageNum(pageNum);
+		// 语种
+		if(lang != null) formalFeature.setLang(lang);
+		// 稿本
+		if(script != null) formalFeature.setManuscript(script);
+		return formalFeature;
+	}
+	
+	
+	/**
+	 * @Method: createStorageLocation 
+	 * @Description: 创建存储位置
+	 * @param @param carryers 脱机载体编号
+	 * @param @return
+	 * @return StorageLocation
+	 * @throws
+	 */
+	public StorageLocation createStorageLocation(List<String> carryers){
+		return this.createStorageLocation(null, carryers, null, null);
+	}
+	
+	/**
+	 * @Method: createStorageLocation 
+	 * @Description: 创建存储位置
+	 * @param @param current 当前位置
+	 * @param @param carryers 脱机载体编号
+	 * @param @param paths 脱机载体存址
+	 * @param @param micro 缩微号
+	 * @param @return
+	 * @return StorageLocation
+	 * @throws
+	 */
+	public StorageLocation createStorageLocation(String current, List<String> carryers, List<String> paths, String micro){
+		StorageLocation storageLocation = factory.createStorageLocation();
+		// 当前位置
+		if(current != null) storageLocation.setCurrentLocation(current);
+		// 脱机载体编号
+		for(String carryer : carryers){
+			storageLocation.getOfflineCarrierNo().add(carryer);
+		}
+		if(paths != null){
+			// 脱机载体存址
+			for(String path : paths){
+				storageLocation.getOfflineCarrierPath().add(path);
+			}
+		}
+		// 缩微号
+		if(micro != null) storageLocation.setMircoNo(micro);
+		return storageLocation;
+	}
+	/**
+	 * @Method: createContentDesc 
+	 * @Description: 创建内容描述
+	 * @param title 题名
+	 * @param respeople 责任者
+	 * @param date 日期
+	 * @param desen 密级
+	 * @return ContentDesc
+	 * @throws
+	 */
+	public ContentDesc createContentDesc(String title, String respeople, String date, String desen){
+		return this.createContentDesc(title, null, null, null, null, null, null, null, null, null, respeople, date, null, null, null, null, desen, null);
+	}
+	
+	/**
+	 * 
+	 * @Method: createContentDesc 
+	 * @Description: 创建内容描述
+	 * @param title 题名
+	 * @param respeople 责任者
+	 * @param date 日期
+	 * @param desen 密级
+	 * @param period 保密期限
+	 * @return ContentDesc
+	 * @throws
+	 */
+	public ContentDesc createContentDesc(String title, String respeople, String date, String desen, String period){
+		return this.createContentDesc(title, null, null, null, null, null, null, null, null, null, respeople, date, null, null, null, null, desen, period);
+	}
+											
+	/**
+	 * @Method: createContentDesc 
+	 * @Description: 创建内容描述
+	 * @param title 题名
+	 * @param patitle 并列题名
+	 * @param subtitle 副题名
+	 * @param titledesc 说明题名文字
+	 * @param subwords 主题词
+	 * @param keyword 关键词
+	 * @param peopleName 人名
+	 * @param summary 摘要
+	 * @param categoryNo 分类号
+	 * @param fileno 文件编号
+	 * @param respeople 责任者
+	 * @param date 日期
+	 * @param doctype 文种
+	 * @param urg 紧急程度
+	 * @param recv 主送
+	 * @param cc 抄送
+	 * @param desen 密级
+	 * @param period 保密期限
+	 * @return ContentDesc
+	 * @throws
+	 */
+	public ContentDesc createContentDesc(String title, String patitle, String subtitle, 
+										String titledesc, List<String> subwords, String keyword,
+										String peopleName, String summary, String categoryNo, String fileno,
+										String respeople, String date, String doctype, String urg, String recv, String cc,
+										String desen, String period){
+		ContentDesc contentDesc = factory.createContentDesc();
+		// 题名
+		contentDesc.setTitle(title);
+		// 并列题名
+		if(patitle != null){
+			contentDesc.setPaTitle(patitle);
+		}
+		// 副题名
+		if(subtitle != null){
+			contentDesc.setSubTitle(subtitle);
+		}
+		// 说明题名文字
+		if(titledesc != null){
+			contentDesc.setTitleDesc("说明题文字");
+		}
+		// 主题词
+		if(subwords != null){
+			for(String word : subwords){
+				SubWord subword = factory.createSubWord();
+				subword.setThesaurus(word);
+				contentDesc.getSubWord().add(subword);
+			}
+		}
+		// 关键词
+		if(keyword != null){
+			contentDesc.setKeyWord(keyword);
+		}
+		if(peopleName != null){
+			// 人名
+			contentDesc.setPeopleName(peopleName);
+		}
+		// 摘要
+		if(summary != null){
+			contentDesc.setSummary(summary);
+		}
+		// 分类号
+		if(categoryNo != null){
+			contentDesc.setCategoryNo(categoryNo);
+		}
+		// 文件编号
+		if(fileno != null){
+			contentDesc.setFileNo(fileno);
+		}
+		// 责任者
+		contentDesc.setResponsePeople(respeople);
+		// 日期
+		contentDesc.setDateE(date);
+		// 文种
+		if(doctype != null){
+			contentDesc.setRecdType(doctype);
+		}
+		// 紧急程度
+		if(urg != null){
+			contentDesc.setUrgencyLev(urg);
+		}
+		// 主送
+		if(recv != null){
+			contentDesc.setMainRecv(recv);
+		}
+		// 抄送
+		if(period != null){
+			contentDesc.setCC(cc);
+		}
+		// 密级
+		contentDesc.setDense(desen);
+		// 保密期限
+		if(period != null){
+			contentDesc.setCondfidPeriod(period);
+		}
+		return contentDesc;
+	}
+	/**
+	 * @Method: createArchivalNo 
+	 * @Description: 创建档号
+	 * @param year 年度
+	 * @param storagePeriod 保管期限
+	 * @return ArchivalNo
+	 * @throws
+	 */
+	public ArchivalNo createArchivalNo(XMLGregorianCalendar year, String storagePeriod){
+			return this.createArchivalNo(null, null, year, storagePeriod, null, null, null, null, null, null, null);
+	}
+	
+	/**
+	 * @Method: createArchivalNo 
+	 * @Description: 创建档号
+	 * @param fondNo 全宗号
+	 * @param directoryNo 目录号
+	 * @param year 年度
+	 * @param storagePeriod 保管期限
+	 * @param pageNo 页号
+	 * @return ArchivalNo
+	 * @throws
+	 */
+	public ArchivalNo createArchivalNo(String fondNo, String directoryNo, XMLGregorianCalendar year, String storagePeriod, String pageNo){
+		return this.createArchivalNo(fondNo, directoryNo, year, storagePeriod, null, null, null, null, null, null, pageNo);
+	}
+	/**
+	 * 
+	 * @Method: createArchivalNo 
+	 * @Description: 创建档号
+	 * @param fondNo 全宗号
+	 * @param directoryNo 目录号
+	 * @param year 年度
+	 * @param storagePeriod 保管期限
+	 * @param institutions 机构或问题
+	 * @param classNo 类别号	
+	 * @param roomCaseNo 室编案卷号
+	 * @param tubeCaseNo 馆编案卷号
+	 * @param tubeNo 馆编件号
+	 * @param pageNo 页号
+	 * @return ArchivalNo
+	 * @throws
+	 */
+	public ArchivalNo createArchivalNo(String fondNo, String directoryNo, XMLGregorianCalendar year, String storagePeriod,
+			   String institutions, String classNo, String roomCaseNo, String tubeCaseNo, BigInteger tubeNo, String pageNo){
+			ArchivalNo archivalNo = factory.createArchivalNo();
+			// 全宗号
+			archivalNo.getContent().add(factory.createFondNo(fondNo));
+			// 目录号
+			archivalNo.getContent().add(factory.createDirectoryNo(directoryNo));
+			// 年度
+			archivalNo.getContent().add(factory.createYear(year));
+			// 保管期限
+			archivalNo.getContent().add(factory.createStoragePeriod(storagePeriod));
+			// 机构或问题
+			archivalNo.getContent().add(factory.createInstitutions(institutions));
+			// 类别号
+			archivalNo.getContent().add(factory.createClassNo(classNo));
+			// 室编案卷号
+			archivalNo.getContent().add(factory.createRoomCaseNo(roomCaseNo));
+			// 馆编案卷号
+			archivalNo.getContent().add(factory.createTubeCaseNo(tubeCaseNo));
+			// 馆编件号
+			archivalNo.getContent().add(factory.createTubeNo(tubeNo));
+			// 页号
+			archivalNo.getContent().add(factory.createPageNo(pageNo));
+			return archivalNo;
+	}
+	
+	/**
+	 * @Method: createArchivalNo 
+	 * @Description: 创建档号
+	 * @param fondNo 全宗号
+	 * @param directoryNo 目录号
+	 * @param year 年度
+	 * @param storagePeriod 保管期限
+	 * @param institutions 机构或问题
+	 * @param classNo 类别号
+	 * @param roomCaseNo 室编案卷号
+	 * @param tubeCaseNo 馆编案卷号
+	 * @param roomNo 室编件号
+	 * @param tubeNo 馆编件号
+	 * @param pageNo 页号
+	 * @return ArchivalNo
+	 * @throws
+	 */
+	public ArchivalNo createArchivalNo(String fondNo, String directoryNo, XMLGregorianCalendar year, String storagePeriod,
+									   String institutions, String classNo, String roomCaseNo, String tubeCaseNo,
+									   BigInteger roomNo, BigInteger tubeNo, String pageNo){
+		ArchivalNo archivalNo = factory.createArchivalNo();
+		// 全宗号
+		if(fondNo != null){
+			archivalNo.getContent().add(factory.createFondNo(fondNo));
+		}
+		// 目录号
+		if(directoryNo != null){
+			archivalNo.getContent().add(factory.createDirectoryNo(directoryNo));
+		}
+		// 年度
+		archivalNo.getContent().add(factory.createYear(year));
+		// 保管期限
+		archivalNo.getContent().add(factory.createStoragePeriod(storagePeriod));
+		// 机构或问题
+		if(institutions != null){
+			archivalNo.getContent().add(factory.createInstitutions(institutions));
+		}
+		// 类别号
+		if(classNo != null){
+			archivalNo.getContent().add(factory.createClassNo(classNo));
+		}
+		if(roomCaseNo != null){
+			// 室编案卷号
+			archivalNo.getContent().add(factory.createRoomCaseNo(roomCaseNo));
+		}
+		if(tubeCaseNo != null){
+			// 馆编案卷号
+			archivalNo.getContent().add(factory.createTubeCaseNo(tubeCaseNo));
+		}
+		if((roomNo != null)){
+			// 室编件号
+			archivalNo.getContent().add(factory.createRoomNo(roomNo));
+			if(tubeNo != null){
+				// 馆编件号
+				archivalNo.getContent().add(factory.createTubeNo(tubeNo));
+			}
+		}else{
+			if(tubeNo != null){
+				// 馆编件号
+				archivalNo.getContent().add(factory.createTubeNo(tubeNo));
+			}
+		}
+		if(pageNo != null){
+			// 页号
+			archivalNo.getContent().add(factory.createPageNo(pageNo));
+		}
+		return archivalNo;
+	}
+	
+	/**
+	 * @Method: createStemFrom 
+	 * @Description: 创建档案来源
+	 * @param unit 立档单位名称
+	 * @return StemFrom
+	 * @throws
+	 */
+	public StemFrom createStemFrom(String unit){
+		StemFrom stemFrom = factory.createStemFrom();
+		// 立档单位名称
+		stemFrom.setArchiveFromUnit(unit);
+		return stemFrom;
+	}
+	
+	/**
+	 * @Method: createStemFrom 
+	 * @Description: 创建档案来源
+	 * @param @param archiveName 档案馆名称
+	 * @param @param archiveCode 档案馆代码
+	 * @param @param fondName 全宗名称
+	 * @param @param unit 立档单位名称
+	 * @param @return
+	 * @return StemFrom
+	 * @throws
+	 */
+	public StemFrom createStemFrom(String unit, String archiveName, String archiveCode, String fondName){
+		StemFrom stemFrom = factory.createStemFrom();
+		// 档案馆名称 
+		stemFrom.setArchiveName(archiveName);
+		// 档案馆代码
+		stemFrom.setArchiveCode(archiveCode);
+		// 全宗名称
+		stemFrom.setFondName(fondName);
+		// 立档单位名称
+		stemFrom.setArchiveFromUnit(unit);
+		return stemFrom;
+	}
+	
+	/**
+	 * @Method: createRecdEntRelation 
+	 * @Description: 创建文件实体关系
+	 * @param recordid 文件标识符
+	 * @param relatedid 被关联文件标识符
+	 * @param relationtype 关系类型
+	 * @param rela 关系
+	 * @param desc 关系描述
+	 * @return RecdEntRelation
+	 * @throws
+	 */
+	public RecdEntRelation createRecdEntRelation(String recordid, String relatedid, String relationtype, String rela, String desc){
+		RecdEntRelation relation = factory.createRecdEntRelation();
+		// 文件标识符
+		relation.setRecdId(recordid);
+		// 被关联文件标识符
+		relation.setRelatedRecdId(relatedid);
+		// 关系类型
+		relation.setRelationType(relationtype);
+		// 关系
+		relation.setRelation(rela);
+		// 关系描述
+		relation.setRelationDesc(desc);
+		return relation;
+	}
+	
+	/**
+	 * @Method: createRecdEntRelation 
+	 * @Description: 创建文件实体关系
+	 * @param recordid 文件标识符
+	 * @param relatedid 被关联文件标识符
+	 * @return RecdEntRelation
+	 * @throws
+	 */
+	public RecdEntRelation createRecdEntRelation(String recordid, String relatedid){
+		RecdEntRelation relation = factory.createRecdEntRelation();
+		// 文件标识符
+		relation.setRecdId(recordid);
+		// 被关联文件标识符
+		relation.setRelatedRecdId(relatedid);
+		return relation;
+	}
+	
+}

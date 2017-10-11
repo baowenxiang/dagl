@@ -1,0 +1,563 @@
+
+##iframe页面主体
+<section class="content" id="content">
+    <div class="row" style="margin-bottom:5px;">
+        <div class="col-md-12">
+            <table id="ml">
+                <tr>
+                    <td><small>门&emsp;&emsp;类:&emsp;</small></td>
+                    <td>
+                        <button name='ml_all' class="btn btn-primary btn-xs active" data-toggle="button" aria-pressed="false">全部</button>
+                        #foreach($ml in $!{mls})
+                            <button name='$!{ml.lx}' class="btn btn-primary btn-xs" data-toggle="button" aria-pressed="false">$!{ml.lxm}</button>
+                        #end
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:5px;">
+      <div class="col-md-12">
+        <small>年&emsp;&emsp;份:&emsp;从&nbsp;</small>
+        <select id="from">
+             #foreach($nd in $!{nds}) 
+                <option value='$!{nd}'>$!{nd}</option>
+             #end
+        </select>
+        <small>到&nbsp;</small>
+        <select id="to">
+            #foreach($nd in $!{nds}) 
+                <option value='$!{nd}' #if($velocityCount==$nds.size()) selected #end>$!{nd}</option>
+             #end
+        </select>
+        &nbsp;&nbsp;
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:5px;">
+        <div class="col-md-12">
+             <table id="bgqx">
+                <tr>
+                    <td><small>保管期限:&emsp;</small></td>
+                    <td>
+                        <select>
+                            <option value='bgqx_all' selected>全部</option>
+                        #foreach($bgqx in $!{bgqxs}) 
+                            <option value='$!{bgqx.lx}' >$!{bgqx.lxm}</option>
+                        #end
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:5px;">
+        <div class="col-md-12">
+             <table id="mj">
+                <tr>
+                    <td><small>密&emsp;&emsp;级:&emsp;</small></td>
+                    <td>
+                        <select>
+                            <option value='mj_all' selected>全部</option>
+                        #foreach($mj in $!{mjs}) 
+                            <option value='$!{mj.lx}' >$!{mj.lxm}</option>
+                        #end
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1 pull-right">
+            <button type="button" id="start" class="btn btn-block btn-info btn-sm">确认</button>
+        </div>
+         
+    </div>
+    <div class="row reportTitle" id="reportCaption" hidden>
+        <div class="col-md-12 text-center">
+            <h3 id="report_caption">####~####年度 档案-文件级 统计</h3>
+        </div>
+    </div>
+    <div class="row reportContent" id="reportContent" hidden> 
+        <div class="col-md-12">
+            <div class="table-responsive" data-pattern="priority-columns">
+                    <table cellspacing="0" id="report_table" class="table table-small-font table-bordered table-striped">
+                        <thead id="report_header">
+                        </thead>
+                        <tbody id="report_body">
+                        </tbody>
+                        <tfoot id="report_foot">
+                        </tfoot>
+                    </table>
+                </div>
+        </div>
+    </div>
+    <div class="row reportContent" hidden>
+        <div class="col-md-1 pull-right">
+            <button type="button" id="print" class="btn btn-block btn-info btn-sm">打印</button>
+        </div>
+    </div>
+    <div class="row reportPic" hidden>
+        <div class="col-md-11 picarea">
+            <div id="main" style="width:1100px;height:400px;"></div>
+        </div>
+    </div>
+    
+</section>
+     <script>
+        var title = "";
+        var index1 = null;
+        $(function(){
+            $("#print").click(function(){
+                var reportTitle = document.getElementById("reportCaption").outerHTML;
+                var reportContent= document.getElementById("reportContent").outerHTML;
+                 exportAsPDF(reportTitle + reportContent);
+            });
+            // 门类管理
+            $("[name='ml_all']").click(function(){
+                $("button.active", "#ml").not("[name='ml_all']").removeClass("active");
+            });
+            
+            $("button", "#ml").not("[name='ml_all']").click(function(){
+                $("[name='ml_all']").removeClass("active");
+            });
+            
+            // 保管期限
+            $("[name='bgqx_all']").click(function(){
+                $("button.active", "#bgqx").not("[name='bgqx_all']").removeClass("active");
+            });
+            
+            $("button", "#bgqx").not("[name='bgqx_all']").click(function(){
+                $("[name='bgqx_all']").removeClass("active");
+            });
+            
+            // 密集
+            $("[name='mj_all']").click(function(){
+                $("button.active", "#mj").not("[name='mj_all']").removeClass("active");
+            });
+            
+            $("button", "#mj").not("[name='mj_all']").click(function(){
+                $("[name='mj_all']").removeClass("active");
+            });
+            
+            $("form").submit(function(){
+                var keyword = $("#key").val();
+                if($.trim(keyword)==""){
+                    window.location.reload();
+                    return false;
+                }
+            });
+            
+            $("#start").click(function(){
+                
+                // 获得门类
+                var mls = [];
+                var mlms = [];
+                $("button.active", "#ml").each(function(){
+                    mls.push($(this).attr("name"));
+                    mlms.push($(this).text());
+                });
+                
+                
+                // 保管期限
+                var bgqxs = [];
+                var bgqxms = [];
+                
+                $("option:selected", "#bgqx").each(function(){
+                    bgqxs.push($(this).attr("value"));
+                    bgqxms.push($(this).text());
+                });
+                // 保管期限中文名
+                var bgqxlist = [];
+                var bgqxmlist = [];
+                $("option", "#bgqx").not("[value='bgqx_all']").each(function(){
+                    bgqxlist.push($(this).attr("value"));
+                    bgqxmlist.push($(this).text());
+                });
+                
+                var mjs = [];
+                var mjms = [];
+                $("option:selected", "#mj").each(function(){
+                    mjs.push($(this).attr("value"));
+                    mjms.push($(this).text());
+                });
+                
+                // 密集中文名
+                var mjlist = [];
+                var mjmlist = [];
+                $("option", "#mj").not("[value='mj_all']").each(function(){
+                    mjlist.push($(this).attr("value"));
+                    mjmlist.push($(this).text());
+                });
+                
+                // 门类中文名
+                var mllist = [];
+                var mlmlist = [];
+                $("button", "#ml").not("[name='ml_all']").each(function(){
+                    mllist.push($(this).attr("name"));
+                    mlmlist.push($(this).text());
+                });
+                
+                // 年份
+                var from = $("#from").val();
+                var to = $("#to").val();
+                
+                //门类检查
+                if(mls.length < 1){
+                    layer.msg('请选择统计门类');
+                // 年份检查
+                }else if(to < from){
+                    layer.msg('结束年度要大于或等于开始年度');
+                //保管期限检查
+                }else if(bgqxs.length < 1){
+                    layer.msg('请选择统计保管期限');
+                }else{
+                    $(".reportTitle").hide();
+                    $(".reportContent").hide();
+                    $(".reportPic").hide();
+                    clearTable();
+                    var bgqxq;
+                    if(!(bgqxs.length==1 && bgqxs[0] != "bgqx_all")){
+                        bgqxq = bgqxlist;
+                    }else{
+                        bgqxq = bgqxs;
+                    }
+                    var mjq;
+                    if(!(mjs.length==1 && mjs[0] != "mj_all")){
+                        mjq = mjlist;
+                    }else{
+                        mjq = mjs;
+                    }
+                    $.ajax({
+                        type: "POST",
+                        async:true,
+                        beforeSend:function(){
+                            index1 = layer.load(1, {shade: [0.1,'#FFFFFF']});
+                        },
+                        url: Util.getRootPath() + "/w/tj/design/report",
+                        data:{"from": from, "to": to, "mls": mls, "bgqxs": bgqxq, "mjs": mjq},
+                        success:function(result){
+                           
+                           title = "";
+                           var colcnt = 0;
+                           if(from == to){
+                                title = from + "年度";
+                           }else{
+                                title= from + "~" +　to + "年度";
+                           }
+                           
+                           if(mls.length==1 && mls[0] != "ml_all"){
+                                title = title + " " + mlms[0];
+                           }
+                           
+                           if(bgqxs.length==1 && bgqxs[0] != "bgqx_all"){
+                                title = title + " " + bgqxms[0];
+                           }
+                           
+                           if(mjs.length==1 && mjs[0] != "mj_all"){
+                                title = title + " " + mjs[0];
+                           }
+                           
+                           title = title + " 统计";
+                           //报表标题
+                           $("#report_caption").text(title);
+                           
+                           // 统计标题
+                           $(".reportTitle").show();
+                           // 统计报表
+                           var report = result.report;
+                           var pic = result.pic;
+                           var header = "<tr>"
+                           
+                           if(!(mls.length==1 && mls[0] != "ml_all")){
+                                header = header + "<td>门类</td>"
+                                colcnt = colcnt + 1;
+                           }
+                           
+                           if(!(bgqxs.length==1 && bgqxs[0] != "bgqx_all")){
+                                header = header + "<td>保管期限</td>"
+                                colcnt = colcnt + 1;
+                           }
+                           
+                           if(!(mjs.length==1 && mjs[0] != "mj_all")){
+                                header = header + "<td>密级</td>"
+                                colcnt = colcnt + 1;
+                           }
+                           header = header + "<td>数量</td>"
+                           header = header + "<td>占比</td>"
+                           colcnt = colcnt + 2;
+                           
+                           header = header + "</tr>"
+                           $("#report_header").append(header);
+                           if(report.length == 0){
+                                var content = "<tr><td colspan='" + colcnt + "' >不存在统计数据</td></tr>"
+                                $("#report_body").append(content);
+                           }else{
+                                for(var idx=0; idx < report.length; idx++){
+                                   var row = "<tr>";
+                                   // 门类
+                                   if(!(mls.length==1 && mls[0] != "ml_all")){
+                                       row = row + "<td>" + report[idx].lxm + "</td>";
+                                   }
+                                   // 保管期限
+                                   if(!(bgqxs.length==1 && bgqxs[0] != "bgqx_all")){
+                                        var no = bgqxlist.indexOf(report[idx].bgqx);
+                                        row = row + "<td>" + bgqxmlist[no] + "</td>";
+                                   }
+                                   //密级
+                                   if(!(mjs.length==1 && mjs[0] != "mj_all")){
+                                        var no = mjlist.indexOf(report[idx].mj);
+                                        row = row +"<td>" + mjmlist[no] + "</td>";
+                                   }
+                                   
+                                   row = row +"<td>" + report[idx].cnt + "</td>";
+                                   row = row +"<td>" + report[idx].pre + "</td>";
+                                   row = row + "</tr>";
+                                   $("#report_body").append(row);
+                                }
+                                
+                                  for(var i = 0; i < colcnt-3; i++){
+                                    autoRowSpan('report_table', 1, i);
+                                  }
+                           }
+                         
+                           $(".reportContent").show();
+                           // $(".reportPic").show();
+                           // var picdata = fixData(pic, mls, mllist, mlmlist, mjlist, mjmlist, bgqxlist, bgqxmlist);
+                           // drawZZT("main", mjmlist, picdata.legend, picdata.data);
+                        },
+                        error:function(error){
+                            layer.msg("请求失败，请稍后重试！");
+                        },
+                        complete:function(){
+                            layer.close(index1);
+                        }
+                      });
+                    
+                }
+                
+            });
+        });
+        
+        function clearTable(){
+            $("#report_header").empty();
+            $("#report_body").empty();
+            $("#report_foot").empty();
+        }
+        
+        function fixData(data, mls, mllist, mlmlist, mjlist , mjmlist, bgqxlist, bgqxmlist){
+            var result = {};
+            var arr = [];
+            var legend = [];
+            var ids = [];
+            if(mls.length==1 && mls[0] == "ml_all"){
+                legend = mlmlist;
+            }else{
+                for(var i=0; i< mls.length; i++){
+                    var mlno = mllist.indexOf(mls[i]);
+                    ids.push(mlno);
+                    legend.push(mlmlist[mlno]);
+                }
+            }
+            console.log("legend:" + legend);
+            for(var i=0; i<data.length; i++){
+                var no = mjlist.indexOf(data[i].name);
+                data[i].name = mjmlist[no];
+                no = bgqxlist.indexOf(data[i].stack);
+                data[i].stack = bgqxmlist[no];
+                if(isAllZero(data[i].data)){
+                    continue;
+                }else{
+                    console.log("dataid: " + ids);
+                    data[i].data = getData(data[i].data, ids);
+                    arr.push(data[i]);
+                };
+            }
+            result.legend = legend;
+            result.data = arr;
+            return result;
+        }
+        
+        function getData(arr, ids){
+            var data = [];
+            if(ids.length==0){
+                data = arr;
+            }
+            for(var i=0; i<ids.length; i++){
+                data.push(arr[ids[i]]);
+            }
+            return data;
+        }
+        
+        function isAllZero(arr){
+            for(var i=0; i<arr.length; i++){
+                if(arr[i] !=0 ){
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        function autoRowSpan(tableId,row,col)  
+        {  
+            var tb = document.getElementById(tableId); 
+            var lastValue="";  
+            var value="";  
+            var pos=1;
+            for(var i=row;i<tb.rows.length;i++)  
+            {  
+                try{
+                    value = tb.rows[i].cells[col].innerText;
+                }catch(e){
+                
+                }  
+                if(lastValue == value)  
+                {   
+                        try{
+                            if(tb.rows[i].cells[col-1].style.display == "none"){
+                                tb.rows[i].cells[col].style.display = "none";  
+                                tb.rows[i-pos].cells[col].rowSpan = tb.rows[i-pos].cells[col].rowSpan + 1;
+                                pos++
+                            }
+                        }catch(e){
+                                tb.rows[i].cells[col].style.display = "none";  
+                                tb.rows[i-pos].cells[col].rowSpan = tb.rows[i-pos].cells[col].rowSpan + 1;
+                                pos++
+                        }
+                }else{  
+                    lastValue = value;  
+                    pos=1;
+                }  
+            }   
+        }
+        
+        
+        function drawZZT(picid, mjs, mlm, pic){
+            var app = echarts.init(document.getElementById(picid));
+            app.title = '堆叠柱状图';
+            option = {
+                tooltip : {
+                    trigger: 'axis',
+                    axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                        type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+                legend: {
+                    data:mjs
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                toolbox: {
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        magicType : {show: true, type: ['line', 'bar']},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                xAxis : [
+                    {
+                        type : 'category',
+                        data : mlm
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value'
+                    }
+                ],
+                series : pic
+            };
+            app.setOption(option);
+        }
+     </script>
+<script> 
+function svg2canvas (targetElem) {
+  var nodesToRecover = [];
+  var nodesToRemove = [];
+ 
+  var svgElem = targetElem.find('svg');
+ 
+  svgElem.each(function(index, node) {
+    var parentNode = node.parentNode;
+     
+    var svg = node.outerHTML;
+ 
+    var canvas = document.createElement('canvas');
+     
+    canvg(canvas, svg);
+     
+    nodesToRecover.push({
+      parent: parentNode,
+      child: node
+    });
+    parentNode.removeChild(node);
+     
+    nodesToRemove.push({
+      parent: parentNode,
+      child: canvas
+    });
+     
+    parentNode.appendChild(canvas);
+  });
+   
+}
+function openWithIframe(html){
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute("id", "myFrmame");
+   
+  var $iframe = $(iframe);
+  $('body').append(iframe);
+  var ifDoc = iframe.contentWindow.document;
+   
+　　//这里做是将报表使用到的css重新写入到iframe中，根据自身的需要
+  var style = '<link rel="stylesheet" href="${rc.contextPath}/resources/plugins/rwdtable/css/rwd-table.css">';
+  style = style + '<link href="${rc.contextPath}/resources/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">'
+  style= style + '<link rel="stylesheet" href="${rc.contextPath}/resources/dist/css/AdminLTE.css">'
+  style= style + '<link rel="stylesheet" href="${rc.contextPath}/resources/dist/css/skins/_all-skins.min.css">'
+  html = "<!DOCTYPE html><html><head>"+style+"</head><body>"+html+"</body></html>"
+  ifDoc.open();    
+  ifDoc.write(html);    
+  ifDoc.close();
+  var fbody = $iframe.contents().find("body");
+  fbody.find(".reportTitle").css("width", "1118px");
+  fbody.find(".reportContent").css("width", "1118px");
+  return fbody;
+}
+//导出pdf  
+//导出pdf
+function exportAsPDF(Html){
+  //得到要导出pdf的html根节点  
+  var fbody = openWithIframe(Html);
+  svg2canvas(fbody);
+  //html2canvas官网的标准方法
+  html2canvas(fbody, {
+    onrendered: function(canvas) {
+       //通过html2canvas将html渲染成canvas，然后获取图片数据
+       var imgData = canvas.toDataURL('image/jpeg');
+       //初始化pdf，设置相应格式
+       var doc = new jsPDF("p", "mm", "a4");
+
+       //这里设置的是a4纸张尺寸(210,297)
+       doc.addImage(imgData, 'JPEG', 4, 0, 206, canvas.height/3.3);
+
+            //输出保存命名为content的pdf
+       doc.save(title + '.pdf');
+       $('#myFrmame').remove(); //最后将iframe删除
+    },
+    background:"#fff", //这里给生成的图片默认背景，不然的话，如果你的html根节点没有设置背景的话，会用黑色填充。
+    allowTaint: true  //避免一些不识别的图片干扰，默认为false，遇到不识别的图片干扰则会停止处理html2canvas
+  });
+   
+}; 
+</script> 
+<script src="${rc.contextPath}/resources/plugins/jsPdf/jspdf.min.js"></script>
+<script src="${rc.contextPath}/resources/plugins/jsPdf/html2canvas.min.js"></script>
+
+
+    

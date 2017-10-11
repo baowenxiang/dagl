@@ -1,0 +1,247 @@
+package cn.proem.dagl.web.temperature.controller;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.util.BeanUtils;
+import cn.proem.dagl.web.temperature.entity.DtoDate;
+import cn.proem.dagl.web.temperature.service.TemperatureService;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+import cn.proem.suw.web.common.util.DateUtil;
+import cn.proem.suw.web.common.util.StringUtil;
+import cn.proem.suw.web.temperature.entity.DWsd;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+/**
+ * @ClassName TemperatureController
+ * @Description 温湿度记录管理层
+ * @author chenxiaofen
+ * @date 2017年6月5日
+ */
+@Controller
+@RequestMapping(value = "/w/temperature")
+public class TemperatureController extends BaseCtrlModel {
+	@Autowired
+	private TemperatureService temperatureService;
+	@Autowired
+	private CommonService commonService;
+	/**
+	 * @MethodName initTable
+	 * @Description 初始化温湿度记录列表
+	 * @author chenxiaofen
+	 * @date 2017年6月5日
+	 * @param request
+	 * @param tablename
+	 * @return
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/initTable")
+	public ModelAndView initTable() throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/temperature/list.vm");
+		return modelAndView;
+	}
+	/**
+	 * @MethodName getRecordList
+	 * @Description 分页获取记录
+	 * @author chenxiaofen
+	 * @date 2017年6月5日
+	 * @param dtGridPager
+	 * @param request
+	 * @return
+	 * @throws ServiceException
+	 */
+	@ResponseBody
+    @RequestMapping(value = "/getRecordList")
+	@LogService(description = "分页获取温湿度记录列表")
+    public String getRecordList(String dtGridPager, HttpServletRequest request) throws ServiceException {
+		DataGridQuery query = parseToQuery(dtGridPager == null ? ""
+				: dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+        return JSON.toJSONStringWithDateFormat(temperatureService.getRecordList(
+        		queryBuilder, query.getNowPage(), query.getPageSize()),
+				"yyyy-MM-dd HH:mm:ss",
+				SerializerFeature.WriteDateUseDateFormat,
+				SerializerFeature.DisableCircularReferenceDetect);
+    }
+	/**
+	 * @MethodName toDetailPage
+	 * @Description 跳转详情页面
+	 * @author chenxiaofen
+	 * @date 2017年6月5日
+	 * @param request
+	 * @param id
+	 * @return
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/toDetailPage/{id}")
+	public ModelAndView toDetailPage(HttpServletRequest request,
+			@PathVariable("id") String id) throws ServiceException {
+
+	    ModelAndView modelAndView = this
+				.createNormalView("/web/temperature/detail.vm");
+	    modelAndView.addObject("id", id);
+		return modelAndView;
+	}
+	/**
+	 * @MethodName detail
+	 * @Description 根据id查询记录详情
+	 * @author chenxiaofen
+	 * @date 2017年6月5日
+	 * @param id
+	 * @return
+	 */
+	@ResponseBody
+    @RequestMapping(value = "/detail")
+	@LogService(description = "获取温湿度记录详情")
+    public ResultModel<DWsd> detail(String id) {
+		ResultModel<DWsd> resultModel = new ResultModel<DWsd>();
+//		commonService.findById(id, DWsd.class);
+		resultModel.setData(commonService.findById(id, DWsd.class));
+		resultModel.setSuccess(true);
+        return resultModel;
+    }
+	@ResponseBody
+    @RequestMapping(value = "/saveOrUpdate")
+	@LogService(description = "保存或修改温湿度记录")
+    public ResultModel<DWsd> saveOrUpdate(@RequestBody Map<String, Object> obj) {
+		ResultModel<DWsd> resultModel = new ResultModel<DWsd>();
+		DWsd dwsd = BeanUtils.cloneObject(DWsd.class, obj.get("dwsd"));
+		try {
+			temperatureService.update(dwsd);
+		} catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			e.printStackTrace();
+			resultModel.setMsg("数据保存失败");
+		}
+        return resultModel;
+    }
+	/**
+	 * @MethodName delete
+	 * @Description 删除温湿度记录
+	 * @author chenxiaofen
+	 * @date 2017年6月6日
+	 * @param id
+	 * @return
+	 */
+	@ResponseBody
+    @RequestMapping(value = "/delete")
+	@LogService(description = "删除温湿度记录")
+    public ResultModel<DWsd> delete(String id) {
+		ResultModel<DWsd> resultModel = new ResultModel<DWsd>();
+		try {
+			temperatureService.delete(id);
+		} catch (ServiceException e) {
+			e.printStackTrace();
+			resultModel.setSuccess(false);
+			resultModel.setMsg("删除失败");
+		}
+        return resultModel;
+    }
+	/**
+	 * @MethodName getRecordByYearAndMonth
+	 * @Description 根据年月获取温湿度记录的统计报表数据(目测暂时闲置~~)
+	 * @author chenxiaofen
+	 * @date 2017年6月6日
+	 * @param id
+	 * @return
+	 */
+	@ResponseBody
+    @RequestMapping(value = "/getRecordByYearAndMonth")
+	@LogService(description = "根据年月获取温湿度记录并形成报表")
+    public ResultModel<Map<String,Object>> getRecordByYearAndMonth(String year,String month) {
+		ResultModel<Map<String,Object>> resultModel = new ResultModel<Map<String,Object>>();
+		resultModel.setDatas(temperatureService.getDataList(year, month));
+        return resultModel;
+    }
+	
+	@ResponseBody
+    @RequestMapping(value = "/getRecordByWeek")
+	@LogService(description = "按周查看温湿度记录报表")
+    public ResultModel<Map<String,Object>> getRecordByWeek(String weekFormat) {
+		ResultModel<Map<String,Object>> resultModel = new ResultModel<Map<String,Object>>();
+		resultModel.setDatas(temperatureService.getDataByWeek(weekFormat));
+        return resultModel;
+    }
+	/**
+	 * @MethodName getWeekList
+	 * @Description 获取日期下拉选的值
+	 * @author chenxiaofen
+	 * @date 2017年6月6日
+	 * @return
+	 */
+	@RequestMapping(value = "/getDateList")
+	@ResponseBody
+	@LogService(description = "获取按周查看的日期列表")
+	public ResultModel<DtoDate> getDateList(HttpServletRequest request, int num, String lastDate) {
+		num = 10;
+		ResultModel<DtoDate> resultModel = new ResultModel<DtoDate>();
+		List<DtoDate> dateList = new ArrayList<DtoDate>();
+		dateList.addAll(this.getWeekList(num, lastDate));
+		resultModel.setDatas(dateList);
+		return resultModel;
+	}
+	public List<DtoDate> getWeekList(int num, String lastDate) {
+		SimpleDateFormat simNow = new SimpleDateFormat("M月d日");
+		//SimpleDateFormat simOld = new SimpleDateFormat("yyyy年M月d日");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		
+		List<DtoDate> dateList = new ArrayList<DtoDate>();
+		
+		try {
+			for (int i = 0; i < num; i++) {
+				String[] dates = null;
+				if (i == 0) {
+					if (StringUtil.isEmpty(lastDate)){
+						Calendar calendar = Calendar.getInstance();
+						calendar.setTime(new Date());
+						calendar.add(Calendar.DAY_OF_YEAR, 1);
+						lastDate = sdf.format(calendar.getTime());
+					}
+				} else if (i > 0) {
+					lastDate = dateList.get(i - 1).getFormatDate();
+				}
+				dates = lastDate.split(" ");
+				Date date = sdf.parse(dates[0]);
+			    Calendar cal = Calendar.getInstance();
+			    cal.setTime(date);
+			    cal.add(Calendar.DAY_OF_YEAR, -1);
+			
+			    DtoDate dtoDate = new DtoDate();
+			    Date f = DateUtil.getFirstDayOfWeek(new Date(cal.getTimeInMillis()));
+			    Date l = DateUtil.getLastDayOfWeek(new Date(cal.getTimeInMillis()));
+			    cal.setTime(f);
+			    int weekNum = cal.get(Calendar.WEEK_OF_MONTH);
+			    String dateStr = simNow.format(f) + "-" + simNow.format(l) + "(本月第"+weekNum+"周)";
+			    String formatDateStr = sdf.format(f) + " " + sdf.format(l);
+			    
+				dtoDate.setDate(dateStr);
+				dtoDate.setFormatDate(formatDateStr);
+			    
+				dateList.add(dtoDate);
+			}
+		} catch (Exception e) {
+		}
+		return dateList;
+	}
+}

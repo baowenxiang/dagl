@@ -1,0 +1,35 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body" >
+			<div class="btn-group">
+    			<button type="button" class="btn btn-default btn-sm btn-icon cancel">
+                    <svg class="icon" aria-hidden="true">
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-undo"></use>
+                    </svg>
+                    <b hidden>撤销</b>&nbsp;
+                </button>
+			</div>
+			
+			<button type="button" class="btn btn-default btn-sm export btn-icon">
+                <svg class="icon" aria-hidden="true">
+                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-download"></use>
+                </svg>
+                <b hidden>导出</b>&nbsp;
+            </button>
+			
+			
+            ##列表
+        	<div id="tableDestroyHistroy" class="dt-grid-container"></div>
+        	##分页栏
+        	<div id="pagingDestroyHistroy" class="dt-grid-toolbar-container"></div>
+      </div>
+    </div>
+	
+	
+ </section>
+##css
+<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+
+##js
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/fileIdentify/destroyHistroy.js"></script>

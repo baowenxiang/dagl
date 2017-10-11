@@ -1,0 +1,162 @@
+package cn.proem.suw.web.common.controller;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.entity.User;
+import cn.proem.core.model.Module;
+import cn.proem.core.velocitytool.AuthTool;
+import cn.proem.dagl.web.sysManage.entity.UserDetail;
+import cn.proem.dagl.web.sysManage.service.PersonalInfoService;
+import cn.proem.dagl.web.systemSetting.entity.SkinSetting;
+import cn.proem.dagl.web.systemSetting.service.SettingService;
+import cn.proem.dagl.web.temperature.service.TemperatureService;
+import cn.proem.suw.web.auth.service.PrivilegeManagementService;
+import cn.proem.suw.web.common.dto.DtoStatis;
+import cn.proem.suw.web.common.dto.DtoTask;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.service.IndexService;
+import cn.proem.suw.web.common.util.ConfigReader;
+import cn.proem.suw.web.common.util.StringUtil;
+
+/**
+ * @ClassName IndexController
+ * @Description 网页版首页
+ * @author Pan Jilong
+ * @date 2016年12月28日
+ */
+@Controller
+@RequestMapping(value = "/w")
+public class IndexController extends BaseCtrlModel {
+	@Autowired
+	private PersonalInfoService personalInfoService;
+	@Autowired
+	private SettingService settingService;
+    @Autowired
+    private IndexService indexService;
+    @Autowired
+    private TemperatureService temperatureService;
+    
+    //改
+    @Autowired
+    private PrivilegeManagementService privilegeManagementService;
+	/**
+	 * @MethodName index
+	 * @Description 跳转首页面
+	 * @author Pan Jilong
+	 * @date 2017年2月3日
+	 * @return
+	 */
+	@RequestMapping(value = "/index")
+	public ModelAndView index(HttpServletRequest request) {
+		User user = getCurrentUser(request);
+        ModelAndView view = new ModelAndView("/web/common/index");
+        if (user == null){
+            view.setViewName("redirect:/w/login");
+        } else {
+        	UserDetail userDetail = personalInfoService.getUserDetailByUser(user);
+            // 设置前台登录用户名
+            view.addObject("userName", user.getName());
+            view.addObject("userId", user.getId());
+            if(StringUtil.isNotEmpty(userDetail)) {
+            	view.addObject("picPath", userDetail.getPicPath());
+            }else {
+            	view.addObject("picPath","");
+            }
+            //改
+            List<Module> buttons = buttons(user);
+            for(Module button: buttons){
+                view.addObject(button.getCode(), true);
+            }
+            try {
+    			//从系统设置表中读取公司名
+    			SkinSetting setting = settingService.getSettingMsg();
+    			if(StringUtil.isNotEmpty(setting)){
+    				if(StringUtil.isNotEmpty(setting.getPlateLgName())) {
+    					view.addObject("inBrowserName",setting.getPlateLgName());
+    				}else {
+    					view.addObject("inBrowserName", ConfigReader.readInBrowserName());
+    				}
+    			}else {
+    				//表中数据为空时，从config.properties读取公司名称
+    				view.addObject("inBrowserName", ConfigReader.readInBrowserName());
+    			}
+    		} catch (ServiceException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+            view.addObject("corporateName", ConfigReader.readCorporateName());
+//            view.addObject("inBrowserName", ConfigReader.readInBrowserName());
+        }
+        return view;
+	}
+	
+	/**
+	 * @MethodName menu
+	 * @Description 根据主菜单code， 获得权限允许的子菜单列表
+	 * @author Pan Jilong
+	 * @date 2017年2月3日
+	 * @return
+	 */
+	@RequestMapping(value = "/menu")
+	@ResponseBody
+	@LogService(description = "根据主菜单获取权限允许的子菜单")
+	public ModelMap menu(HttpServletRequest request, String code) {
+		ModelMap resultMap = new ModelMap();
+		String profileName = (String) request.getSession().getAttribute("PROFILE_NAME");
+        List<Module> userModule = new AuthTool().getUserModule(profileName, code, true);
+        resultMap.put("menu_list", userModule);
+        return resultMap;
+	}
+	
+	@RequestMapping(value = "/thirdMenu")
+	@ResponseBody
+	@LogService(description = "获取第三级菜单")
+	public ModelMap thirdMenu(HttpServletRequest request, String code) {
+		ModelMap resultMap = new ModelMap();
+		String profileName = (String) request.getSession().getAttribute("PROFILE_NAME");
+        List<Module> userModule = new AuthTool().getUserModule(profileName, code,true, "front");
+        resultMap.put("menu_list", userModule);
+        return resultMap;
+	}
+	
+	
+	@RequestMapping(value = "/welcome")
+	public ModelAndView welcome(HttpServletRequest request) {
+		ModelAndView view = this.createNormalView("/web/common/welcome.vm");
+		User user = this.getCurrentUser(request);
+		List<DtoTask> tasks = null;
+		if(user.getId()!=null){
+		    tasks = indexService.queryAllTask(user.getId());
+		}
+		// 流程任务列表
+		view.addObject("tasks", tasks);
+		List<DtoStatis> statis = indexService.queryArchiveNumStatic();
+		// 统计数据
+		view.addObject("statises", statis);
+//		
+//		//温湿度记录统计
+//		List<DWsd> dwsdList = indexService.queryTemperatureStatic();
+//		view.addObject("dwsdList", dwsdList);
+//		//获取温湿度记录表所覆盖的年份
+//		List<Map<String,Object>> yearList = indexService.getTotalYears();
+//		view.addObject("yearList", yearList);
+		return view;
+	}
+
+	
+	//2017年8月28日  
+	 private List<Module> buttons(User user){
+	        return privilegeManagementService.getPrivilegeButtons(user);
+	    }
+}

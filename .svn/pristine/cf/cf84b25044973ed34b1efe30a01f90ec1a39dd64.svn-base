@@ -1,0 +1,87 @@
+<style >
+	/*附件样式*/
+    .file-div{
+    	overflow: hidden;
+    	padding: 0;
+    }
+    .file-div>div{
+		width:100%,
+    	display: inline-block;
+    	height: 34px;
+    	line-height: 34px;
+    	border: 1px solid #CCCCCC;
+    	margin-bottom: 2px;
+    	padding: 0 12px;
+    	//text-overflow: ellipsis; 
+		//white-space: nowrap; 
+		//overflow: hidden;
+    }
+	.file-div>div>div{
+		width:70%;
+    	display: inline-block;
+    	height: 34px;
+    	line-height: 34px;
+    	//border: 1px solid #CCCCCC;
+    	margin-bottom: 2px;
+    	//padding: 0 12px;
+    	text-overflow: ellipsis; 
+		white-space: nowrap; 
+		overflow: hidden;
+    }
+	
+	
+    .file-div>div>div>a{
+		cursor: pointer;
+    	padding-left: 10px;
+		text-decoration:none;
+    	color: #2C6F89;
+    }
+    .file-div>div>div>span.file-remove{
+    	cursor: pointer;
+    	position: absolute;
+    	right: 10px;
+    }
+	.file-div>div>div>span.file-download{
+    	cursor: pointer;
+    	position: absolute;
+    	right: 35px;
+    }
+	
+	.file-div>div>div>span.file-size{
+    	position: absolute;
+    	right: 60px;
+    }
+	
+    .file-div>div>div>span.file-remove:HOVER{
+    	color: #A70000;
+    }
+	.file-div>div>div>span.file-download:HOVER{
+    	color: #A70000;
+    }
+</style>
+
+#foreach($html in $!{htmls}) 
+	$html
+#end
+
+#if(${auth_file})
+<div class="layui-form-item yw">
+	<label class="layui-form-label">原文</label>
+	<div class="layui-input-block">
+		<input type="file" name="attachment" id="attachment" multiple style="display: none;">
+		<label class="layui-input" for="attachment">
+			<i class="fa fa-cloud"></i><span>点击上传原文</span>
+		</label>	
+	</div>
+</div>
+
+<div class="layui-form-item yw">
+	<div class="layui-input-block">
+		<div class="file-div"></div>
+	</div>
+</div>
+#end
+
+
+
+<script src="${rc.contextPath}/resources/js/web/table/content.js"></script>

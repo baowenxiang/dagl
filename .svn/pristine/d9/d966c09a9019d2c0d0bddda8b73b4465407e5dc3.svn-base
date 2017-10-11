@@ -1,0 +1,46 @@
+package cn.proem.dagl.web.tj.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.core.entity.User;
+import cn.proem.core.entity.UserDepartment;
+import cn.proem.dagl.web.tj.service.TJService;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.service.CommonService;
+
+@Controller
+@RequestMapping(value = "/w/tj")
+public class TJController extends BaseCtrlModel {
+    @Autowired
+    private TJService tjservice;
+    @Autowired
+    private CommonService commonService;
+    
+    @RequestMapping(value = "/init")
+    public ModelAndView init(){
+        ModelAndView modelAndView = this.createNormalView("/web/tj/init.vm");
+        return modelAndView;
+    }
+    
+    @RequestMapping(value = "/gcl")
+    public ModelAndView gcl(HttpServletRequest request, @RequestParam String type) throws ServiceException{
+        ModelAndView modelAndView = this.createNormalView("/web/tj/gcl.vm");
+        User user = this.getCurrentUser(request);
+        UserDepartment userdepartment = commonService.findUserDepartmentByUserId(user.getId());
+        if(userdepartment != null){
+            // 部门
+            String department = userdepartment.getDepartment() != null ? userdepartment.getDepartment().getId() : "";
+            tjservice.tjGcl(department);
+        }
+        
+        return modelAndView;
+    }
+    
+}

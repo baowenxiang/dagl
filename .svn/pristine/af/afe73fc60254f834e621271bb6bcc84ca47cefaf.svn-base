@@ -1,0 +1,21 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body" id="list">
+        #parse("web/table/tools.vm")
+		
+		##表名
+        <input type="hidden" name="tablename" value="${tablename}" />
+    	##标志字段
+    	<input type="hidden" name="flag" value="${flag}" />
+		
+        ##列表
+    	<div id="tableDiv" class="dt-grid-container"></div>
+    	##分页栏
+    	<div id="pagingDiv" class="dt-grid-toolbar-container"></div>
+      </div>
+    </div>
+    ##CSS
+    ##Javascript
+    <script src="${rc.contextPath}/resources/js/web/flow/list.js"></script>
+	
+</section>

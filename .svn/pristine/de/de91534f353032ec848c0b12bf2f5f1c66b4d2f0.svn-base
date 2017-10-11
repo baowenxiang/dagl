@@ -1,0 +1,104 @@
+package cn.proem.dagl.web.fuzzyQuery.dto;
+
+import java.util.Date;
+
+public class DtoSearchResult {
+	
+	private String fileId;
+	
+	private String title;
+	
+	private String content;
+	
+	private String address;
+	
+	private String fileCreateTime;
+	
+	private Date time;
+	
+	private String dh;
+	
+	public String getFileId() {
+		return fileId;
+	}
+
+	public void setFileId(String fileId) {
+		this.fileId = fileId;
+	}
+	
+	private String fileLastModifiedTime;
+
+    private String dm;
+	public String getFileCreateTime() {
+		return fileCreateTime;
+	}
+
+	public void setFileCreateTime(String fileCreateTime) {
+		this.fileCreateTime = fileCreateTime;
+	}
+
+	public String getFileLastModifiedTime() {
+		return fileLastModifiedTime;
+	}
+
+	public void setFileLastModifiedTime(String fileLastModifiedTime) {
+		this.fileLastModifiedTime = fileLastModifiedTime;
+	}
+
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public Date getTime() {
+		return time;
+	}
+
+	public void setTime(Date time) {
+		this.time = time;
+	}
+
+    /**
+     * @return the dh
+     */
+    public String getDh() {
+        return dh;
+    }
+
+    /**
+     * @param dh the dh to set
+     */
+    public void setDh(String dh) {
+        this.dh = dh;
+    }
+
+    public void setDm(String dm) {
+        this.dm = dm;
+    }
+	
+    public String getDm(){
+        return this.dm;
+    }
+	
+
+}

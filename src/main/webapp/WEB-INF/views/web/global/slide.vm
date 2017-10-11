@@ -1,0 +1,11 @@
+##左侧边栏隐藏显示
+##HTML
+<body>
+    <div id="slide">
+        ##<span><i class="fa fa-expand"></i></span>
+    </div>
+</body>
+##CSS
+<link href="${rc.contextPath}/resources/css/web/common/slide.css" rel="stylesheet" />
+##Javascript
+##<script src="${rc.contextPath}/resources/js/web/common/slide.js"></script>

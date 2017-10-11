@@ -1,0 +1,434 @@
+package cn.proem.dagl.web.tools.service.impl;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipOutputStream;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.dicManager.entity.DictionaryValue;
+import cn.proem.dagl.web.dicManager.service.DicManagerService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.dagl.web.tools.service.ToolsService;
+import cn.proem.dagl.web.tools.util.CommonFile;
+import cn.proem.suw.web.common.constant.Path;
+import cn.proem.suw.web.common.exception.ServiceException;
+
+@Service
+public class ToolsServiceImpl implements ToolsService {
+	 @Autowired
+	 private DicManagerService dicManagerService;
+	 @Autowired
+	private GeneralDao generalDao;
+	 @Autowired
+	private CustomArchiveService customArchiveService;
+	 
+	@Override
+	public void batchDownLoad(HttpServletRequest request,HttpServletResponse resp, List<CommonFile> commonFiles, String name) throws Exception{
+		 Map<String, Object> conditions = new HashMap<String, Object>();
+		 conditions.put("bm", name);
+		 BaseEntityInf table = customArchiveService.getEntityByConditions("pdagl_tablename", conditions);
+		 String cnNmae = table.get("zwm");
+		
+		//生成的ZIP文件名  
+		Calendar cld=Calendar.getInstance();
+		int millisecond=cld.get(Calendar.MILLISECOND);
+        String tmpFileName = cnNmae+"-"+millisecond+".zip"; 
+        //在服务器端创建打包下载的临时文件
+    	String strZipPath= this.getFilePath()+Path.UPLOAD_IMPORT_FILE_PATH+ tmpFileName ;
+    	File file = new File(strZipPath);
+        //循环获得需要打包的文件		            
+         List<File> files=new ArrayList<File>();
+         
+         for(CommonFile commonFile:commonFiles){
+        	 String realPath=this.getFilePath()+ commonFile.getRealpath();
+             files.add(new File(realPath));		            	
+         }
+         
+         //文件输出流
+         FileOutputStream outStream = new FileOutputStream(file);
+         //压缩流
+         @SuppressWarnings("resource")
+         ZipOutputStream toClient = new ZipOutputStream(outStream);
+         toClient.setEncoding("gbk");
+         // 压缩文件列表中的文件
+         int size = files.size();
+         for(int i = 0; i < size; i++) {
+        	 File file1 = (File) files.get(i);
+        	 //zipFile(file, outputStream);
+        	 // 将文件写入到zip文件中
+        	 if(file1.exists()){
+        		 if(file1.isFile()){
+        			 FileInputStream inStream = new FileInputStream(file1);
+        			 BufferedInputStream bInStream = new BufferedInputStream(inStream);
+        			 ZipEntry entry = new ZipEntry(commonFiles.get(i).getFilename());
+        			 toClient.putNextEntry(entry);
+        			 final int MAX_BYTE = 10000 * 1024 *1024;    //最大的流为10M
+        			 long streamTotal = 0;                    //接受流的容量
+        			 int streamNum = 0;                      //流需要分开的数量
+        			 int leaveByte = 0;                      //文件剩下的字符数
+        			 byte[] inOutbyte;                       //byte数组接受文件的数据
+        			 streamTotal = bInStream.available();                        //通过available方法取得流的最大字符数
+        			 streamNum = (int)Math.floor(streamTotal / MAX_BYTE);    //取得流文件需要分开的数量
+        			 leaveByte = (int)streamTotal % MAX_BYTE;                //分开文件之后,剩余的数量
+        			 if (streamNum > 0) {
+        				   for(int j = 0; j < streamNum; ++j){
+        				       inOutbyte = new byte[MAX_BYTE];
+        				       //读入流,保存在byte数组
+        				       bInStream.read(inOutbyte, 0, MAX_BYTE);
+        				       toClient.write(inOutbyte, 0, MAX_BYTE);  //写出流
+        				                  }
+        			          }            
+        			 
+        			 //写出剩下的流数据
+        			  inOutbyte = new byte[leaveByte];
+        			  bInStream.read(inOutbyte, 0, leaveByte);
+        			  toClient.write(inOutbyte);
+        			  toClient.closeEntry();     //Closes the current ZIP entry and positions the stream for writing the next entry
+        			  bInStream.close();    //关闭
+        		      inStream.close();		        			 		        			 		        			 
+        		 }
+        	 }else{
+        		 continue;
+        	 }
+         }
+         
+         toClient.close();
+         outStream.close();     
+ 		    
+       //下载zip文件		          	  
+       InputStream fin = null;  
+       ServletOutputStream out1 = null;  
+  		try {  
+  			file = new File(strZipPath); 
+   	        fin = new FileInputStream(file);     	               
+   	            resp.setCharacterEncoding("utf-8");
+   	            //获得zip文件的后缀
+   	            String extName = tmpFileName.substring(tmpFileName.lastIndexOf(".")+1);
+   	            resp.setContentType("application/"+extName);  
+   	            
+   	            boolean isMSIE = false;
+   	            String[] IEBrowserSignals = {"MSIE", "Trident", "Edge"};
+   	            String userAgent = request.getHeader("User-Agent");
+   	            for (String signal : IEBrowserSignals) {
+   	                if (userAgent.contains(signal))
+   	                	isMSIE = true;
+   	            }
+   	            if (isMSIE) {
+   	                // 设置浏览器以下载的方式处理该文件默认名为resume.doc  
+   		            resp.addHeader("Content-Disposition", "attachment;filename="+ URLEncoder.encode(tmpFileName, "UTF-8"));  
+   	            } else {
+   	            	// 设置浏览器以下载的方式处理该文件默认名为resume.doc  
+   		            resp.addHeader("Content-Disposition", "attachment;filename="+ new String(tmpFileName.getBytes("UTF-8"),"ISO8859-1"));  
+   	            }
+   	            
+   	              
+   	            out1 = resp.getOutputStream();  
+   	            byte[] buffer2 = new byte[512];  // 缓冲区  
+   	            int bytesToRead = -1;  
+   	            // 通过循环将读入的Word文件的内容输出到浏览器中  
+   	            while((bytesToRead = fin.read(buffer2)) != -1) {  
+   	                out1.write(buffer2, 0, bytesToRead);  
+   	            }  
+	   	  } finally {  
+	            if(fin != null) fin.close();  
+	            if(out1 != null) out1.close();  
+	   	  }
+      	//删除临时文件
+      	file.delete();
+	}
+	
+	
+	/**
+	 * @Title getFilePath
+	 * @Description 文件资源所在路径
+	 * @author Pan Jilong
+	 * @date 2017年1月9日
+	 * @return
+	 */
+	public String getFilePath() {
+		String classesPath = this.getClass().getClassLoader().getResource("").getPath().replaceAll("%20", " ");  
+        String tempdir;
+        String classPath[] = classesPath.split("webapps");
+        tempdir = classPath[0];
+        tempdir += "webapps/";
+        tempdir += File.separator;
+        return tempdir;
+	}
+
+
+	@Override
+	public void importFromExcel(String fullpath, String tablename)throws Exception, ServiceException {
+		List<DictionaryValue> fields =  dicManagerService.getDicValueList(tablename);
+		
+		
+		Workbook wookbook = WorkbookFactory.create(new FileInputStream(fullpath));
+		//用于放ImpExcelBean的list
+		//将Excel的各行记录放入ImpExcelBean的list里面
+		//WorkbookFactory是用来将Excel内容导入数据库的一个类
+		Sheet sheet = wookbook.getSheetAt(0);//统计excel的行数
+		
+		
+		int rowLen = sheet.getPhysicalNumberOfRows();//excel总行数，记录数=行数-1
+		//导入各条记录
+		for (int i = 1; i < rowLen; i++) {
+			Row row = sheet.getRow(i);
+			StringBuffer sql = new StringBuffer("INSERT INTO "+	tablename + " (");
+				List<String> strs = new ArrayList<String>();
+				List<Object> values = new ArrayList<Object>();
+				values.add(UUID.randomUUID().toString());
+				values.add(Integer.valueOf(0));
+				for(DictionaryValue dictionaryValue : fields){
+					strs.add(dictionaryValue.getDvno());
+					values.add(getValue(row.getCell(Integer.valueOf(dictionaryValue.getXsxh()))));
+				}
+				StringBuilder params = new StringBuilder();
+				StringBuilder questionParams = new StringBuilder();
+				params.append("id").append(",").append("del_flag");
+				questionParams.append("?").append(",").append("?");
+				if(fields != null && fields.size()>0){
+					for (int j = 0; j< fields.size(); j++) {  
+						DictionaryValue dictionaryValue = fields.get(j);
+		                	params.append(","+dictionaryValue.getDvno());  
+		                	questionParams.append( ",?");
+		            }  
+				}
+			sql.append(params.toString());
+			sql.append(")");
+			sql.append(" VALUES ");
+			sql.append("(");
+			sql.append(questionParams.toString());
+			sql.append(")");
+			generalDao.executeSQL(sql.toString(), values.toArray());
+		}
+		
+	}
+	
+	private String getValue(Cell cell) {
+        if (cell == null)
+            return "";
+        if (cell.getCellType() == Cell.CELL_TYPE_BOOLEAN) {
+            return String.valueOf(cell.getBooleanCellValue()).trim();
+        } else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+            if(HSSFDateUtil.isValidExcelDate(cell.getNumericCellValue())){
+                return String.valueOf(((int)cell.getNumericCellValue()));
+            }
+            return String.valueOf(cell.getNumericCellValue()).trim();
+        } else {
+            return String.valueOf(cell.getStringCellValue()).trim();
+        }
+    }
+
+
+	@Override
+	public void importFromExcel(String fullpath, String tablename,Map<String, Object> extraParams) throws Exception, ServiceException {
+		List<DictionaryValue> fields =  dicManagerService.getDicValueList(tablename);
+		Workbook wookbook = WorkbookFactory.create(new FileInputStream(fullpath));
+		//用于放ImpExcelBean的list
+		//将Excel的各行记录放入ImpExcelBean的list里面
+		//WorkbookFactory是用来将Excel内容导入数据库的一个类
+		Sheet sheet = wookbook.getSheetAt(0);//统计excel的行数
+		int rowLen = sheet.getPhysicalNumberOfRows();//excel总行数，记录数=行数-1
+		//导入各条记录
+		for (int i = 1; i < rowLen; i++) {
+			Row row = sheet.getRow(i);
+			StringBuffer sql = new StringBuffer("INSERT INTO "+	tablename + " (");
+				List<Object> values = new ArrayList<Object>();
+				
+				StringBuilder params = new StringBuilder();
+				StringBuilder questionParams = new StringBuilder();
+				
+				params.append("id");
+				questionParams.append("?");
+				values.add(UUID.randomUUID().toString());
+				
+				for(String extra:extraParams.keySet()){
+					params.append(","+extra);
+					questionParams.append(",?");
+					values.add(extraParams.get(extra));
+				}
+				
+				if(fields != null && fields.size()>0){
+					for (int j = 0; j< fields.size(); j++) {  
+						DictionaryValue dictionaryValue = fields.get(j);
+		                	params.append(","+dictionaryValue.getDvno());  
+		                	questionParams.append( ",?");
+		                	values.add(getValue(row.getCell(Integer.valueOf(dictionaryValue.getXsxh()))));
+		            }  
+				}
+			sql.append(params.toString());
+			sql.append(")");
+			sql.append(" VALUES ");
+			sql.append("(");
+			sql.append(questionParams.toString());
+			sql.append(")");
+			generalDao.executeSQL(sql.toString(), values.toArray());
+		}
+	}
+
+
+	@Override
+	public void importFileFromExcel(String fullpath, String tablename,Map<String, Object> extraParams) throws Exception, ServiceException {
+		List<DictionaryValue> fields =  dicManagerService.getDicValueList(tablename);
+		Workbook wookbook = WorkbookFactory.create(new FileInputStream(fullpath));
+		//用于放ImpExcelBean的list
+		//将Excel的各行记录放入ImpExcelBean的list里面
+		//WorkbookFactory是用来将Excel内容导入数据库的一个类
+		Sheet sheet = wookbook.getSheetAt(0);//统计excel的行数
+		int rowLen = sheet.getPhysicalNumberOfRows();//excel总行数，记录数=行数-1
+		//导入各条记录
+		for (int i = 1; i < rowLen; i++) {
+			Row row = sheet.getRow(i);
+			StringBuffer sql = new StringBuffer("INSERT INTO "+	tablename + " (");
+				List<Object> values = new ArrayList<Object>();
+				StringBuilder params = new StringBuilder();
+				StringBuilder questionParams = new StringBuilder();
+				params.append("uuid");
+				questionParams.append("?");
+				values.add(UUID.randomUUID().toString());
+				for(String extra:extraParams.keySet()){
+					params.append(","+extra);
+					questionParams.append(",?");
+					values.add(extraParams.get(extra));
+				}
+				if(fields != null && fields.size()>0){
+					for (int j = 0; j< fields.size(); j++) {  
+						DictionaryValue dictionaryValue = fields.get(j);
+		                	params.append(","+dictionaryValue.getDvno());  
+		                	questionParams.append( ",?");
+		                	values.add(getValue(row.getCell(Integer.valueOf(dictionaryValue.getXsxh()))));
+		            }  
+				}
+			sql.append(params.toString());
+			sql.append(")");
+			sql.append(" VALUES ");
+			sql.append("(");
+			sql.append(questionParams.toString());
+			sql.append(")");
+			generalDao.executeSQL(sql.toString(), values.toArray());
+		}
+	}
+	
+	@Override
+	public List<String> importFileFromExcel(String fullpath, String tablename,Map<String, Object> extraParams, List<String> infos) throws Exception, ServiceException {
+		// 错误信息格式
+		String errorinfo = "档号:%s,题名:%s,存在问题:%s";
+		String total = "本次导入共计:%d条,成功:%d条,失败: %d条";
+		// 记录总条数
+		Integer totolCount = 0;
+		// 导入成功条数
+		Integer successCount = 0;
+		// 导入失败条数
+		Integer errorCount = 0;
+		List<DictionaryValue> fields =  dicManagerService.getDicValueList(tablename);
+		Workbook wookbook = WorkbookFactory.create(new FileInputStream(fullpath));
+		//用于放ImpExcelBean的list
+		//将Excel的各行记录放入ImpExcelBean的list里面
+		//WorkbookFactory是用来将Excel内容导入数据库的一个类
+		Sheet sheet = wookbook.getSheetAt(0);//统计excel的行数
+		int rowLen = sheet.getPhysicalNumberOfRows();//excel总行数，记录数=行数-1
+		totolCount = rowLen-1;
+		//导入各条记录
+		for (int i = 1; i < rowLen; i++) {
+			Row row = sheet.getRow(i);
+			StringBuffer sql = new StringBuffer("INSERT INTO "+	tablename + " (");
+				List<Object> values = new ArrayList<Object>();
+				StringBuilder params = new StringBuilder();
+				StringBuilder questionParams = new StringBuilder();
+				params.append("uuid");
+				questionParams.append("?");
+				values.add(UUID.randomUUID().toString());
+				for(String extra:extraParams.keySet()){
+					params.append(","+extra);
+					questionParams.append(",?");
+					values.add(extraParams.get(extra));
+				}
+			String dh = new String();
+			String cwrq = null;
+			String tm  = new String();;
+			if(fields != null && fields.size()>0){
+				for (int j = 0; j< fields.size(); j++) {  
+					DictionaryValue dictionaryValue = fields.get(j);
+					
+					if("tm".equalsIgnoreCase(dictionaryValue.getDvno())){
+						tm = getValue(row.getCell(Integer.valueOf(dictionaryValue.getXsxh())));
+					}
+					
+					//判断档号是否存在
+					if("dh".equalsIgnoreCase(dictionaryValue.getDvno())){
+						dh = getValue(row.getCell(Integer.valueOf(dictionaryValue.getXsxh())));
+					}
+					
+					if("cwrq".equalsIgnoreCase(dictionaryValue.getDvno())){
+						cwrq = getValue(row.getCell(Integer.valueOf(dictionaryValue.getXsxh())));
+					}
+					params.append(","+dictionaryValue.getDvno());  
+					questionParams.append( ",?");
+					values.add(getValue(row.getCell(Integer.valueOf(dictionaryValue.getXsxh()))));
+				}  
+			}
+			if(dhCheck(dh,tablename)){
+				errorCount++; //导入失败的记录
+				infos.add(String.format(errorinfo, dh,tm,"档号有对应记录"));
+				continue;
+				
+			}else if(cwrq!=null && dateCheck(cwrq)){
+				errorCount++; //导入失败的记录
+				infos.add(String.format(errorinfo, dh,tm,"成文日期格式输入有误"));
+				continue;
+			}
+			sql.append(params.toString());
+			sql.append(")");
+			sql.append(" VALUES ");
+			sql.append("(");
+			sql.append(questionParams.toString());
+			sql.append(")");
+			generalDao.executeSQL(sql.toString(), values.toArray());
+			successCount++;
+		}
+		infos.add(String.format(total,totolCount,successCount,errorCount));
+		return infos;
+	}
+	
+	private boolean dateCheck(String date){
+		if(date.length()!=8){
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean dhCheck(String dh, String tablename){
+		if(customArchiveService.getEntitiesByConditions(tablename, " DH = '"+dh+"' AND DELFLAG = '0' ").size()>0){
+			return true;
+		}
+		return false;
+	}
+	
+}

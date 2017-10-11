@@ -1,0 +1,218 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body" id="list">
+		<input type="hidden" name="processId" value="$!{processId}">
+        ##列表
+    	<div id="tableDiv" class="dt-grid-container"></div>
+    	##分页栏
+    	<div id="pagingDiv" class="dt-grid-toolbar-container"></div>
+      </div>
+    </div>
+    ##CSS
+    ##Javascript
+    ##<script src="${rc.contextPath}/resources/js/web/fileTransfer/transferToDo.js"></script>
+</section>
+
+<script >
+	$(function(){
+		initGrid();
+		refreshGrid();
+		//初始化方法
+		initMethod();
+	});
+	
+	//初始化表格
+    function initGrid(){
+    	var processId = $.trim($('[name="processId"]').val());	
+    	grid = $.fn.DtGrid.init({
+    		loadURL : Util.getRootPath() + "/w/fileTransfer/getToDoTasks?processId="+processId,
+    	    ajaxLoad : true,
+    	    gridContainer : 'tableDiv',
+    	    toolbarContainer : 'pagingDiv',
+    	    lang : 'zh-cn',
+    	    tools : '',
+    	    pageSize : 10,
+    	    check : false,
+    	    pageSizeLimit : [10, 20, 50],
+    		columns : [
+    
+    					
+    		       		{
+    		       			id:'tm',
+    		       			title : '<b>批量移交标题</b>',
+    		       			type:"string",
+    		       			columnClass:'text-center'
+    		       		},
+    					{
+    		       			id:'oldCompany',
+    		       			title : '<b>原公司</b>',
+    		       			type:"string",
+    		       			columnClass:'text-center',
+    
+    		       		},
+    		       		{
+    		       			id:'newCompany',
+    		       			title : '<b>申请移交至公司</b>',
+    		       			type:"string",
+    		       			columnClass:'text-center',
+    
+    		       		},
+    		       		
+    		       		{
+    						id:'uuid',
+    						title : '<b>操作</b>',
+    						type:"string",
+    						hideType:'xs',
+    						columnClass:'text-center',
+    						isContentEditable: false,
+    						resolution:function(value, record, column, grid, dataNo, columnNo){
+    						var btn = "";
+    						if(record.nodeName !== '部门领导审批'){
+    							btn += '<a title="移交上级" class="btn btn-primary btn-xs toLeader" data-id="'+record.uuid+'" >移交上级</a>';
+    						}
+    						btn += '<a title="同意" class="btn btn-primary btn-xs approve" data-id="'+record.uuid+'" >同意</a>';
+    						btn += '<a title="拒绝" class="btn btn-primary btn-xs reject" data-id="'+record.uuid+'">拒绝</a>';
+    						return btn;
+    				}
+    			},
+    		]
+    	});
+    }
+    
+    /**
+     * 刷新列表数据
+     */
+    function refreshGrid() {
+    	grid.parameters = getParameters();
+    	grid.load();
+    }
+    /**
+     * 获取查询参数
+     */
+    function getParameters() {
+    	return {
+    	};
+    }	
+
+	
+	
+	function initMethod(){
+		
+	$("#tableDiv").on("click",".toLeader",function(){
+		//通过批量通用的uuid获得businessId集合
+		var uuid = $.trim($(this).attr('data-id'));
+		var datas;
+		
+		Util.ajaxJsonSync(
+			Util.getRootPath() + "/w/fileTransfer/getRecords",
+			{	
+				daid:uuid,
+			},
+			function(result){
+				if (result.success) {
+					datas = result.datas;
+				} else {
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			}, function (ex) {
+				layer.alert("获得业务集合请求失败", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		);
+		var ids = [];
+		var tablename;
+		for(var i = 0;i<datas.length;i++){
+			var dh = datas[i].dh;
+			ids.push(dh.substring(dh.indexOf('@')+1));
+			tablename = dh.substring(0,dh.indexOf('@'));
+		}
+	
+		ids = ids.join();
+		var options = {}
+		options.url = Util.getRootPath() + "/w/fileTransfer/nextstepView?tablename="+tablename+"&ids="+ids+"&flag=HANDLE"+"&daid="+uuid;
+		options.title = "下一步处理人";
+    	window.parent.showModal(options);
+		
+		
+		
+	});
+	
+	
+	
+	$("#tableDiv").on("click",".approve",function(){
+		
+		var handParam = {};
+		//流程定义Id
+		handParam.processId = $.trim($('[name="processId"]').val());
+		//业务ID
+		handParam.businessId = $.trim($(this).attr('data-id'));
+		
+		handParam.operate = 'APPROVE';
+		
+		//处理流程
+		Util.ajaxJsonSync(
+			Util.getRootPath() + "/w/fileTransfer/handProcess",
+			{	
+				handParam: handParam,
+			},
+			function(result){
+				if (result.success) {
+					layer.msg(result.msg,{time: 2000});
+					 refreshGrid();
+				} else {
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			}, function (ex) {
+				layer.alert("流程处理失败", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		);
+	});
+	
+	$("#tableDiv").on("click",".reject",function(){
+		var handParam = {};
+		//流程定义Id
+		handParam.processId = $.trim($('[name="processId"]').val());
+		//业务ID
+		handParam.businessId = $(this).attr('data-id');
+		
+		handParam.operate = 'REJECT';
+		
+		//处理流程
+		Util.ajaxJsonSync(
+			Util.getRootPath() + "/w/fileTransfer/handProcess",
+			{	
+				handParam: handParam,
+			},
+			function(result){
+				if (result.success) {
+					layer.msg(result.msg,{time: 2000});
+					refreshGrid();
+				} else {
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			}, function (ex) {
+				layer.alert("流程处理失败", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		);
+	});
+	
+	
+	$("#tableDiv").on("click", "img", function(){
+		var fileid = $(this).attr("dagl-uuid");
+		var filename = $(this).attr("title");
+		$.ajax({
+            type: "GET",
+            contentType: "application/json",
+            url: Util.getRootPath() + "/w/preview/" + fileid,
+            dataType: 'json',
+            async: false,	
+            success: function(result) {
+            	var option = {};
+            	option.title = filename;
+            		option.url = result.cache;
+            		window.parent.showModal(option);
+            },
+		});
+	});
+
+	}
+</script>

@@ -1,0 +1,107 @@
+package cn.proem.dagl.web.fileStamp.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.DocumentException;
+
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.fileStamp.service.FileStampService;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.preArchive.service.ZlsjService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.dagl.web.tools.util.CommonFile;
+import cn.proem.stamp.PDFWriter;
+import cn.proem.stamp.PicWriter;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+
+@Controller
+@RequestMapping(value = "/w/fileStamp")
+public class FileStampController extends BaseCtrlModel {
+	@Autowired
+	private FileStampService fileStampService;
+	@Autowired
+	private CustomArchiveService customArchiveService;
+	@Autowired
+	private ZlsjService zlsjService;
+	
+	
+	@RequestMapping(value = "/toFileStampView/{tableName}")
+	public ModelAndView toFileStampView(HttpServletRequest request,@PathVariable("tableName") String tableName) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileStamp/fileStamp.vm");
+		modelAndView.addObject("tablename", tableName);	
+		return modelAndView;
+	}
+	
+	@RequestMapping(value = "/doFileStamp")
+    @ResponseBody
+    public ResultModel<String> doFileStamp(HttpServletRequest request) throws DocumentException, IOException{
+		ResultModel<String> resultModel = new ResultModel<String>();
+		try{
+	        String tablename = request.getParameter("tablename");
+	        String[] uuids = request.getParameterValues("uuids[]");
+	        
+	        for(String uuid : uuids){
+	        	BaseEntityInf entity = customArchiveService.getEntity(tablename, uuid);
+	        	
+	        	List<Ywgj> ywgjs = zlsjService.getFilesByZlsjId(uuid);
+	        	if(ywgjs!=null && ywgjs.size()>0){
+	        		Ywgj ywgj = ywgjs.get(0);
+	        		if("pdf".equalsIgnoreCase(ywgj.getWjlx())){
+	        			String fullPath = this.getFilePath() + ywgj.getWjdz();
+	        			String stampPath = ywgj.getWjdz().substring(0,ywgj.getWjdz().lastIndexOf(".")-36);
+	        			String realStampPath = stampPath+UUID.randomUUID().toString()+".pdf";
+	        			
+	        			String[][] fonts = { { "测试01", "测试02", "测试03" }, { "测试11", "测试12", "测试13" }, { "测试21", "测试22", "aaa测试23" } };
+	        			PDFWriter.drawTable(fullPath, this.getFilePath()+realStampPath,10, 20, 100, 20, 3, 3, fonts, 1, 12,BaseColor.BLACK, BaseColor.RED);
+	        			
+	        			File realStamp = new File(this.getFilePath()+realStampPath);
+	        			Long size = realStamp.length();
+	        			
+	        			fileStampService.doFileStamp(size, ywgj.getId(), realStampPath);
+	        			
+	        		}else if("jpg".equalsIgnoreCase(ywgj.getWjlx())){
+	        			String fullPath = this.getFilePath() + ywgj.getWjdz();
+	        			String stampPath = ywgj.getWjdz().substring(0,ywgj.getWjdz().lastIndexOf(".")-36);
+	        			String realStampPath = stampPath+UUID.randomUUID().toString()+".jpg";
+	        			
+	        			String[][] fonts = { { "测试01", "测试02", "测试03" }, { "测试11", "测试12", "测试13" }, { "测试21", "测试22", "aaa测试23" } };
+	        			
+	        			PicWriter.drawTable(fullPath, this.getFilePath()+realStampPath,10, 20, 100, 20, 2, 2, fonts, 1, 12,BaseColor.BLACK, BaseColor.RED);
+	        		
+	        			File realStamp = new File(this.getFilePath()+realStampPath);
+	        			Long size = realStamp.length();
+	        			
+	        			fileStampService.doFileStamp(size, ywgj.getId(), realStampPath);
+	        		}
+	        	}
+	        }
+		}catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg("文件操作失败");
+		} 
+		return resultModel;
+        
+	}
+	
+}

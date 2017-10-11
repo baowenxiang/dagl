@@ -1,0 +1,87 @@
+@CHARSET "UTF-8";
+.site-block{
+	padding: 20px;
+}
+
+.site-text{
+	position: relative;
+}
+
+*{
+	box-sizing:inherit;
+	-moz-box-sizing:inherit; /* Firefox */
+	-webkit-box-sizing:inherit; /* Safari */
+}
+.nullClazz {
+	border:1px solid red;
+}
+/*非空字段前*样式*/
+.notNull {
+	color:red;
+}
+/* form外的提醒字体样式*/
+.attention {
+	color:red;
+	font-size:12px;
+	padding-left:5px;
+}
+
+
+ .add-file-div{
+    	overflow: hidden;
+    	padding: 0;
+    }
+    .add-file-div>div{
+		width:100%,
+    	display: inline-block;
+    	height: 34px;
+    	line-height: 34px;
+    	border: 1px solid #CCCCCC;
+    	margin-bottom: 2px;
+    	padding: 0 12px;
+    	//text-overflow: ellipsis; 
+		//white-space: nowrap; 
+		//overflow: hidden;
+    }
+	.add-file-div>div>div{
+		width:70%;
+    	display: inline-block;
+    	height: 34px;
+    	line-height: 34px;
+    	//border: 1px solid #CCCCCC;
+    	margin-bottom: 2px;
+    	//padding: 0 12px;
+    	text-overflow: ellipsis; 
+		white-space: nowrap; 
+		overflow: hidden;
+    }
+	
+	
+    .add-file-div>div>div>a{
+		cursor: pointer;
+    	padding-left: 10px;
+		text-decoration:none;
+    	color: #2C6F89;
+    }
+    .add-file-div>div>div>span.file-remove{
+    	cursor: pointer;
+    	position: absolute;
+    	right: 10px;
+    }
+	.add-file-div>div>div>span.file-download{
+    	cursor: pointer;
+    	position: absolute;
+    	right: 35px;
+    }
+	
+	.add-file-div>div>div>span.file-size{
+    	position: absolute;
+    	right: 60px;
+    }
+	
+    .add-file-div>div>div>span.file-remove:HOVER{
+    	color: #A70000;
+    }
+	.add-file-div>div>div>span.file-download:HOVER{
+    	color: #A70000;
+    }

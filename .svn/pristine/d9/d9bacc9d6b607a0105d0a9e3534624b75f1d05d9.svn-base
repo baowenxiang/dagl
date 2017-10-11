@@ -1,0 +1,22 @@
+package cn.proem.dagl.web.tj.dto;
+
+import java.util.List;
+import java.util.Map;
+
+public class DesignDto {
+    /**
+     * @return the report
+     */
+    public List<Map<String, Object>> getReport() {
+        return report;
+    }
+
+    /**
+     * @param report the report to set
+     */
+    public void setReport(List<Map<String, Object>> report) {
+        this.report = report;
+    }
+
+    List<Map<String, Object>> report;
+}

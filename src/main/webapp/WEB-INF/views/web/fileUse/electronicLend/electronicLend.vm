@@ -1,0 +1,101 @@
+##iframe页面主体
+<section class="content">
+    <div class="box box-default">
+        <div class="box-body">
+            ##表名
+            <input type="hidden" name="tablename" value="pfm_electronic_lending">
+			<div class="btn-group">
+                    <button type="button" class="btn btn-default btn-sm btn-icon register">
+                        <svg class="icon" aria-hidden="true">
+                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-registered_trademark"></use>
+                        </svg>
+                        <b hidden>登记</b>&nbsp;
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm addGrid btn-icon toStartProcess">
+                         <svg class="icon" aria-hidden="true">
+                             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-workflow"></use>
+                         </svg>
+                         <b hidden>发起流程</b>&nbsp;
+                    </button>
+                </div>
+			
+			
+            ##资料收集分页展示DTgrid
+            <div id="dataCollectContext" >
+                ##查询条件
+                <div id="conditionElectronicLend"></div>
+                ##列表
+                <div id="tableElectronicLend" class="dt-grid-container"></div>
+                ##分页栏
+                <div id="pagingElectronicLend" class="dt-grid-toolbar-container"></div>
+			</div>
+            
+        </div>
+    </div >
+</section> 
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/fileUse/electronicLend/electronicLend.js"></script>
+<script >
+
+	$(function(){
+		 $("button b").show();
+	
+	
+		//点击发起流程按钮
+		$('button.toStartProcess').on("click",function(){
+			var tablename = $('[name="tablename"]').val();
+			
+			var business = grid.getCheckedRecords();
+			if(business.length==0){
+				layer.alert("请勾选档案！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+    		var businessIds = [];
+			for(var i=0;i<business.length;i++){
+				if(business[i].jyzt === '未登记'){
+					layer.alert("请选择提交信息项", {skin: 'layui-layer-lan',closeBtn: 0});
+					return;
+				}
+    			businessIds.push(business[i].id);
+    		}
+			
+					
+			var businessStr = businessIds.join();
+			
+			var url = Util.getRootPath() + "/w/fileuse/electronicLend/nextstepView?tablename="+tablename+"&ids="+businessStr+"&flag=NEW";
+			
+			var options = {}
+			options.url = url;
+        	options.title = "下一步处理人";
+        	window.parent.showModal(options);
+			
+			
+		});
+		
+		//点击登记按钮
+		$(".register").on("click",function(){
+			var business = grid.getCheckedRecords();	
+			
+			if(business.length==0){
+				layer.alert("请勾选电子借阅！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+			if(business.length>1){
+				layer.alert("只能选择一条！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+			if(business[0].jyzt !== '未登记'){
+				layer.alert("你选择的借阅状态有误！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return;
+			}
+		
+			var url = Util.getRootPath() + "/w/fileuse/electronicLend/registerView?id="+business[0].id;
+			
+			var options = {}
+			options.url = url;
+        	options.title = "登记";
+        	window.parent.showModal(options);
+		});
+	});
+
+</script>

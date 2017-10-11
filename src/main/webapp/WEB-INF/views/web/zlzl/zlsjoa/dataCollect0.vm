@@ -1,0 +1,30 @@
+ ##iframe页面主体
+ <section class="content">
+	<div class="box box-default">
+      <div class="box-body" id="list">
+			##表名
+            <input type="hidden" name="tablename" value="pfm_zlzl_zlsj">
+			#parse("web/zlzl/zlsjoa/button.vm")
+                    	
+            ##资料收集分页展示DTgrid
+            <div id="dataCollectContext" >
+            	##查询条件
+            	<div id="conditionDataCollect">
+            	</div>
+            	##列表
+            	<div id="tableDataCollect" class="dt-grid-container"></div>
+            	##分页栏
+            	<div id="pagingDataCollect" class="dt-grid-toolbar-container"></div>
+            </div>
+    
+	  </div>
+	</div >
+</section>     
+        
+##CSS
+<link href="${rc.contextPath}/resources/css/web/zlzl/zlsjoa/dataCollect.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/zlzl/zlsjoa/dataCollect0.js"></script>
+
+

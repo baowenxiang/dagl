@@ -1,0 +1,26 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body" id="list">
+			<input type="hidden" name="tablename" value="${tablename}" />
+			<input type="hidden" name="auth_data" value="$!{auth_data}" />
+			<input type="hidden" name="auth_look" value="$!{auth_look}" />
+			<input type="hidden" name="auth_delete" value="$!{auth_delete}" />
+            #parse("web/table/search.vm")
+            #parse("web/ygtable/tools.vm")
+            <button type="button" class="btn btn-default btn-sm addOAdata btn-icon" style="display:none">
+		         <svg class="icon" aria-hidden="true">
+		             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+		         </svg>
+		         <b hidden>OA数据归档</b>&nbsp;
+		    </button>
+            ##列表
+        	<div id="tableDataCollect" class="dt-grid-container"></div>
+        	##分页栏
+        	<div id="pagingDataCollect" class="dt-grid-toolbar-container"></div>
+      </div>
+    </div>
+    ##CSS
+    ##Javascript
+    <script src="${rc.contextPath}/resources/js/web/ygtable/list.js"></script>
+    
+</section>

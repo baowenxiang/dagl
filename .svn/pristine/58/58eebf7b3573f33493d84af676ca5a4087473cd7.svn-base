@@ -1,0 +1,67 @@
+ul.layui-nav{
+	/*height: 44px;*/
+	background-color: #F0F0F0;
+	border-radius : 0;
+}
+ul.layui-nav p{
+	height: 44px;
+	color:#000000;
+	line-height:44px;
+	width: 90%;
+	display: inline-block;
+	margin: 0;
+}
+.singleDiv {
+	width:22%;
+	margin:1%;
+	display: inline-block;
+}
+.colorDiv {
+	width: 100%;
+}
+.blue {
+	background-color: #3C8DBC;
+}
+.black {
+	background-color: #000000;
+}
+.yellow {
+	background-color: #f39c12;
+}
+.purple {
+	background-color: #605ca8 !important;
+}
+.red {
+	background-color: #FF2D2D;
+}
+.contentDiv p {
+	color: #000000;
+	text-align: center;
+	padding:5%;
+}
+.btns {
+	height: 44px;
+	line-height:44px;
+	width: 10%;
+	display: inline-block;
+	float: right
+}
+/*#preview {
+	width : 75%;
+	display: inline-block;
+}
+.picBtn {
+	width:20%;
+	display: inline-block;
+}*/
+.select {
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.7)
+}
+.selectIcon {
+	font-size:20px;
+	width:100%;
+	text-align:center;
+}
+.hideSelectIcon {
+	display: none;
+}

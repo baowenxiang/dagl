@@ -1,0 +1,54 @@
+$(function(){
+	var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+	initGrid();
+	refreshGrid();
+	layer.close(index);
+})
+
+
+
+function initGrid(){
+	
+	grid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/fileidentify/identifyInfo/getIdentifyInfoTables",
+	    ajaxLoad : true,
+	    gridContainer : 'tableIdentifyInfo',
+	    toolbarContainer : 'pagingIdentifyInfo',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 10,
+	    check : true,
+	    pageSizeLimit : [10,20,50],
+	    columns : [
+					{
+						id:'dh',
+						title : '<b>档号</b>',
+						type:"string",
+						columnClass:'text-center'
+					},
+		       		{
+		       			id:'jdnr',
+		       			title : '<b>鉴定内容</b>',
+		       			type:"string",
+		       			columnClass:'text-center'
+		       		},
+		       		{
+		       			id:'jdsj',
+		       			title : '<b>鉴定时间</b>',
+		       			type:"string",
+		       			columnClass:'text-center'
+		       		}
+		       		
+		       		]
+	});
+	refreshGrid();
+}
+
+function refreshGrid() {
+	grid.parameters = getParameters();
+	grid.load();
+}
+function getParameters() {
+	return{
+	}
+}

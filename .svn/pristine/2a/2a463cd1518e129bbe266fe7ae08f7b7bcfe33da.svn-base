@@ -1,0 +1,23 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body" id="list">
+			<input type="hidden" name="tablename" value=$!{tablename} />
+			<input type="hidden" name="flag" value=$!{flag} />
+			<input type="hidden" name="relatablename" value=$!{relatablename} />
+            <input type="hidden" name="auth_data" value="$!{auth_data}" />
+			<input type="hidden" name="auth_look" value="$!{auth_look}" />
+			<input type="hidden" name="auth_delete" value="$!{auth_delete}" />
+			<input type="hidden" name="kjlb2" value="$!{kjlb2}" />
+		    #parse("web/table/search.vm")
+            #parse("web/kjCategory/tools.vm")
+            ##列表
+        	<div id="tableDataCollect" class="dt-grid-container"></div>
+        	##分页栏
+        	<div id="pagingDataCollect" class="dt-grid-toolbar-container"></div>
+      </div>
+    </div>
+    ##CSS
+    ##Javascript
+    <script src="${rc.contextPath}/resources/js/web/kjCategory/qtList.js"></script>
+    
+</section>

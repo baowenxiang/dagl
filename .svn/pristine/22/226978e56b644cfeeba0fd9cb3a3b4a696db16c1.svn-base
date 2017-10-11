@@ -1,0 +1,74 @@
+<section class="content">
+	<div class="box box-default">
+		<div class="box-body">
+      		##title区域
+      		<ul class="layui-nav">
+		  		<li class="layui-nav-item">
+		  			<p>数据库备份</p>
+		  			<span class="btns">
+		            	<button type="button" class="btn btn-primary add" data-modal="dataCollectUpdate">新增备份</button>
+		            </span>
+		  		</li>
+			</ul>
+			##备份记录分页展示
+		    <div style="" id="dataCollectContext" >
+		    	##查询条件
+		    	<div id="conditionDataCollect">
+		    	</div>
+		    	##列表
+		    	<div id="tableDataCollect" class="dt-grid-container"></div>
+		    	##分页栏
+		    	<div id="pagingDataCollect" class="dt-grid-toolbar-container"></div>
+		    </div>
+            	
+		</div>
+	</div>
+	##新增备份模态框
+	<div class="modal" id="dataCollectUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1">数据库备份</h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					##备份信息填写区域      	
+		            <form class="backForm form-horizontal" role="form">
+						<div class="form-group">
+							<label class="col-sm-3 control-label" for="fileName">文件名</label>
+					    	<div class="col-sm-7">
+					        	<input name="filename" id="fileName" class="form-control">
+					    	</div>
+					    </div>
+					    <div class="form-group">
+							<label class="col-sm-3 control-label" for="content">备注</label>
+					    	<div class="col-sm-7">
+					        	<input name="content" id="content" class="form-control">
+					    	</div>
+					    </div>
+					    ##按钮区域
+						##<div class="form-group">
+							##<label class="col-sm-4 control-label"></label>
+							##<div class="col-sm-2">
+				            	##<button type="button" class="btn btn-primary backup">提交</button>
+				            ##</div>
+				        ##</div>
+					</form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary backup" data-dismiss="modal">提交</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+</section>     
+        
+##CSS
+<link href="${rc.contextPath}/resources/css/web/setting/backup.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/setting/backup.js"></script>

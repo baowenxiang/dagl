@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- layer -->
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/table/import.css" rel="stylesheet">
+</head>
+<body>
+    <div id="impapp" class="site-text site-block">
+    		<form class="layui-form mailForm">
+				<input type="hidden" name="tablename" value=$!{tablename}>
+                <div class="layui-form-item yw">
+                    <label class="layui-form-label">导入</label>
+                    <div class="layui-input-block">
+						<input type="file" name="importAttachment" id="importAttachment"  multiple style="display: none;">
+						<label class="uploadFileBtn layui-input" for="importAttachment">
+							<i class="fa fa-cloud"></i><span>点击上传导入模版</span>
+						</label>	
+					 </div>
+                </div>
+        		<div class="layui-form-item yw">
+        			<label class="layui-form-label"></label>
+        			<div class="layui-input-block">
+        				<div class="add-file-div col-sm-12"></div>
+        			</div>                   	        	
+        		</div>
+				
+				<div class="layui-form-item yw">
+        			<div class="layui-input-block">
+        				<a class="layui-btn layui-btn-default" id="import">导入</a>
+        				<a class="layui-btn layui-btn-primary" id="close">关闭</a>
+        			</div>
+        		</div>
+			</form>
+    </div>
+</body>
+
+
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/table/import.js"></script>
+<script>
+
+</script>
+</html>
+	

@@ -1,0 +1,567 @@
+package cn.proem.dagl.web.scheduled.task;
+
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.UUID;
+
+import javax.xml.namespace.QName;
+
+import org.apache.axis2.AxisFault;
+import org.apache.axis2.addressing.EndpointReference;
+import org.apache.axis2.client.Options;
+import org.apache.axis2.rpc.client.RPCServiceClient;
+import org.apache.axis2.transport.http.HTTPConstants;
+import org.dom4j.Attribute;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.dagl.web.oaservice.entity.OAFjObj;
+import cn.proem.dagl.web.oaservice.entity.OAGwObj;
+import cn.proem.dagl.web.oaservice.entity.TGdfjObj;
+import cn.proem.dagl.web.oaservice.entity.TGdwjObj;
+import cn.proem.dagl.web.oaservice.entity.TYwgjObj;
+import cn.proem.dagl.web.oaservice.service.GdfjService;
+import cn.proem.dagl.web.oaservice.service.GdwjService;
+import cn.proem.dagl.web.oaservice.service.IYwgjService;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.tools.util.ConcurrentUtil;
+import cn.proem.suw.web.common.constant.Path;
+import cn.proem.suw.web.common.util.ConfigReader;
+import cn.proem.suw.web.common.util.StringUtil;
+
+public class OAThread extends Thread {
+    private GdwjService gdwjService;
+    private GeneralDao generalDao;
+    private IYwgjService ywgjService;
+    private GdfjService gdfjService;
+    private SessionFactory sessionfactory;
+    private String path;
+    private String startDate;
+    private String endDate;
+    private int all;
+    private int cnt;
+    
+    @SuppressWarnings("unchecked")
+    public void run() {
+        boolean participate = ConcurrentUtil.bindHibernateSessionToThread(this.sessionfactory);  
+            // TODO:
+            System.out.println("==========【OA数据归档】==============【开始】==========");
+            Integer res = 0;
+            OAGwObj gwObj = new OAGwObj();
+            List<OAFjObj> fjObjList = new ArrayList<OAFjObj>();
+            // 密钥
+            String pwdStr = null;
+            try {
+                Scanner in = new Scanner(new File(ConfigReader.readOAPwd()));
+                while (in.hasNextLine()) {
+                    pwdStr = in.nextLine();
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            String key = pwdStr;
+            // String key = "vicsq374";//三桥
+            // String key = "mansd285";//隧道
+            // 判断时间参数是否为空
+            if (StringUtil.isEmpty(startDate)) {
+                // 轮询的前一天,[nowTime-1,nowTime]
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(Calendar.DATE, -1); // 前一天
+                Date date = calendar.getTime();
+                startDate = this.timeConv(date, "yyyy-MM-dd HH:mm:ss");
+                // 当前时间,轮询时间
+                endDate = this.timeConv(new Date(), "yyyy-MM-dd HH:mm:ss");
+            }
+
+            // 文件存储路径
+            // String ywDir="D:/yw/";//原文（附件+公文办文单）
+            // String gwDir="D:/gw/";//公文XML
+            String ywDir = path + Path.UPLOAD_OA_GDFJ;// 附件原文
+            String gwDir = path + Path.UPLOAD_OA_GDWJ;// 公文XML
+
+            SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+            String systime = df.format(new Date());
+            String[] a = systime.split("/");
+            for (String b : a) {
+                ywDir = ywDir + b + "/";
+                gwDir = gwDir + b + "/";
+            }
+            if (!new File(ywDir).exists()) {
+                new File(ywDir).mkdirs();
+            }
+            if (!new File(gwDir).exists()) {
+                new File(gwDir).mkdirs();
+            }
+
+            // --1.OA对接,获取公文ids
+            String[] idsStr_doc = this.getEdocByAccount_client(key, startDate, endDate);
+            if(idsStr_doc != null){
+                all = idsStr_doc.length;
+            }
+            // String idsStr_doc[] = {"8820785270165162547",
+            // "6618166266175440884", "4047450895024802566",
+            // "4080801277921609513", "2698127767948446610",
+            // "1889535803203142566"};
+            // --2.循环获取对应id下的公文XML格式
+            for (String id : idsStr_doc) {
+                this.exportEdocDate_client(key, id, gwDir);
+            }
+
+            // --3.循环获取对应id下的公文数据并入库
+            for (String id : idsStr_doc) {
+
+                // --3.1循环解析XML,获取归档文件和归档附件信息
+                Map map = this.readXML(gwDir, ywDir, id);
+                gwObj = (OAGwObj) map.get("gw");
+                fjObjList = (List<OAFjObj>) map.get("fj");
+
+                // --3.1.1对应id下归档文件信息入库
+                TGdwjObj gdwjObj = gwObj.toGdwjObj();// OAGwObj->TGdwjObj,实体转换
+
+                if (gdwjObj.getId() == null || gdwjObj.getId().equals("")) {
+                    gdwjObj.setId(UUID.randomUUID().toString().substring(0, 32));// 随机生成32位ID
+                }
+                gdwjObj.setSfygd("sfygd_2");
+                gdwjObj.setSfjd("sfjd_2");
+                gdwjService.addGdwjObj(gdwjObj, id);// 归档文件入库
+
+                // --3.1.2获取对应id下公文对应的办文单并入库
+                this.transferDownloadImgService_client(key, id, "edoc", ywDir);
+                TYwgjObj ywgjObj_bwd = new TYwgjObj();// 添加到原文挂接表
+                ywgjObj_bwd.setId(gdwjObj.getId());
+                ywgjObj_bwd.setWjlx("jpg");
+                ywgjObj_bwd.setWjdz(ywDir.split("\\\\")[1] + id + ".jpg");
+                ywgjObj_bwd.setScrq(new Date());
+                ywgjObj_bwd.setWjdx(
+                        Integer.parseInt((String.valueOf((new File(ywDir.split("\\\\")[1] + id + ".jpg")).length()))));
+                ywgjObj_bwd.setScz("OA");
+                ywgjService.addYwgjObj(ywgjObj_bwd);// 办文单入库
+                
+                          
+                Ywgj bwd = new Ywgj();
+                bwd.setDelFlag(0);
+                bwd.setScrq(new Date());
+                bwd.setScz("OA");
+                bwd.setWjdx(new Long(Integer.parseInt((String.valueOf((new File(ywDir.split("\\\\")[1] + id + ".jpg")).length())))));
+                bwd.setWjlx("jpg");
+                bwd.setWjdz(ywDir.split("\\\\")[1] + id + ".jpg");
+                bwd.setWjm(id + ".jpg");
+                bwd.setZlsj(gdwjObj.getId());
+                generalDao.save(bwd); // 办文单插入原文表
+                System.out.println(gdwjObj.getTm());
+                // --3.1.3对应id下归档附件的获取和挂接
+                for (OAFjObj fjObj : fjObjList) {
+
+                    // 添加到OA附件表
+                    fjObj.setFormId(gdwjObj.getId());
+                    TGdfjObj gdfjObj = fjObj.toGdfjObj();// OAFjObj->TGdfjObj,实体转换
+                    String zlsj = gdfjObj.getId();
+                    gdfjService.addGdfjObj(gdfjObj);
+
+                    // 获取归档附件
+                    this.transferDownloadService_client(key, fjObj.getFileId(), ywDir, fjObj.getFileName(),
+                            fjObj.getFileSuffix());
+
+                    // 添加到原文挂接表
+                    String wjdz = fjObj.getFileDir() + gdfjObj.getFjmc() + "." + gdfjObj.getFjhz();
+                    TYwgjObj ywgjObj = new TYwgjObj();
+                    ywgjObj.setId(gdwjObj.getId());
+                    ywgjObj.setWjlx(gdfjObj.getFjhz());
+                    ywgjObj.setWjdz(wjdz.split("\\\\")[1]);
+                    ywgjObj.setScrq(new Date());
+                    ywgjObj.setWjdx(Integer.parseInt((String.valueOf((new File(wjdz)).length()))));
+                    ywgjObj.setScz("OA");
+                    ywgjService.addYwgjObj(ywgjObj);// 归档附件入库
+                    // 转存数据到原文挂接表
+                    Ywgj gj = new Ywgj();
+                    gj.setDalx(ywgjObj.getDalx());
+                    gj.setDelFlag(0);
+                    gj.setScrq(ywgjObj.getScrq());
+                    gj.setScz(ywgjObj.getScz());
+                    gj.setWjdx((long) ywgjObj.getWjdx());
+                    // gj.setWjdz(ywgjObj.getWjdz());
+                    String str = ywgjObj.getWjdz();
+                    gj.setWjdz(str.substring(0, str.lastIndexOf("/")) + "\\" + str.substring(str.lastIndexOf("/") + 1));
+                    gj.setWjlx(ywgjObj.getWjlx());
+                    gj.setXsxh(ywgjObj.getXsxh());
+                    gj.setZlsj(zlsj);
+                    gj.setWjm(gdfjObj.getFjmc() + "." + ywgjObj.getWjlx());
+                    generalDao.save(gj);
+                }
+               this.cnt ++;
+            }
+            ConcurrentUtil.closeHibernateSessionFromThread(participate, sessionfactory);  
+            System.out.println("==========【OA数据归档】==============【结束】==========");
+            // ------------------ 开始执行 ---------------------------
+            System.out.println("STOP TIME:" + System.currentTimeMillis());
+    }
+
+    public OAThread(SessionFactory sessionfactory, GdwjService gdwjService, GeneralDao generalDao, IYwgjService ywgjService, GdfjService gdfjService) {
+        this.sessionfactory = sessionfactory;
+        this.gdfjService = gdfjService;
+        this.gdwjService = gdwjService;
+        this.generalDao = generalDao;
+        this.ywgjService = ywgjService;
+        this.cnt = 0;
+        this.all = 0;
+    }
+
+    public void setOADate(String path, String startDate, String endDate) {
+        this.path = path;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    public String[] getEdocByAccount_client(String key, String startDate, String endDate) {
+        String result = null;
+        String[] resultArr = null;
+        try {
+            EndpointReference targetEPR = new EndpointReference(
+                    "http://221.226.17.202:88/seeyon/services/transferService?wsdl");
+            RPCServiceClient serviceClient;
+            serviceClient = new RPCServiceClient();
+            Options options = serviceClient.getOptions();
+            options.setTo(targetEPR);
+            // QName opAdd =new
+            // QName("http://impl.service.transfer.plugin.v3x.seeyon.com",
+            // "getEdocByAccount");
+            QName opAdd = new QName("http://impl.service.transfer.apps.seeyon.com", "getEdocByAccount");
+            Class[] returnTypes = new Class[] { String.class };
+            Object[] opAddArgs = new Object[] { key, startDate, endDate };
+            Object[] response = serviceClient.invokeBlocking(opAdd, opAddArgs, returnTypes);
+            result = (String) response[0];
+            resultArr = result.split(";;");
+            System.out.println(result);
+        } catch (AxisFault e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return resultArr;
+
+    }
+
+    public String timeConv(Date date, String str) {
+
+        // 初始化
+        String dateString = null;
+        SimpleDateFormat formatter = null;
+
+        // 根据输入参数选择对应的转换格式
+        if (str.equals("yyyy-MM-dd")) {
+            formatter = new SimpleDateFormat("yyyy-MM-dd");
+        } else if (str.equals("yyyy-MM-dd HH:mm:ss")) {
+            formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+        dateString = formatter.format(date);
+        return dateString;
+    }
+
+    public void exportEdocDate_client(String key, String id, String dir) {
+
+        EndpointReference targetEPR = new EndpointReference(
+                "http://221.226.17.202:88/seeyon/services/transferService?wsdl");
+        RPCServiceClient serviceClient;
+        try {
+            serviceClient = new RPCServiceClient();
+            Options options = serviceClient.getOptions();
+            options.setTo(targetEPR);
+
+            options.setManageSession(true);
+            options.setProperty(HTTPConstants.REUSE_HTTP_CLIENT, true);
+            // QName opAdd =new
+            // QName("http://impl.service.transfer.plugin.v3x.seeyon.com",
+            // "exportEdocDate");
+            QName opAdd = new QName("http://impl.service.transfer.apps.seeyon.com", "exportEdocDate");
+            Class[] returnTypes = new Class[] { String.class };
+            Object[] opAddArgs = new Object[] { key, id };
+            Object[] response = serviceClient.invokeBlocking(opAdd, opAddArgs, returnTypes);
+            String result = (String) response[0];
+            // System.out.println(result);
+            serviceClient.cleanupTransport();
+            try {
+                byte[] buff = new byte[] {};
+                FileOutputStream output = new FileOutputStream(dir + id + ".xml");
+                buff = result.getBytes("UTF-8");
+                output.write(buff, 0, buff.length);
+                output.flush();
+                output.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } catch (AxisFault e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+    }
+
+    public Map readXML(String gwDir, String ywDir, String id) {
+        System.out.println("ID号为：" + id + "的公文XML解析开始....");
+        // --初始化
+        OAGwObj gwObj = new OAGwObj();
+        List<OAFjObj> fjObjList = new ArrayList<OAFjObj>();
+        StringBuffer gwObjStr = new StringBuffer();
+        StringBuffer fileIds = new StringBuffer();
+        StringBuffer fileSuffixs = new StringBuffer();
+        StringBuffer fileNames = new StringBuffer();
+        String[] gwObjArr = null;
+        String[] fileIdsArr = null;
+        String[] fileSuffixsArr = null;
+        String[] fileNamesArr = null;
+        Map map = new HashMap();
+
+        try {
+            SAXReader reader = new SAXReader();
+            Document doc = reader.read(new File(gwDir + id + ".xml"));
+
+            // --1.解析XML
+            Element root = doc.getRootElement();
+            // --1.1第一层
+            for (Iterator it = root.elementIterator(); it.hasNext();) {
+                Element element = (Element) it.next();
+                Attribute attribute = element.attribute("propertyname");
+                String text = attribute.getText();
+                System.out.println(text);
+
+                // --1.2第二层
+                for (Iterator it2 = element.elementIterator(); it2.hasNext();) {
+
+                    Element element2 = (Element) it2.next();
+                    Attribute attribute2 = element2.attribute("type");
+                    if (attribute2 != null) {
+                        String text2 = attribute2.getText();
+
+                        // --1.3第三层
+                        for (Iterator it3 = element2.elementIterator(); it3.hasNext();) {
+
+                            Element element3 = (Element) it3.next();
+                            Attribute attribute3 = element3.attribute("propertyname");
+                            Attribute fileId = element3.attribute("value");
+
+                            String text3 = attribute3.getText();
+
+                            if (text2.equals("DocumentFormExport")) {
+
+                                // --1.4获取正文字段信息
+                                if (text3.equals("value")) {
+                                    if (element3.getText() == null || element3.getText() == "") {
+                                        gwObjStr.append(" ");
+                                    } else {
+                                        gwObjStr.append(element3.getText());
+                                    }
+                                    gwObjStr.append(";;");
+                                }
+                            } else if (text2.equals("AttachmentExport")) {
+
+                                // --1.5获取附件字段信息（ID、后缀名、文件名）
+                                if (text3.equals("id")) {
+                                    if (fileId.getText() == null || fileId.getText() == "") {
+                                        fileIds.append(" ");
+                                    } else {
+                                        fileIds.append(fileId.getText());
+                                    }
+                                    fileIds.append(";;");
+                                }
+                                if (text3.equals("filesuffix")) {
+                                    if (element3.getText() == null || element3.getText() == "") {
+                                        fileSuffixs.append(" ");
+                                    } else {
+                                        fileSuffixs.append(element3.getText());
+                                    }
+                                    fileSuffixs.append(";;");
+
+                                }
+                                if (text3.equals("fileName")) {
+                                    if (element3.getText() == null || element3.getText() == "") {
+                                        fileNames.append(" ");
+                                    } else {
+                                        fileNames.append(element3.getText());
+                                    }
+                                    fileNames.append(";;");
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            // --2.将公文字段信息存入实体
+            gwObjArr = (gwObjStr.toString()).split(";;");
+            gwObj.setFormId(gwObjArr[0]);
+            gwObj.setTm(gwObjArr[1]);
+            gwObj.setFlh(gwObjArr[3]);
+            gwObj.setWh(gwObjArr[5]);
+            if (gwObjArr[7].equals(" ") || gwObjArr[7].equals("")) {
+                gwObj.setMj(null);
+            } else {
+                gwObj.setMj(gwObjArr[7]);
+            }
+            // gwObj.setZrz(gwObjArr[14]+";"+gwObjArr[11]);
+
+            // 1：收文，0：发文
+            if (gwObjArr[3].equals("1") && (gwObjArr.length > 21)) {
+                gwObj.setZrz(gwObjArr[14]);
+                gwObj.setCwrq(gwObjArr[21]);
+            } else if (gwObjArr[3].equals("1") && (gwObjArr.length == 21)) {
+                gwObj.setZrz(" ");
+                gwObj.setCwrq(" ");
+            } else if (gwObjArr[3].equals("0")) {
+                gwObj.setZrz(gwObjArr[14]);
+                gwObj.setCwrq(gwObjArr[16]);
+            }
+
+            gwObj.setZtc(gwObjArr[19]);
+
+            // --3.将附件字段信息存入实体
+            fileIdsArr = (fileIds.toString()).split(";;");
+            fileSuffixsArr = (fileSuffixs.toString()).split(";;");
+            fileNamesArr = (fileNames.toString()).split(";;");
+            for (int i = 0; i < fileIdsArr.length; i++) {
+                OAFjObj fjObj = new OAFjObj();
+                fjObj.setFileDir(ywDir);
+                fjObj.setFileId(fileIdsArr[i]);
+                fjObj.setFileSuffix(fileSuffixsArr[i]);
+                fjObj.setFileName(fileNamesArr[i]);
+                fjObjList.add(fjObj);
+
+            }
+            map.put("gw", gwObj);
+            map.put("fj", fjObjList);
+
+            // //--4.归档附件获取
+            // for(OAFjObj fj:fjObjList){
+            // transferDownloadService_client(key,fj.getFileId(),ywDir,fj.getFileName(),fj.getFileSuffix());
+            // }
+
+        } catch (DocumentException | MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("ID号为：" + id + "的公文XML解析完成！");
+        return map;
+    }
+
+    public void transferDownloadImgService_client(String key, String id, String type, String dir) {
+        StringBuffer parameters = new StringBuffer();
+        parameters.append("summaryId=" + id);// 公文或表单流程id
+        parameters.append("&type=" + type);// 公文 edoc 表单col
+        URL preUrl = null;
+        URLConnection uc = null;
+        try {
+            preUrl = new URL("http://221.226.17.202:88/seeyon/services/transferDownloadImgService");
+            String s = parameters.toString();
+            uc = preUrl.openConnection();
+            uc.setDoOutput(true);
+            uc.setUseCaches(false);
+            uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            HttpURLConnection hc = (HttpURLConnection) uc;
+            hc.setRequestMethod("POST");
+            OutputStream os = hc.getOutputStream();
+            DataOutputStream dos = new DataOutputStream(os);
+            dos.writeBytes(s);
+            dos.flush();
+            dos.close();
+            FileOutputStream file = new FileOutputStream(dir + id + ".jpg");
+            InputStream is = hc.getInputStream();
+            int ch;
+            while ((ch = is.read()) != -1) {
+                file.write(ch);
+            }
+            if (is != null)
+                is.close();
+            System.out.println("获取文件完成");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void transferDownloadService_client(String key, String fileId, String fileDir, String fileName,
+            String fileSuffix) {
+        StringBuffer parameters = new StringBuffer();
+        parameters.append("fileId=" + fileId);
+        URL preUrl = null;
+        URLConnection uc = null;
+        try {
+            preUrl = new URL("http://221.226.17.202:88/seeyon/services/transferDownloadService");
+            String s = parameters.toString();
+            uc = preUrl.openConnection();
+            uc.setDoOutput(true);
+            uc.setUseCaches(false);
+            uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            HttpURLConnection hc = (HttpURLConnection) uc;
+            hc.setRequestMethod("POST");
+            OutputStream os = hc.getOutputStream();
+            DataOutputStream dos = new DataOutputStream(os);
+            dos.writeBytes(s);
+            dos.flush();
+            dos.close();
+            FileOutputStream file = new FileOutputStream(fileDir + fileName + "." + fileSuffix);
+            InputStream is = hc.getInputStream();
+            int ch;
+            while ((ch = is.read()) != -1) {
+                file.write(ch);
+            }
+            if (is != null)
+                is.close();
+            System.out.println("获取文件完成");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * @return the all
+     */
+    public int getAll() {
+        return all;
+    }
+
+    /**
+     * @return the cnt
+     */
+    public int getCnt() {
+        return cnt;
+    }
+
+    /**
+     * @param all the all to set
+     */
+    public void setAll(int all) {
+        this.all = all;
+    }
+
+    /**
+     * @param cnt the cnt to set
+     */
+    public void setCnt(int cnt) {
+        this.cnt = cnt;
+    }
+    
+    
+}

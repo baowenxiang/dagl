@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- layer -->
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/common/detail.css" rel="stylesheet">	
+	<link href="${rc.contextPath}/resources/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		.row {
+			margin:5px;
+		}
+	</style>
+</head>
+<body>
+<div id="daglapp" class="site-text site-block">
+	##档案类型
+	<input type="hidden" name="tablename" value=$!{tablename}>	  </div>
+      </div>
+</div>
+    </form>        <input type="hidden" name="tablename" value=$!{tablename}>
+
+</body>
+
+   <form claslayui-tab-brief action="">
+        <div class="layui-tab layui-tab-card" lay-filter="docDemoTabBrief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">基本信息</li>
+               <!-- 
+               	<li>原文</li> 
+               -->
+                <li>目录信息</li>
+           <!-- <li>业务行为</li>
+                <li>部门用户</li>
+                <li>数字签名</li>
+                <li>锁定签名</li>
+               -->
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+					
+					<div class="container-fluid  form-inline">
+						
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>封装包格式描述</label>
+                                    <input type="text" class="form-control" value="$!{fzbgems}" name="fzbgems">
+                                </div>
+                            </div>
+                        </div>
+    					<div class="row">
+    						<div class="col-sm-6">
+								<div class="form-group">
+									<label for="exampleInputName2">版本</label>
+									<input type="text" class="form-control" value="$!{bb}" name="bb">
+                          		</div>
+    						</div>
+    						<div class="col-sm-6">
+								<div class="form-group">
+									<label for="exampleInputName2">封装包类型</label>
+									<input type="text" class="form-control" value="$!{fzblx}" name="fzblx">
+                                </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+    								  <div class="form-group">
+                                        <label for="exampleInputName2">封装包创建时间</label>
+                                        <input type="text" class="form-control" value="$!{fzbcjsj}" name="fzbcjsj">
+                                      </div>
+    						</div>
+    						<div class="col-sm-6">
+    								  <div class="form-group">
+                                        <label for="exampleInputName2">封装包创建单位</label>
+                                        <input type="text" class="form-control" value="$!{fzbcjdw}" name="fzbcjdw">
+                                      </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label for="exampleInputName2">档案馆代码</label>
+                                    <input type="text" class="form-control" value="$!{dagdm}" name="dagdm">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label for="exampleInputName2">全宗名称</label>
+                                    <input type="text" class="form-control" value="$!{qzmc}" name="qzmc">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>电子文件号</label>
+                                    <input type="text" class="form-control" value="$!{dzwjh}" name="dzwjh">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>全宗号</label>
+                                    <input type="text" class="form-control" value="$!{qzh}" name="qzh">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>目录号</label>
+                                    <input type="text" class="form-control" value="$!{mlh}" name="mlh">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>年度</label>
+                                    <input type="text" class="form-control" value="$!{nd}" name="nd">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>保管期限</label>
+                                    <input type="text" class="form-control" value="$!{bgqx}" name="bgqx">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>机构或问题</label>
+                                    <input type="text" class="form-control" value="$!{jghwt}" name="jghwt">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>类别号</label>
+                                    <input type="text" class="form-control" value="$!{lbh}" name="lbh">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>室编案卷号</label>
+                                    <input type="text" class="form-control" value="$!{sbajh}" name="sbajh">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>馆编案卷号</label>
+                                    <input type="text" class="form-control" value="$!{gbjh}" name="gbjh">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>室编件号</label>
+                                    <input type="text" class="form-control" value="$!{sbjh}" name="sbjh">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>馆编件号</label>
+                                    <input type="text" class="form-control" value="$!{gbjh}" name="gbjh">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>页号</label>
+                                    <input type="text" class="form-control" value="$!{yh}" name="yh">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-12">
+								  <div class="form-group">
+                                    <label>题名</label>
+                                    <textarea class="form-control" name="tm" rows="3">$!{tm}</textarea>
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>责任者</label>
+                                    <input type="text" class="form-control" value="$!{zrz}" name="zrz">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>文件编号</label>
+                                    <input type="text" class="form-control" value="$!{wjbh}" name="wjbh">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>日期</label>
+                                    <input type="text" class="form-control" value="$!{rq}" name="rq">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>密级</label>
+                                    <input type="text" class="form-control" value="$!{mj}" name="mj">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>页数</label>
+                                    <input type="text" class="form-control" value="$!{ys}" name="ys">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>控制标识</label>
+                                    <input type="text" class="form-control" value="$!{kzbs}" name="kzbs">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>语种</label>
+                                    <input type="text" class="form-control" value="$!{yz}" name="yz">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>稿本</label>
+                                    <input type="text" class="form-control" value="$!{gb}" name="gb">
+                                  </div>
+    						</div>
+    					</div>
+                    </div>
+				</div>
+       <!--         <div class="layui-tab-item">
+					<table class="table">
+                      <thead>
+                        <tr>
+                          <th>文档标识符</th>
+                          <th>文档序号</th>
+						  <th>计算机文件名</th>
+                          <th>计算机文件大小</th>
+						  <th>扫描分辨率</th>
+                          <th>扫描色彩模式</th>
+						  <th>反编码关键字</th>
+                          <th>原文</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+				
+				</div>
+			-->
+                <div class="layui-tab-item">
+					<div class="container-fluid  form-inline">
+                        
+    					<div class="row">
+    						<div class="col-sm-6">
+								<div class="form-group">
+									<label>全宗号</label>
+									<input type="text" class="form-control" value="$!{qzh}" name="qzh">
+                          		</div>
+    						</div>
+    						<div class="col-sm-6">
+								<div class="form-group">
+									<label>年度</label>
+									<input type="text" class="form-control" value="$!{nd}" name="nd">
+                                </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>保管期限</label>
+                                    <input type="text" class="form-control" value="$!{bgqx}" name="bgqx">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>类别号</label>
+                                    <input type="text" class="form-control" value="$!{lbh}" name="lbh">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>室编件号</label>
+                                    <input type="text" class="form-control" value="$!{sbjh}" name="sbjh">
+                                </div>
+                            </div>
+                        </div>
+						
+						<div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>题名</label>
+                                    <textarea class="form-control"  name="tm" rows="3">$!{tm}</textarea>
+                                </div>
+                            </div>
+                        </div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>关键词</label>
+                                    <input type="text" class="form-control" value="$!{gjc}" name="gjc">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>文件编号</label>
+                                    <input type="text" class="form-control" value="$!{wjbh}" name="wjbh">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>日期</label>
+                                    <input type="text" class="form-control" value="$!{rq}" name="rq">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>密级</label>
+                                    <input type="text" class="form-control" value="$!{mj}" name="mj">
+                                  </div>
+    						</div>
+    					</div>	
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>流水号</label>
+                                    <input type="text" class="form-control" value="$!{lsh}" name="lsh">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>拟稿人</label>
+                                    <input type="text" class="form-control" value="$!{ngr}" name="ngr">
+                                  </div>
+    						</div>
+    					</div>
+						
+						<div class="row">
+    						<div class="col-sm-6 ">
+								  <div class="form-group">
+                                    <label>文件组合类型</label>
+                                    <input type="text" class="form-control" value="$!{wjzhlx}" name="wjzhlx">
+                                  </div>
+    						</div>
+    						<div class="col-sm-6">
+								  <div class="form-group">
+                                    <label>语种</label>
+                                    <input type="text" class="form-control" value="$!{yz}" name="yz">
+                                  </div>
+    						</div>
+    					</div>
+						
+                     </div>
+				</div>
+				<!--
+				<div class="layui-tab-item">
+					<table class="table">
+                      <thead>
+                        <tr>
+                          <th>业务标识符</th>
+                          <th>机构人员名称</th>
+						  <th>业务行为</th>
+                          <th>业务状态</th>
+						  <th>行为时间</th>
+                          <th>行为依据</th>
+						  <th>行为描述</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+				</div>
+                <div class="layui-tab-item">
+					<table class="table">
+                      <thead>
+                        <tr>
+                          <th>机构人员标识符</th>
+                          <th>机构人员类型</th>
+						  <th>机构人员名称</th>
+                          <th>组织机构代码</th>
+						  <th>个人职位</th>
+                          <th>所属单位</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+				</div>
+				<div class="layui-tab-item">
+					<table class="table">
+                      <thead>
+                        <tr>
+						  <th>签名标识符</th>
+                          <th>签名规则</th>
+                          <th>签名时间</th>
+						  <th>签名人</th>
+                          <th>签名算法标识</th>
+						  <th>数字证书</th>
+                          <th>签名结果</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+				</div>
+                <div class="layui-tab-item">
+					<table class="table">
+                      <thead>
+                        <tr>
+						  <th>被锁定签名标识符</th>
+                          <th>签名规则</th>
+                          <th>签名时间</th>
+						  <th>签名人</th>
+                          <th>签名算法标识</th>
+                          <th>签名结果</th>
+						  <th>数字证书</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+				</div>
+				-->
+            </div>
+        </div>
+        
+		 <div class="layui-form-item">
+            <div class="layui-input-block">
+              <a class="layui-btn" lay-filter="eep" lay-submit>确定</a>
+              <a type="reset" class="layui-btn layui-btn-primary">重置</a>
+            </div>
+          </div>
+	</form>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+
+<script>
+layui.use('element', function(){
+  var element = layui.element();
+});
+</script>
+
+</html>
+	

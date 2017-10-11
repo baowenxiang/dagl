@@ -1,0 +1,396 @@
+package cn.proem.dagl.web.archives.controller;
+
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.entity.Role;
+import cn.proem.core.entity.User;
+import cn.proem.core.entity.UserDepartment;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.archives.entity.DTable;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.archives.entity.DTableField;
+import cn.proem.dagl.web.archives.entity.DTableName;
+import cn.proem.dagl.web.dicManager.entity.DictionaryValue;
+import cn.proem.dagl.web.dicManager.service.DicManagerService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+import cn.proem.suw.web.common.service.UserManagementService;
+import cn.proem.suw.web.common.util.StringUtil;
+
+@Controller
+@RequestMapping(value = "/w/customarchive")
+public class CustomArchiveController extends BaseCtrlModel{
+    
+    /**
+     * 共通服务
+     */
+    @Autowired
+	private CommonService commonService;
+    
+    /**
+     * 字典服务
+     */
+    @Autowired
+	private DicManagerService dicManagerService;
+    
+    /**
+     * 自定义档案服务
+     */
+    @Autowired
+	private CustomArchiveService customArchiveService;
+    
+    @RequestMapping(value = "/init")
+    public ModelAndView init(HttpServletRequest request){
+        ModelAndView vm =  this.createNormalView("/web/archive/archive.vm");
+        List<DictionaryValue> list = new ArrayList<DictionaryValue>();
+		list = dicManagerService.getDicValueList("zdlx");
+		vm.addObject("zdlxList", list);
+        return vm;
+    }
+    
+    /**
+     * @Description 重构表
+     * @MethodName rebuildTable
+     * @author bao
+     * @date 2017年5月25日
+     * @param request
+     * @param id
+     * @return ResultModel<String>
+     */
+    @RequestMapping("/rebuildTable")
+	@ResponseBody
+	@LogService(description = "重构表")
+    public ResultModel<String> rebuildTable(HttpServletRequest request,String bm){
+    	ResultModel<String> resultModel = new ResultModel<String>();
+    	try{
+    		if(!customArchiveService.isExists(bm)){
+    		    customArchiveService.createAchive(bm);
+    		}else{
+    		    customArchiveService.alterAchive(bm);
+    		}
+    	}catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+		}catch(Exception ex){
+			resultModel.setSuccess(false);
+			resultModel.setMsg("重构失败,请检查字段是否重复,是否与关键字重复!");
+		}
+    	
+    	
+    	return resultModel;
+    }
+    
+    /**
+	 * 查询表名列表
+	 * @param dtGridPager
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/getTableNameList")
+	@ResponseBody
+	@LogService(description = "查询表名列表")
+	public String getTableNameList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("delFlag",Integer.parseInt("0"),ConditionType.EQ,FieldType.INTEGER,null));
+		DataGrid<DTableName> dataGrid = customArchiveService.getTableNameDateGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		
+		return JSON.toJSONStringWithDateFormat(dataGrid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+	}
+	
+	/**
+	 * 查询字段列表
+	 * @param dtGridPager
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/getTableFieldList")
+	@ResponseBody
+	@LogService(description = "查询字段列表")
+	public String getTableFieldList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		Map<String, Object> map = query.getParameters();
+		if(map!=null && map.size()>0){
+			String id = (String)map.get("id");
+			queryBuilder.addCondition(new QueryCondition("id",id,ConditionType.EQ,FieldType.STRING,"tableName"));
+		}
+		queryBuilder.addCondition(new QueryCondition("delFlag",Integer.parseInt("0"),ConditionType.EQ,FieldType.INTEGER,null));
+		DataGrid<DTableField> dataGrid = customArchiveService.getTableFieldDateGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		
+		return JSON.toJSONStringWithDateFormat(dataGrid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+	}
+	
+	/**
+	 * 保存，修改表
+	 * @param request
+	 * @return
+	 * @throws ParseException
+	 */
+	@RequestMapping("/updateDTableName")
+	@ResponseBody
+	@LogService(description = "保存修改表")
+	public ResultModel<String> updateDTableName(HttpServletRequest request) throws ParseException{
+		ResultModel<String> resultModel = new ResultModel<String>();
+		DTableName tableName = new DTableName();
+		User user = this.getCurrentUser(request);
+		String id = request.getParameter("id");
+		if(StringUtil.isNotEmpty(id)){
+			tableName.setId(id);
+			tableName.setUpdateId(user.getId());
+		}
+		
+		tableName.setCreateId(user.getId());
+		tableName.setDelFlag(0);
+		tableName.setBm(request.getParameter("bm"));
+		String columns = request.getParameter("columns");
+		if(StringUtil.isNotEmpty(columns)){
+			tableName.setColumns(Integer.parseInt(columns));
+		}
+		
+		tableName.setSm(request.getParameter("sm"));
+		tableName.setZwm(request.getParameter("zwm"));
+		tableName.setSfdajcb(request.getParameter("sfdajcb"));
+		tableName.setSfdtb(request.getParameter("sfdtb"));
+		tableName.setSfxsfxk(request.getParameter("sfxsfxk"));
+		tableName.setSfzym(request.getParameter("sfzym"));
+		try {
+			customArchiveService.saveOrUpdateDTableName(tableName);
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			resultModel.setSuccess(false);
+			resultModel.setMsg("修改失败");
+			e.printStackTrace();
+		}
+		return resultModel;
+	}
+	
+	/**
+	 * 删除表
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping("/deleteDTableName")
+	@ResponseBody
+	@LogService(description = "删除表")
+	public ResultModel<String> deleteDTableNameById(String id){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		if(StringUtil.isNotEmpty(id)){
+			try {
+				customArchiveService.deleteDTableNameById(id);
+			} catch (ServiceException e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg("删除失败");
+				e.printStackTrace();
+			}
+		}
+		
+		return resultModel;
+	}
+	
+	/**
+	 * 获取表详情
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping("/getDTableNameById")
+	@ResponseBody
+	@LogService(description = "获取表详情")
+	public ResultModel<DTableName> getDTableNameById(String id){
+		ResultModel<DTableName> rm = new ResultModel<DTableName>();
+		DTableName tableName = commonService.findById(id, DTableName.class);
+		rm.setData(tableName);
+		return rm;
+	}
+	
+	/**
+	 * 保存，修改表字段
+	 * @param request
+	 * @return
+	 * @throws ParseException
+	 */
+	@RequestMapping("/updateDTableField")
+	@ResponseBody
+	@LogService(description = "保存或修改表字段")
+	public ResultModel<String> updateDTableField(HttpServletRequest request) throws ParseException{
+		ResultModel<String> resultModel = new ResultModel<String>();
+		DTableField tableField = new DTableField();
+		User user = this.getCurrentUser(request);
+		String id = request.getParameter("id");
+		if(StringUtil.isNotEmpty(id)){
+			tableField.setId(id);
+			tableField.setUpdateId(user.getId());
+		}
+		
+		tableField.setCreateId(user.getId());
+		tableField.setDelFlag(0);
+		String tableName = request.getParameter("tableName");
+		DTableName DtableName = customArchiveService.getDTableNameByTableName(tableName);
+		tableField.setTableName(DtableName);
+		tableField.setAlign(request.getParameter("align"));
+		tableField.setDid(request.getParameter("did"));
+		tableField.setMrz(request.getParameter("mrz"));
+		tableField.setZdlx(request.getParameter("zdlx"));
+		tableField.setPxlx(request.getParameter("pxlx"));
+		tableField.setRqgs(request.getParameter("rqgs"));
+		tableField.setSfbbxxx(request.getParameter("sfbbxxx"));
+		tableField.setSfbtx(request.getParameter("sfbtx"));
+		tableField.setSfcxx(request.getParameter("sfcxx"));
+		tableField.setSfdjl(request.getParameter("sfdjl"));
+		tableField.setSfgyxxx(request.getParameter("sfgyxxx"));
+		tableField.setSfkbj(request.getParameter("sfkbj"));
+		tableField.setSfkxg(request.getParameter("sfkxg"));
+		tableField.setSfkzzd(request.getParameter("sfkzzd"));
+		tableField.setSfsy(request.getParameter("sfsy"));
+		tableField.setSm(request.getParameter("sm"));
+		String width = request.getParameter("width");
+		if(StringUtil.isNotEmpty(width)){
+			tableField.setWidth(Integer.parseInt(width));
+		}
+		if(StringUtil.isNotEmpty(request.getParameter("xsxh"))){
+			tableField.setXsxh(Integer.parseInt(request.getParameter("xsxh")));
+		}
+		if(StringUtil.isNotEmpty(request.getParameter("zdcd"))){
+			tableField.setZdcd(Integer.parseInt(request.getParameter("zdcd")));
+		}
+
+		tableField.setZdywm(request.getParameter("zdywm"));
+		tableField.setZdzwm(request.getParameter("zdzwm"));
+		if(StringUtil.isNotEmpty(request.getParameter("zyhs"))){
+			tableField.setZyhs(Integer.parseInt(request.getParameter("zyhs")));
+		}
+		if(StringUtil.isNotEmpty(request.getParameter("zyls"))){
+			tableField.setZyls(Integer.parseInt(request.getParameter("zyls")));
+		}
+		
+		
+		try {
+			
+			customArchiveService.saveOrUpdateDTableField(tableField);
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			resultModel.setSuccess(false);
+			resultModel.setMsg("修改失败");
+			e.printStackTrace();
+		}
+		return resultModel;
+	}
+	
+	/**
+	 * 获取表字段详情
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping("/getDTableFieldById")
+	@ResponseBody
+	@LogService(description = "获取表字段详情")
+	public ResultModel<DTableField> getDTableFieldById(String id){
+		ResultModel<DTableField> rm = new ResultModel<DTableField>();
+		DTableField tableField = commonService.findById(id, DTableField.class);
+		rm.setData(tableField);
+		return rm;
+	}
+	
+	/**
+	 * 删除表字段
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping("/deleteDTableField")
+	@ResponseBody
+	@LogService(description = "删除表字段")
+	public ResultModel<String> deleteDTableFieldById(String id){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		if(StringUtil.isNotEmpty(id)){
+			try {
+				customArchiveService.deleteDTableFieldById(id);
+			} catch (ServiceException e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg("删除失败");
+				e.printStackTrace();
+			}
+		}
+		
+		return resultModel;
+	}
+	
+	@RequestMapping("/getZdlxValue")
+	@ResponseBody
+	@LogService(description = "获取字段类型")
+	public List<DictionaryValue> getZdlxValue(){
+		List<DictionaryValue> list = new ArrayList<DictionaryValue>();
+		list = dicManagerService.getDicValueList("zdlx");
+		
+		return list;
+	}
+    //--------------------------------------------------------------------------------------------------
+
+    @RequestMapping(value = "/create/{tablename}")
+    public ModelAndView create(HttpServletRequest request,
+                               @PathVariable("tablename") String tablename){
+        ModelAndView vm = new ModelAndView("/web/archive/testcreatetable");
+        DTable table = new DTable(tablename);
+        table.add("id", DTable.VARCHAR, 200, false);
+        table.add("field2", DTable.VARCHAR, 255);
+        table.add("field3", DTable.VARCHAR, 200);
+        List<String> pri = new ArrayList<String>();        
+        pri.add("id");
+        table.setPrimary(pri);             
+        customArchiveService.dropAndCreateTable(table);
+        return vm;
+    }
+    
+    @RequestMapping(value = "/drop/{tablename}")
+    public ModelAndView drop(HttpServletRequest request,
+                             @PathVariable("tablename") String tablename){
+        ModelAndView vm = new ModelAndView("/web/archive/testcreatetable");
+        DTable table = new DTable("Test");
+        table.add("id", DTable.VARCHAR, 200, false);
+        table.add("field2", DTable.VARCHAR, 255);
+        table.add("field3", DTable.VARCHAR, 200);
+        List<String> pri = new ArrayList<String>();
+        pri.add("id");
+        table.setPrimary(pri);
+        customArchiveService.dropAndCreateTable(table);
+        return vm;
+    }
+    
+    @RequestMapping(value = "/query/{tablename}")
+    public ModelAndView testqueryTable(HttpServletRequest request,
+                                       @PathVariable("id") String id) throws ServiceException{
+        ModelAndView vm = new ModelAndView("/web/archive/testcreatetable");
+        BaseEntityInf entity = customArchiveService.getEntity("Test");
+        entity.set("id", id);
+        entity.set("field2", "2");
+        entity.set("field3", "3");
+        customArchiveService.save(entity);
+        entity = customArchiveService.getEntity("Test", id);
+        customArchiveService.del(entity);
+        return vm;
+    }
+    
+}

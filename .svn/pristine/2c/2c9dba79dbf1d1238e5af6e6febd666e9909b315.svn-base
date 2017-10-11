@@ -1,0 +1,29 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body" id="list">
+			<div class="btn-group">
+                <button type="button" class="btn btn-default btn-sm btn-icon batchdelete">
+                    <svg class="icon" aria-hidden="true">
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-delete_database"></use>
+                    </svg>
+                    <b hidden>删除</b>&nbsp;
+                </button>
+               <button type="button" class="btn btn-default btn-sm addGrid btn-icon">
+                 <svg class="icon" aria-hidden="true">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+                 </svg>
+                 <b hidden>增加</b>&nbsp;
+            </button>
+            </div>
+			
+            ##列表
+        	<div id="tableDataCollect" class="dt-grid-container"></div>
+        	##分页栏
+        	<div id="pagingDataCollect" class="dt-grid-toolbar-container"></div>
+      </div>
+    </div>
+    ##CSS
+    ##Javascript
+    <script src="${rc.contextPath}/resources/js/web/temperature/list.js"></script>
+    
+</section>

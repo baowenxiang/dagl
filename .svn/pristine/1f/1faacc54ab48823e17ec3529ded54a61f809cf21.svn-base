@@ -1,0 +1,129 @@
+package cn.proem.dagl.web.fileIdentify.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.fileIdentify.entity.FileIdentify;
+import cn.proem.dagl.web.fileIdentify.service.DestroyHistroyService;
+import cn.proem.dagl.web.fileIdentify.service.IdentifyService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+
+
+/**
+ * 档案鉴定控制层
+ * @author lenovo
+ *
+ */
+@Controller
+@RequestMapping("/w/fileidentify/destroyHistory")
+public class DestroyHistroyController extends BaseCtrlModel{
+	@Autowired
+	private CustomArchiveService customArchiveService;
+	@Autowired
+	private  DestroyHistroyService destroyHistroyService;
+	@Autowired
+	private CommonService commonService;
+	@Autowired
+	private IdentifyService identifyService;
+	
+	
+	/**
+	 * @Description 初始化页面
+	 * @MethodName initView
+	 * @author bao
+	 * @date 2017年5月19日
+	 * @param request
+	 * @return
+	 * @throws ServiceException ModelAndView
+	 */
+	@RequestMapping(value = "/initView")
+	public ModelAndView initView(HttpServletRequest request) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileIdentify/destroyHistory.vm");
+		return modelAndView;
+	}
+	
+	/**
+	 * @Description 获得销毁历史列表
+	 * @MethodName getDestroyTables
+	 * @author bao
+	 * @date 2017年5月21日
+	 * @param dtGridPager
+	 * @param request
+	 * @return String
+	 */
+	@RequestMapping(value = "/getDestroyTables")
+	@ResponseBody
+	@LogService(description = "获取销毁历史列表")
+	public String getDestroyTables(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("jdnr","销毁",ConditionType.EQ, FieldType.STRING, null));
+		queryBuilder.addCondition(new QueryCondition("delFlag",Integer.valueOf(0),ConditionType.EQ, FieldType.INTEGER, null));
+		
+		return JSON.toJSONStringWithDateFormat(destroyHistroyService.getDestroyTables(
+				queryBuilder, query.getNowPage(), query.getPageSize()),
+				"yyyy-MM-dd HH:mm:ss",
+				SerializerFeature.WriteDateUseDateFormat,
+				SerializerFeature.DisableCircularReferenceDetect);
+	}
+	
+	/**
+	 * @Description 撤销销毁
+	 * @MethodName getDestroyTables
+	 * @author bao
+	 * @date 2017年5月21日
+	 * @param request
+	 * @param ids
+	 * @return ResultModel<String>
+	 */
+	@RequestMapping(value = "/cancelDestroy")
+	@ResponseBody
+	@LogService(description = "撤销销毁")
+	public ResultModel<String> getDestroyTables(HttpServletRequest request,
+									@RequestParam(value="ids[]")String[] ids){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		try{
+			for(String id : ids){
+				FileIdentify fileIdentify = commonService.findById(id,FileIdentify.class);
+				
+				BaseEntityInf entity = customArchiveService.getEntity(commonService.findById(id, FileIdentify.class).getBm(), fileIdentify.getDaid());
+				
+				entity.set("SFJD", "sfjd_2");
+				customArchiveService.update(entity);
+				destroyHistroyService.deleteDestroyHistroy(id);
+				String jdnrId = destroyHistroyService.addIdentifyContent(this.getCurrentUser(request), id);
+			}
+			
+		} catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg("撤销失败");
+		}
+		
+		
+		return resultModel;
+	}
+}

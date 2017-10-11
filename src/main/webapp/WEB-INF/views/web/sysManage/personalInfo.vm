@@ -1,0 +1,146 @@
+##iframe页面主体
+<section class="content">
+	<div class="box box-default">
+		<div class="box-body">
+			##title区域
+	  		<ul class="layui-nav">
+		  		<li class="layui-nav-item">
+		  			<p>个人信息设置</p>
+		  			<span class="btns">
+		            	<button type="button" class="btn btn-primary passwordUpdate">密码修改</button>
+		            	<button type="button" class="btn btn-default saveUserDetail">保存修改</button>
+		            </span>
+		  		</li>
+			</ul>
+			##个人资料详情展示
+		    <form class="userForm form-horizontal" role="form">
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="username">用户ID</label>
+			    	<div class="col-sm-3">
+			        	<input name="username" id="username" class="form-control" readOnly>
+			    	</div>
+					<label class="col-sm-2 control-label" for="name">真实姓名</label>
+			    	<div class="col-sm-3">
+			        	<input name="name"  id="name" class="form-control">
+			    	</div>
+			    </div>
+				
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="gender">性别</label>
+					<div class="col-sm-3">
+						<select class="select form-control" id="gender" name="gender">
+					        <option value="1" selected>男</option>
+					        <option value="0">女</option>
+					    </select>
+					</div>
+					
+					<label class="col-sm-2 control-label" for="telphone">联系电话</label>
+			    	<div class="col-sm-3">
+			        	<input name="tm" class="form-control" id="telphone" name="telphone">
+			    	</div>
+			    </div>
+				
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="appellation">称呼</label>
+			    	<div class="col-sm-3">
+			        	<input name="appellation" id="appellation" class="form-control">
+			    	</div>
+					<label class="col-sm-2 control-label" for="createtime">创建时间</label>
+			    	<div class="col-sm-3">
+			        	<input name="createtime"  id="createtime" class="form-control" readOnly>
+			    	</div>
+			    </div>
+				
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="lastTime">上次登录时间</label>
+			    	<div class="col-sm-3">
+			        	<input name="lastTime" id="lastTime" class="form-control" readOnly>
+			    	</div>
+					<label class="col-sm-2 control-label" for="createtime">登陆次数</label>
+			    	<div class="col-sm-3">
+			        	<input name="loginNum"  id="loginNum" class="form-control" readOnly>
+			    	</div>
+			    </div>
+				
+				<div class="form-group">
+		            <label class="col-sm-2 control-label eddit-label">头像上传</label>
+		            <div class="col-sm-3">
+						<input type="file" name="headPic" id="headPic" style="display: none;">
+						<div id="preview">
+			                <img id="imghead" src="${rc.contextPath}/resources/img/user.png" style="box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1);" onclick="$('#headPic').click();">
+			            </div>
+		            </div>                   
+				</div>                          
+				
+				
+				##尾部
+				##<div class="form-group">
+					##<label class="col-sm-4 control-label"></label>
+					##<div class="col-sm-2">
+		            	##<button type="button" class="btn btn-primary passwordUpdate">密码修改</button>
+		            ##</div>
+		            ##<div class="col-sm-2">
+		            	##<button type="button" class="btn btn-default saveUserDetail">保存修改</button>
+		            ##</div>
+		            ##<label class="col-sm-4 control-label"></label>
+		        ##</div>
+			</form>
+		</div>
+	</div>
+</section>     
+
+
+
+##修改资料收集模态框
+	<div class="modal" id="updatePasswordModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-show="true">
+        <div class="modal-dialog" style="width: 800px;">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">密码修改</h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">用户ID</label>
+    				    	<div class="col-sm-7">
+    				        	<input  class="form-control" name="userLogin" readOnly>
+    				    	</div>
+    				    </div>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">原始密码</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" type="password" name="oldPassword">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">新密码</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control" type="password"  name="password">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">确认新密码</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" type="password" name="confirmPass">
+    				    	</div>
+    				   </div>
+                     </form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+                    <button type="button" class="btn btn-primary updatePassword" data-dismiss="modal">确定</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+
+##CSS
+<link href="${rc.contextPath}/resources/css/web/sysManage/personalInfo.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/sysManage/personalInfo.js"></script>
+

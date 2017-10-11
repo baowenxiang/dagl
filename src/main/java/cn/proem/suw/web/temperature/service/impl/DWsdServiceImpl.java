@@ -1,0 +1,59 @@
+package cn.proem.suw.web.temperature.service.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.util.StringUtil;
+import cn.proem.suw.web.temperature.entity.DWsd;
+import cn.proem.suw.web.temperature.service.DWsdService;
+
+@Service
+public class DWsdServiceImpl implements DWsdService {
+    
+    @Autowired
+    private GeneralDao generalDao;
+    
+    @Override
+    public List<DWsd> wsdsByPage(Integer startRecord, Integer pageSize) {
+        QueryBuilder queryBuilder = new QueryBuilder();
+        return generalDao.queryByCriteria(DWsd.class, queryBuilder, null, startRecord, pageSize);
+    }
+
+    @Override
+    @Transactional
+    public void save(DWsd wsd) throws ServiceException {
+     // 温度id
+        if (StringUtil.isEmpty(wsd.getId())) {
+            throw new ServiceException("ID为空");
+        }
+        // 记录日期
+        if (StringUtil.isEmpty(wsd.getJlrq())) {
+            throw new ServiceException("记录日期为空");
+        }
+        // 时间
+        if (StringUtil.isEmpty(wsd.getWsdsj())) {
+            throw new ServiceException("时间为空");
+        }
+        // 记录人
+        if (StringUtil.isEmpty(wsd.getJlr())) {
+            throw new ServiceException("记录人为空");
+        }
+        // 温度
+        if (StringUtil.isEmpty(wsd.getWd())) {
+            throw new ServiceException("温度为空");
+        }
+        // 湿度
+        if (StringUtil.isEmpty(wsd.getSd())) {
+            throw new ServiceException("湿度为空");
+        }
+        generalDao.saveOrUpdate(wsd);
+    }
+
+}

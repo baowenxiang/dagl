@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/fileStamp/fileStamp.css" rel="stylesheet">
+</head>
+<body>
+<div class="site-text site-block">
+	
+    <form class="layui-form" >
+		<input type="hidden" name="tablename" value=$!{tablename} />	
+		
+	     <div class="layui-form-item">
+            <div class="layui-input-block">
+              <button class="layui-btn" lay-submit lay-filter="confirm">确定</button>
+              <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+          </div>
+    </form>
+</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/fileStamp/fileStamp.js"></script>
+
+</html>
+	

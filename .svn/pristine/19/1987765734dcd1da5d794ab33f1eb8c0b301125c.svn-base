@@ -1,0 +1,88 @@
+package cn.proem.dagl.web.fileCompilation.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.Order;
+import cn.proem.core.model.OrderType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.fileCompilation.entity.CompileResult;
+import cn.proem.dagl.web.fileCompilation.entity.CompileResultMiddle;
+import cn.proem.dagl.web.fileCompilation.service.FileCompilationService;
+import cn.proem.dagl.web.preArchive.entity.Zlsj;
+import cn.proem.suw.web.common.exception.ServiceException;
+
+@Service
+public class FileCompilationServiceImpl implements FileCompilationService {
+	@Autowired
+	private GeneralDao generalDao;
+	
+	
+
+	@Override
+	@Transactional
+	@LogService(description = "保存编研成果")
+	public String saveCompileResult(CompileResult compileResult) throws ServiceException {
+		return generalDao.save(compileResult);
+	}
+
+
+
+	@Override
+	@Transactional
+	@LogService(description = "保存编研成果中间表")
+	public String saveCompileResultMiddle(CompileResultMiddle compileResultMiddle) throws ServiceException {
+		return generalDao.save(compileResultMiddle);
+	}
+
+
+
+	@Override
+	public DataGrid<CompileResult> getCompileResultGrid(QueryBuilder queryBuilder, int nowPage, int pageSize) {
+		DataGrid<CompileResult> dataGrid = new DataGrid<CompileResult>(nowPage, pageSize);
+		dataGrid.setRecordCount(generalDao.countByCriteria(CompileResult.class, queryBuilder));
+		List<CompileResult> compileResults = generalDao.queryByCriteria(CompileResult.class, queryBuilder, new Order[]{new Order("createTime", OrderType.DESC)}, dataGrid.getStartRecord(), dataGrid.getPageSize());
+	
+		dataGrid.setExhibitDatas(compileResults);
+		
+		return dataGrid;
+	}
+
+
+
+	@Override
+	public DataGrid<CompileResultMiddle> getCompileResultMiddleGrid(QueryBuilder queryBuilder, int nowPage, int pageSize) {
+		DataGrid<CompileResultMiddle> dataGrid = new DataGrid<CompileResultMiddle>(nowPage, pageSize);
+		dataGrid.setRecordCount(generalDao.countByCriteria(CompileResultMiddle.class, queryBuilder));
+		List<CompileResultMiddle> compileResults = generalDao.queryByCriteria(CompileResultMiddle.class, queryBuilder, new Order[]{new Order("createTime", OrderType.DESC)}, dataGrid.getStartRecord(), dataGrid.getPageSize());
+	
+		dataGrid.setExhibitDatas(compileResults);
+		
+		return dataGrid;
+	}
+
+
+
+	@Override
+	@Transactional
+	@LogService(description = "删除编研")
+	public void deleteCompileResult(String compileResultId)
+			throws ServiceException {
+		CompileResult compileResult = generalDao.findById(compileResultId,CompileResult.class);
+		compileResult.setDelFlag(1);
+		generalDao.update(compileResult);
+	}
+
+
+	
+}

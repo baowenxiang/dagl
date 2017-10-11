@@ -1,0 +1,23 @@
+#db_type=oracle
+##jdbc.url=jdbc:oracle:thin:@192.168.5.129:1521:PROEMOA
+#jdbc.url=jdbc:oracle:thin:@localhost:1521:PROEMOA
+#jdbc.driverClassName=oracle.jdbc.driver.OracleDriver
+#jdbc.username=proemoa
+#jdbc.password=proemoa
+#hibernate.dialect=org.hibernate.dialect.OracleDialect
+
+db_type=mysql
+jdbc.url=jdbc:MySQL://localhost:3306/dagl?useUnicode=true&characterEncoding=UTF-8
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.username=root
+jdbc.password=bdqn
+hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+hibernate.hbm2ddl.auto=update
+hibernate.extraPackagesToScan=cn.proem.suw.*.*.entity
+hibernate.show_sql=true
+hibernate.format_sql=false
+hibernate.jdbc.fetch_size=50
+hibernate.jdbc.batch_size=30
+
+druid.validationQuery=SELECT 1

@@ -1,0 +1,106 @@
+package cn.proem.suw.web.common.constant;
+
+import cn.proem.suw.web.common.util.ConfigReader;
+
+/**
+ * @ClassName Path
+ * @Description 路径
+ * @author Tcc
+ * @date 2017年4月17日
+ */
+public class Path {
+
+	/**
+	 * APP存储路径
+	 */
+	public static String APK_FILE_PATH = "/apkFile/";
+	/**
+	 * 汇报附件上传路径
+	 */
+	public static String UPLOAD_REPORT_FILE_PATH = "/uploadFile/workreport/";
+	/**
+	 * 流程附件保存路径
+	 */
+	public static String UPLOAD_FLOW_FILE_PATH = "/uploadFile/workflow/";
+	/**
+	 * 头像上传路径
+	 */
+	public static String UPLOAD_HEAD_PicPath = "/uploadFile/personnel/";
+	
+	/**
+	 * 邮件附件上传路径
+	 */
+	public static String UPLOAD_MAIL_FILE_PATH = "/uploadFile/mail/";
+	
+	/**
+	 * 资料挂接的附件
+	 */
+	public static String UPLOAD_YWGJ_FILE_PATH = "/uploadFile/ywgj/";
+	
+	/**
+	 * 档案挂接的附件
+	 */
+	public static String UPLOAD_DAGL_FILE_PATH = "/uploadFile/dagj/";
+	
+	/**
+	 * 批量挂接
+	 */
+	public static String UPLOAD_PLGJ_FILE_PATH = "/uploadFile/plgj/";
+	
+	/**
+	 * 统一导入模版
+	 */
+	public static String UPLOAD_IMPORT_FILE_PATH = "/uploadFile/import/";
+	
+	/**
+	 * 图片上传路径
+	 */
+	public static String UPLOAD_IMG_FILE_PATH = "/uploadFile/img/";
+	/**
+	 * pdf路径
+	 */
+	public static String UPLOAD_PDF_FILE_PATH = "uploadFile\\pdf";
+	/**
+	 * pdf传换成html的工具路径
+	 */
+	public static String UPLOAD_PDF2HTML_FILE_PATH = "Pdf2Html\\pdf2htmlEX.exe";
+	/**
+	 * 附件上传路径（管养接口）
+	 */
+	public static String UPLOAD_DOCU_ATTACHMENT_PATH ="/uploadFile/attachment/";
+	/**
+	 * 附件上传路径
+	 */
+	public static String UPLOAD_DOCU_FILEUPLOAD_PATH ="/uploadFile/uploadFiles/";
+	/**
+	 * 全文检索索引存储路径
+	 */
+	public static String UPLOAD_INDEX_PATH ="/uploadFile/luceneIndex/";
+	/**
+	 * 文件转html缓存路径
+	 */
+	public static String UPLOAD_CACHE_PATH ="/uploadFile/cache/";
+	/**
+	 * 数据库备份地址
+	 */
+	public static String BACKUP_PATH = ConfigReader.readBackupPath();
+	/**
+	 * 文件夹备份地址
+	 */
+	public static String FILE_BACKUP_PATH = ConfigReader.readFileBackupPath();
+	/**
+	 * 系统背景图存放地址
+	 */
+	public static String UPLOAD_BGPIC_PATH ="/uploadFile/bgpic/";
+	public static String UPLOAD_SEP = "/";
+	/**
+	 * OA对接归档文件地址
+	 */
+	public static String UPLOAD_OA_GDWJ = "/uploadFile/GW/";
+	/**
+	 * OA对接归档附件地址
+	 */
+	public static String UPLOAD_OA_GDFJ = "/uploadFile/YW/";
+	
+	public static String UPLOAD_EEP_PATH = "/uploadFile/eep/";
+}

@@ -1,0 +1,511 @@
+package cn.proem.dagl.web.fileBorrowing.controller;
+
+import java.io.OutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.entity.User;
+import cn.proem.core.entity.UserDepartment;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.core.model.Pager;
+import cn.proem.dagl.web.fileBorrowing.entity.FileBorrowing;
+import cn.proem.dagl.web.fileBorrowing.service.FileBorrowingService;
+import cn.proem.dagl.web.fileUse.entity.ElectronicLend;
+import cn.proem.suw.util.StringUtil;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+
+@Controller
+@RequestMapping("/w/fileBorrowing")
+public class FileBorrowingController extends BaseCtrlModel {
+	
+	@Autowired
+	private FileBorrowingService fileBorrowingSerivce;
+	@Autowired
+	private CommonService commonService;
+	
+	/**
+	 * 跳转借阅信息页面
+	 * @return
+	 */
+	@RequestMapping("/jyxx/initview")
+	public ModelAndView initFileBorrowingJyPage(){
+		ModelAndView view = this.createNormalView("/web/fileBorrowing/jYinitView.vm");
+		
+		return view;
+		
+	}
+	
+	/**
+	 * 
+	 * @Description:增加借阅信息页面
+	 * @author:bao
+	 * @time:2017年7月17日 下午5:18:08
+	 */
+	@RequestMapping("/jyxx/toAddJyxx")
+	public ModelAndView toAddJyxx(){
+		ModelAndView view = this.createNormalView("/web/fileBorrowing/addJyxx.vm");
+		
+		return view;
+		
+	}
+	
+	@RequestMapping(value = "/jyxx/toModifyJyxx")
+	public ModelAndView toModify(HttpServletRequest request,String id) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileBorrowing/modifyJyxx.vm");
+		FileBorrowing fileBorrowing = commonService.findById(id, FileBorrowing.class);
+		modelAndView.addObject("fileBorrowing", fileBorrowing);
+		return modelAndView;
+	}
+	
+	/**
+	 * 跳转归还信息页面
+	 * @return
+	 */
+	@RequestMapping("/ghxx/initview")
+	public ModelAndView initFileBorrowingGhPage(){
+		ModelAndView view = this.createNormalView("/web/fileBorrowing/gHinitView.vm");
+		
+		return view;
+		
+	}
+	/**
+	 * 跳转查询页面
+	 * @param request
+	 * @param tablename
+	 * @return
+	 * @throws ServiceException
+	 */
+	@RequestMapping(value = "/jyxxQueryView")
+	public ModelAndView jyxxQueryView(HttpServletRequest request) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileBorrowing/jyxxQueryView.vm");
+		return modelAndView;
+	}
+	
+	@RequestMapping(value = "/ghxxQueryView")
+	public ModelAndView ghxxQueryView(HttpServletRequest request,String jyzt) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileBorrowing/ghxxQueryView.vm");
+		modelAndView.addObject("jyzt", jyzt);
+		return modelAndView;
+	}
+	
+	/**
+	 * 查询借阅信息列表
+	 * @param dtGridPager
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/getJyxxList")
+	@ResponseBody
+	@LogService(description = "查询借阅信息列表")
+	public String getJyxxList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		String departmentId = commonService.findDeptByUserId(this.getCurrentUser(request).getId());
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		String tm = (String)query.getParameters().get("tm");
+		if(StringUtil.isNotEmpty(tm)){
+			queryBuilder.addCondition(new QueryCondition("tm",tm,ConditionType.LIKE,FieldType.STRING,null));
+		}
+		queryBuilder.addCondition(new QueryCondition("delFlag",0,ConditionType.EQ,FieldType.INTEGER,null));
+		queryBuilder.addCondition(new QueryCondition("jyzt","0",ConditionType.EQ,FieldType.STRING,null));
+		queryBuilder.addCondition(new QueryCondition("id",departmentId,ConditionType.EQ,FieldType.STRING,"department"));
+		DataGrid<FileBorrowing> dataGrid = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		
+		return JSON.toJSONStringWithDateFormat(dataGrid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+	}
+	
+	/**
+	 * 查询归还信息列表
+	 * @param dtGridPager
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/getGhxxList")
+	@ResponseBody
+	@LogService(description = "查询归还信息列表")
+	public String getGhxxList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		String departmentId = commonService.findDeptByUserId(this.getCurrentUser(request).getId());
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("delFlag",0,ConditionType.EQ,FieldType.INTEGER,null));
+		//题名查询
+		String tm = String.valueOf(query.getParameters().get("tm"));
+		if(StringUtil.isNotEmpty(tm)){
+			queryBuilder.addCondition(new QueryCondition("tm",tm,ConditionType.LIKE,FieldType.STRING,null));	
+		}
+		//获取借阅状态
+		String jyzt = String.valueOf(query.getParameters().get("jyzt"));
+		if("2".equals(jyzt) || "0".equals(jyzt)){
+			queryBuilder.addCondition(new QueryCondition("jyzt","0",ConditionType.EQ,FieldType.STRING,null));
+			queryBuilder.addCondition(new QueryCondition("nghsj",new SimpleDateFormat("yyyy-MM-dd").format(new Date()),ConditionType.LT,FieldType.STRING,null));
+			
+		}else{
+			queryBuilder.addCondition(new QueryCondition("jyzt","1",ConditionType.EQ,FieldType.STRING,null));
+		}
+		queryBuilder.addCondition(new QueryCondition("id",departmentId,ConditionType.EQ,FieldType.STRING,"department"));
+		DataGrid<FileBorrowing> dataGrid = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		
+		return JSON.toJSONStringWithDateFormat(dataGrid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+	}
+	/**
+	 * 借阅归还
+	 * @return
+	 */
+	@RequestMapping("/fileReturn")
+	@ResponseBody
+	@LogService(description = "借阅归还")
+	public ResultModel<String> flieReturn(String businessStr,String jyxg){
+		ResultModel<String> rs = new ResultModel<String>();
+		String[] ids = businessStr.split(",");
+		for(String id : ids){
+			try {
+				fileBorrowingSerivce.fileReturn(id,jyxg);
+				
+			} catch (ServiceException e) {
+				rs.setMsg("归还失败");
+				e.printStackTrace();
+			}
+		}
+		return rs;
+	}
+	/**
+	 * 添加借阅信息
+	 * @return
+	 */
+	@RequestMapping("/saveJyxx")
+	@ResponseBody
+	@LogService(description = "添加借阅信息")
+	public ResultModel<String> saveJyxx(HttpServletRequest request){
+		ResultModel<String> rs = new ResultModel<String>();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		FileBorrowing fb = new FileBorrowing();
+		User user = this.getCurrentUser(request);
+		try {
+				UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+				fb.setDepartment(department.getDepartment());
+				if(StringUtil.isNotEmpty(request.getParameter("id"))){
+					fb = commonService.findById(request.getParameter("id"), FileBorrowing.class);
+//					fb.setJyzt("1");
+				}else{
+					fb.setJyzt("0");
+					fb.setLrsj(new Date());
+
+				}
+				
+				if(StringUtil.isNotEmpty(request.getParameter("tm"))){
+					fb.setTm(request.getParameter("tm"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("dh"))){
+					fb.setDh(request.getParameter("dh"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jyrid"))){
+					fb.setJyrid(request.getParameter("jyrid"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("wh"))){
+					fb.setWh(request.getParameter("wh"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("fh"))){
+					fb.setFh(Integer.parseInt(request.getParameter("fh")));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jymd"))){
+					fb.setJymd(request.getParameter("jymd"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jyr"))){
+					fb.setJyr(request.getParameter("jyr"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("pzr"))){
+					fb.setPzr(request.getParameter("pzr"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jbr"))){
+					fb.setJbr(request.getParameter("jbr"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jyxg"))){
+					fb.setJyxg(request.getParameter("jyxg"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("jgmc"))){
+					fb.setJgmc(request.getParameter("jgmc"));
+				}
+				if(StringUtil.isNotEmpty(request.getParameter("qwbs"))){
+					fb.setQwbs(request.getParameter("qwbs"));
+				}
+					
+				if(StringUtil.isNotEmpty(request.getParameter("jysj"))){
+					fb.setJysj(request.getParameter("jysj"));
+				}
+				
+				if(StringUtil.isNotEmpty(request.getParameter("nghsj"))){
+					fb.setNghsj(request.getParameter("nghsj"));
+				}
+			
+				fileBorrowingSerivce.saveJyxx(fb);
+				
+			} catch (ServiceException e){
+				rs.setSuccess(false);
+				rs.setMsg(e.getMessage());
+			}catch (Exception ex){
+				rs.setSuccess(false);
+				rs.setMsg("借阅信息保存失败");
+			}
+		return rs;
+	}
+	/**
+	 * 删除借阅信息
+	 * @param ids
+	 * @return
+	 */
+	@RequestMapping("/deleteJyxx")
+	@ResponseBody
+	@LogService(description = "删除借阅信息")
+	public ResultModel<String> deleteJyxx(String id){
+		
+		ResultModel<String> rs = new ResultModel<String>();
+		
+		try {
+			fileBorrowingSerivce.deleteJyxx(id);
+		} catch (ServiceException e) {
+			rs.setSuccess(false);
+			rs.setMsg("删除失败");
+			e.printStackTrace();
+		}
+		return rs;
+	}
+	/**
+	 * 获取借阅信息详情
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping("/getJyxxById")
+	@ResponseBody
+	@LogService(description = "获取借阅信息详情")
+	public ResultModel<FileBorrowing> getJyxxById(String id){
+		ResultModel<FileBorrowing> rm  = new ResultModel<FileBorrowing>();
+		FileBorrowing fb = commonService.findById(id, FileBorrowing.class);
+		rm.setData(fb);
+		return rm;
+	}
+	
+	
+	@RequestMapping(value = "/exportFileBorrow/{ids}/{dtGridPager}")
+	@ResponseBody
+	@LogService(description = "在借数据批量导出")
+	public ResultModel<String> exportFileDef(HttpServletRequest request,HttpServletResponse response,@PathVariable("ids")String ids,@PathVariable("dtGridPager")String dtGridPager){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		Pager dataGridQuery = JSON.toJavaObject(JSON.parseObject(dtGridPager == null ? "" : dtGridPager), Pager.class);
+		String departmentId = commonService.findDeptByUserId(this.getCurrentUser(request).getId());
+		List<FileBorrowing> fileBorrowings = null;
+		try{
+			User user = this.getCurrentUser(request);
+			List<String> idList = new ArrayList<String>();
+			QueryBuilder queryBuilder = null;
+			//无勾选值
+			if(!StringUtil.isNotEmpty(ids)){
+				queryBuilder = new QueryBuilder();
+				String tm = String.valueOf(dataGridQuery.getParameters().get("tm"));
+				if(StringUtil.isNotEmpty(tm)){
+					queryBuilder.addCondition(new QueryCondition("tm",tm,ConditionType.LIKE,FieldType.STRING,null));	
+				}
+				queryBuilder.addCondition(new QueryCondition("delFlag", Integer.valueOf(0),ConditionType.EQ, FieldType.INTEGER, null));
+				queryBuilder.addCondition(new QueryCondition("jyzt","0",ConditionType.EQ,FieldType.STRING,null));
+				queryBuilder.addCondition(new QueryCondition("id",departmentId,ConditionType.EQ,FieldType.STRING,"department"));
+				fileBorrowings = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,0,-1).getExhibitDatas();
+			//有勾选值
+			}else{
+				queryBuilder = new QueryBuilder();
+				queryBuilder.addCondition(new QueryCondition("id",ids,ConditionType.IN,FieldType.STRING,null));
+				fileBorrowings = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,0,-1).getExhibitDatas();
+			}
+				
+				
+			// 获得所有数据
+	        HSSFWorkbook workbook = new HSSFWorkbook();			//生成工作簿
+			HSSFSheet sheet = workbook.createSheet("实体借阅登记导出记录");		//生成工作页
+			sheet.setDefaultColumnWidth(15);				//sheet默认列宽
+			HSSFCellStyle style = workbook.createCellStyle();	//生成样式
+			
+			HSSFCellStyle cellStyle=workbook.createCellStyle();       //设置自动换行的样式
+			cellStyle.setWrapText(true);
+			
+			//导出excel的样式
+			style.setFillForegroundColor(HSSFColor.WHITE.index);  
+	        style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);  
+	        style.setBorderBottom(HSSFCellStyle.BORDER_THIN);  
+	        style.setBorderLeft(HSSFCellStyle.BORDER_THIN);  
+	        style.setBorderRight(HSSFCellStyle.BORDER_THIN);  
+	        style.setBorderTop(HSSFCellStyle.BORDER_THIN);  
+	        style.setAlignment(HSSFCellStyle.ALIGN_CENTER); 
+			
+	        // 生成一个字体  
+	        HSSFFont font = workbook.createFont();  
+	        font.setColor(HSSFColor.BLACK.index);  
+	        font.setFontHeightInPoints((short) 12);  
+	        font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD); 
+	        style.setFont(font);
+			
+			
+			 HSSFRow rowHeader = sheet.createRow(0);
+			 String[] headers = {"题名","档号","借阅目的","借阅人","借阅时间"};
+			 for(int i = 0;i<headers.length;i++){
+	        	HSSFCell cell = rowHeader.createCell(i);
+				HSSFRichTextString text = new HSSFRichTextString(headers[i]);
+				cell.setCellStyle(style);
+				cell.setCellValue(text);
+				cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+	        	
+			 }
+			
+			for(int i = 0;i<fileBorrowings.size();i++){
+				FileBorrowing fileBorrowing = fileBorrowings.get(i);
+				HSSFRow row = sheet.createRow(i+1);
+				row.createCell(0).setCellValue(fileBorrowing.getTm());
+				row.createCell(1).setCellValue(fileBorrowing.getDh());
+				row.createCell(2).setCellValue(fileBorrowing.getJymd());
+				row.createCell(3).setCellValue(fileBorrowing.getJyr());
+				row.createCell(4).setCellValue(fileBorrowing.getJysj());
+				
+			}
+			 
+			
+			OutputStream output=response.getOutputStream();  
+	        response.reset();  
+	        response.setHeader("Content-disposition", "attachment; filename="+new String("实体借阅登记记录.xls".getBytes("utf-8"), "iso8859-1"));  
+	        response.setContentType("application/msexcel");          
+	        workbook.write(output);  
+	        output.close();  
+				
+		}catch(Exception e){
+			resultModel.setSuccess(false);
+			resultModel.setMsg("批量导出失败");
+		} 
+		return resultModel;
+	}
+
+
+	@RequestMapping(value = "/exportSendBack/{ids}/{dtGridPager}")
+	@ResponseBody
+	@LogService(description = "归还信息批量导出")
+	public ResultModel<String> exportSendBack(HttpServletRequest request,HttpServletResponse response,@PathVariable("ids")String ids,@PathVariable("dtGridPager")String dtGridPager){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		Pager dataGridQuery = JSON.toJavaObject(JSON.parseObject(dtGridPager == null ? "" : dtGridPager), Pager.class);
+		String departmentId = commonService.findDeptByUserId(this.getCurrentUser(request).getId());
+		List<FileBorrowing> fileBorrowings = null;
+		try{
+			User user = this.getCurrentUser(request);
+			List<String> idList = new ArrayList<String>();
+			QueryBuilder queryBuilder = null;
+			//无勾选值
+			if(!StringUtil.isNotEmpty(ids)){
+				queryBuilder = new QueryBuilder();
+				String tm = String.valueOf(dataGridQuery.getParameters().get("tm"));
+				if(StringUtil.isNotEmpty(tm)){
+					queryBuilder.addCondition(new QueryCondition("tm",tm,ConditionType.LIKE,FieldType.STRING,null));	
+				}
+				queryBuilder.addCondition(new QueryCondition("delFlag", Integer.valueOf(0),ConditionType.EQ, FieldType.INTEGER, null));
+				queryBuilder.addCondition(new QueryCondition("jyzt","1",ConditionType.EQ,FieldType.STRING,null));
+				queryBuilder.addCondition(new QueryCondition("id",departmentId,ConditionType.EQ,FieldType.STRING,"department"));
+				fileBorrowings = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,0,-1).getExhibitDatas();
+			//有勾选值
+			}else{
+				queryBuilder = new QueryBuilder();
+				queryBuilder.addCondition(new QueryCondition("id",ids,ConditionType.IN,FieldType.STRING,null));
+				fileBorrowings = fileBorrowingSerivce.getFileBorrowingDataGrid(queryBuilder,0,-1).getExhibitDatas();
+			}
+				
+				
+			// 获得所有数据
+	        HSSFWorkbook workbook = new HSSFWorkbook();			//生成工作簿
+			HSSFSheet sheet = workbook.createSheet("实体借阅登记导出记录");		//生成工作页
+			sheet.setDefaultColumnWidth(15);				//sheet默认列宽
+			HSSFCellStyle style = workbook.createCellStyle();	//生成样式
+			
+			HSSFCellStyle cellStyle=workbook.createCellStyle();       //设置自动换行的样式
+			cellStyle.setWrapText(true);
+			
+			//导出excel的样式
+			style.setFillForegroundColor(HSSFColor.WHITE.index);  
+	        style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);  
+	        style.setBorderBottom(HSSFCellStyle.BORDER_THIN);  
+	        style.setBorderLeft(HSSFCellStyle.BORDER_THIN);  
+	        style.setBorderRight(HSSFCellStyle.BORDER_THIN);  
+	        style.setBorderTop(HSSFCellStyle.BORDER_THIN);  
+	        style.setAlignment(HSSFCellStyle.ALIGN_CENTER); 
+			
+	        // 生成一个字体  
+	        HSSFFont font = workbook.createFont();  
+	        font.setColor(HSSFColor.BLACK.index);  
+	        font.setFontHeightInPoints((short) 12);  
+	        font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD); 
+	        style.setFont(font);
+			
+			
+			 HSSFRow rowHeader = sheet.createRow(0);
+			 String[] headers = {"题名","档号","借阅目的","借阅人","借阅时间","借阅效果"};
+			 for(int i = 0;i<headers.length;i++){
+	        	HSSFCell cell = rowHeader.createCell(i);
+				HSSFRichTextString text = new HSSFRichTextString(headers[i]);
+				cell.setCellStyle(style);
+				cell.setCellValue(text);
+				cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+	        	
+			 }
+			
+			for(int i = 0;i<fileBorrowings.size();i++){
+				FileBorrowing fileBorrowing = fileBorrowings.get(i);
+				HSSFRow row = sheet.createRow(i+1);
+				row.createCell(0).setCellValue(fileBorrowing.getTm());
+				row.createCell(1).setCellValue(fileBorrowing.getDh());
+				row.createCell(2).setCellValue(fileBorrowing.getJymd());
+				row.createCell(3).setCellValue(fileBorrowing.getJyr());
+				row.createCell(4).setCellValue(fileBorrowing.getJysj());
+				row.createCell(5).setCellValue(fileBorrowing.getJyxg());
+			}
+			 
+			
+			OutputStream output=response.getOutputStream();  
+	        response.reset();  
+	        response.setHeader("Content-disposition", "attachment; filename="+new String("实体借阅登记记录.xls".getBytes("utf-8"), "iso8859-1"));  
+	        response.setContentType("application/msexcel");          
+	        workbook.write(output);  
+	        output.close();  
+				
+		}catch(Exception e){
+			resultModel.setSuccess(false);
+			resultModel.setMsg("批量导出失败");
+		} 
+		return resultModel;
+	}
+}

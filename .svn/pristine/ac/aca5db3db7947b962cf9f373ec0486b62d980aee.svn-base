@@ -1,0 +1,210 @@
+//全局变量
+var grid;
+
+$(function(){
+	var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+	initTable();
+	layer.close(index);
+	
+	initMethod();
+})
+
+function initTable(){
+	grid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/fileuse/electronicLend/getAllElectronicLendList",
+	    ajaxLoad : true,
+	    gridContainer : 'tableElectronicLend',
+	    toolbarContainer : 'pagingElectronicLend',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 10,
+	    check : true,
+	    pageSizeLimit : [10,20,50],
+	    columns : [
+			{
+				id:'jyzt',
+				title : '<b>借阅状态</b>',
+				type:"string",
+				columnClass:'text-center'
+			},
+			{
+				id:'dh',
+				title : '<b>档号</b>',
+				type:"string",
+				columnClass:'text-center'
+			},
+			{
+				id:'jyr',
+				title : '<b>借阅人</b>',
+				type:"string",
+				columnClass:'text-center',
+				resolution:function(value, record, column, grid, dataNo, columnNo){
+					return value.name;
+				}
+			},
+			{
+				id:'wh',
+				title:'<b>文号</b>',
+				type:"string",
+				columnClass:'text-center'
+			},
+			{
+				id:'tm',
+				title : '<b>题名</b>',
+				type:"string",
+				columnClass:'text-center'
+			},
+			{
+				id:'bz',
+				title : '<b>备注</b>',
+				type:"string",
+				columnClass:'text-center'
+			},
+			{
+				id:'jymd',
+				title : '<b>借阅目的</b>',
+				type:"string",
+				columnClass:'text-center'
+			},
+			{
+				id:'jysj',
+				title : '<b>借阅时间</b>',
+				type:"string",
+				columnClass:'text-center'
+			},
+			{
+				id:'daid',
+				title : '<b>挂接原文</b>',
+				type:"string",
+				columnClass:'text-center',
+				resolution:function(value, record, column, grid, dataNo, columnNo){
+					if(record.jyzt === '借阅成功'){
+						 var html = "";
+		   				 Util.ajaxJsonSync(
+								 Util.getRootPath()+"/w/example/flow/getYwgjByFileId",
+			                        {
+									 tablename:record.bm,
+									 id : value
+			                        },
+			                        function(result){
+										if(result.success){
+											
+											var datas = result.datas;
+											if(datas.length>0){
+		   									for(var i = 0;i<datas.length;i++){
+        										var wjlx = datas[i].wjlx;
+        										var wjm = datas[i].wjm;
+        										if(wjlx == 'pdf'){
+        											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/pdf.svg" />';
+        										}else if(wjlx == 'doc' || wjlx == 'docx'){
+        											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/word.svg" />';
+        										}else if(wjlx == 'xlsx' || wjlx == 'xls'){
+        											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/excel.svg" />';
+        										}else if(Util.isAudio(wjlx)){
+        											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/音频.svg" />';
+        										}else if(Util.isVedio(wjlx)){
+        											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/视频.svg" />';
+        										}else if(Util.isPIC(wjlx)){
+           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/pic.svg" />';
+        										}else if(wjlx == 'txt'){
+           											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/txt.svg" />';
+
+           										}
+        										else{
+        											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/文件.svg" />';
+        										}
+        									}
+											}
+										}
+			                        }
+		   				 )
+		   				 return html;
+					}else{
+						return "";
+					}
+				}
+			},{
+       			id:'id',
+       			title : '<b>操作</b>',
+       			type:"string",
+       			columnClass:'text-center',
+       			resolution: function(value, record, column, grid, dataNo, columnNo) {
+       				var html = ''; 	
+       				html += '<div class="btnDiv">';
+					html += '	<a title="删除" class="btn btn-danger btn-xs delete" data-id="'+record.id+'">删除</a>';
+       				html += '</div>';
+       				return html;
+       			}
+       		}
+	    ]
+	});
+	refreshGrid();
+}
+
+function refreshGrid() {
+	grid.parameters = getParameters();
+	grid.load();
+}
+function getParameters() {
+	
+}
+
+function initMethod(){
+	//点击预览内容
+    $("#tableElectronicLend").on("click", "img", function(){
+    	var index = layer.load(1, {shade: [1,'#FFFFFF']});
+    	var fileid = $(this).attr("dagl-uuid");
+    	var filename = $(this).attr("title");
+    	console.log(filename);
+    	$.ajax({
+            type: "GET",
+            url: Util.getRootPath() + "/w/preview/" + fileid,
+            dataType: 'json',
+            async: false,	
+            success: function(result) {
+            	var option = {};
+            	option.title = filename;
+            	if(result.type == 'flv'){
+            		layer.close(index);
+            		option.url = Util.getRootPath() + "/w/preview/video/" + filename + "/" + result.cache;
+            		window.parent.showModal(option);
+            	}else{
+            		layer.close(index);
+            		option.url = result.cache;
+            		window.parent.showModal(option);
+            	}
+            },
+            error:function(XMLHttpRequest, textStatus, errorThrown){
+            	layer.close(index);
+            	layer.msg("文件不存在或被删除");
+            },
+    	});
+    });
+    
+    
+    $("#tableElectronicLend").on("click","a.delete",function(){
+		var id = $(this).attr("data-id");
+		
+		$.ajax({
+			url : Util.getRootPath()+"/w/fileuse/electronicLend/delete",
+			type:'POST', //GET
+			async:true,
+			data:{
+				id:id
+			},
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				if(data.success){
+					layer.msg(data.msg,{time: 2000});
+					refreshGrid();
+				}else{
+					layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+				}
+			},
+			error:function(ex) {
+				layer.alert("删除失败！", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		});
+	});
+	
+} 

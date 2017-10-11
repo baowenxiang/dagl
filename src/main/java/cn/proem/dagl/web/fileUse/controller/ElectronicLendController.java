@@ -1,0 +1,1072 @@
+package cn.proem.dagl.web.fileUse.controller;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipOutputStream;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.bpm.context.TaskOperate;
+import cn.proem.bpm.entity.Handler;
+import cn.proem.bpm.entity.HandlerGroup;
+import cn.proem.bpm.entity.HandlerType;
+import cn.proem.bpm.entity.ProcUnit;
+import cn.proem.bpm.model.Executor;
+import cn.proem.bpm.model.NextStep;
+import cn.proem.bpm.model.StartParam;
+import cn.proem.bpm.model.Task;
+import cn.proem.bpm.service.BpmQueryService;
+import cn.proem.bpm.service.ProcessService;
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.entity.User;
+import cn.proem.core.entity.UserDepartment;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.core.util.BeanUtils;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.fileUse.dto.DtoElectronicLend;
+import cn.proem.dagl.web.fileUse.entity.ElectronicLend;
+import cn.proem.dagl.web.fileUse.service.ElectronicLendService;
+import cn.proem.dagl.web.flow.service.FlowService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.dagl.web.tools.util.CommonFile;
+import cn.proem.suw.web.common.constant.Path;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+import cn.proem.suw.web.common.util.HandParam;
+import cn.proem.suw.web.common.util.StringUtil;
+
+/**
+ * 电子借阅控制层
+ * @author bao
+ *
+ */
+@Controller
+@RequestMapping(value = "/w/fileuse/electronicLend")
+public class ElectronicLendController extends BaseCtrlModel{
+    @Autowired
+    private CommonService commonService;
+    @Autowired
+    private ElectronicLendService electronicLendService;
+    @Autowired
+	private ProcessService processService;
+	@Autowired
+	private BpmQueryService bpmQueryService;
+	@Autowired
+	private FlowService flowService;
+	
+	@Autowired
+	private CustomArchiveService customArchiveService;
+    
+    /**
+	 * @Description 原文挂接 
+	 * @MethodName initView
+	 * @author bao
+	 * @date 2017年4月20日
+	 * @param request
+	 * @return ModelAndView
+	 */
+	@RequestMapping(value = "/initView")
+	public ModelAndView initView(HttpServletRequest request) {
+		ModelAndView modelAndView = this.createNormalView("/web/fileUse/electronicLend/electronicLend.vm");
+		
+		
+		return modelAndView;
+	}
+	
+	/**
+	 * @Description 所有借阅详情页面
+	 * @MethodName allLendInfoView
+	 * @author bao
+	 * @date 2017年5月23日
+	 * @param request
+	 * @return ModelAndView
+	 */
+	@RequestMapping(value = "/allLendInfoView")
+	public ModelAndView allLendInfoView(HttpServletRequest request) {
+		ModelAndView modelAndView = this.createNormalView("/web/fileUse/electronicLend/allLendInfo.vm");
+		
+		return modelAndView;
+	}
+	
+	/**
+	 * @Description 进入修改页面
+	 * @MethodName modifyView
+	 * @author bao
+	 * @date 2017年5月23日
+	 * @param request
+	 * @param id
+	 * @return ModelAndView
+	 */
+	@RequestMapping(value = "/modifyView")
+	public ModelAndView modifyView(HttpServletRequest request,String id,String flag) {
+		ModelAndView modelAndView = this.createNormalView("/web/fileUse/electronicLend/electronicLendLook.vm");
+		ElectronicLend electronicLend = commonService.findById(id, ElectronicLend.class);
+		
+		modelAndView.addObject("id", id);
+		modelAndView.addObject("tm", electronicLend.getTm());
+		modelAndView.addObject("jymd", electronicLend.getJymd());
+		modelAndView.addObject("bz", electronicLend.getBz());
+		modelAndView.addObject("bm", electronicLend.getBm());
+		modelAndView.addObject("flag", flag);
+		return modelAndView;
+	}
+	
+	
+	/**
+	 * @Description 修改电子借阅信息
+	 * @MethodName modifyElectronicLend
+	 * @author bao
+	 * @date 2017年5月23日
+	 * @param request
+	 * @param id
+	 * @param jymd
+	 * @param bz
+	 * @return ResultModel<String>
+	 */
+	@RequestMapping(value = "/modifyElectronicLend")
+	@ResponseBody
+	@LogService(description = "修改电子借阅信息")
+	public ResultModel<String> modifyElectronicLend(HttpServletRequest request,@RequestBody Map<String, Object> obj){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		
+		try {
+			@SuppressWarnings("unchecked")
+			Map<String,String> data = (Map<String, String>) obj.get("data");
+			
+			
+			ElectronicLend electronicLend = commonService.findById(data.get("id"), ElectronicLend.class);
+			electronicLend.setBz(data.get("bz"));
+			electronicLend.setJymd(data.get("jymd"));
+			electronicLendService.saveOrUpdate(electronicLend);
+		} catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg("更新失败");
+		} 
+		return resultModel;
+	}
+	
+	
+	/**
+	 * @Description 根据电子借阅di删除电子借阅
+	 * @MethodName deleteZlsjById
+	 * @author bao
+	 * @date 2017年4月21日
+	 * @param request
+	 * @param id
+	 * @return ResultModel<String>
+	 */
+	@RequestMapping(value = "/delete")
+	@ResponseBody
+	@LogService(description = "根据电子借阅di删除电子借阅")
+	public ResultModel<String> delete(HttpServletRequest request,@RequestParam("id")String id){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		try {
+			electronicLendService.delete(id);
+		} catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg("删除电子借阅失败");
+		}
+		return resultModel;
+	}
+	
+	/**
+	 * @Description 获取电子借阅集合
+	 * @MethodName getElectronicLendList
+	 * @author bao
+	 * @date 2017年5月14日
+	 * @param dtGridPager
+	 * @param request
+	 * @return String
+	 */
+	@RequestMapping(value = "/getElectronicLendList")
+	@ResponseBody
+	@LogService(description = "获取电子借阅集合")
+	public String getElectronicLendList(String dtGridPager, HttpServletRequest request){
+		User user = this.getCurrentUser(request);
+		DataGridQuery query = parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("delFlag", Integer.valueOf(0),ConditionType.EQ, FieldType.INTEGER, null));
+		queryBuilder.addCondition(new QueryCondition("jyzt","未登记,已登记,已拒绝",ConditionType.IN, FieldType.STRING, null));
+		try {
+			UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+			if(commonService.isAdminOrFileAdmin(user)){
+				List<User> users = commonService.findUsersByDeptId(department.getDepartment().getId());
+				List<String> userList = new ArrayList<String>();
+				for(User u : users){
+					userList.add(u.getId());
+				}
+				String str = StringUtils.join(userList.toArray(), ",");
+				if(users.size()>0){
+					queryBuilder.addCondition(new QueryCondition("id", str,ConditionType.IN, FieldType.STRING, "jyr"));
+				}else{
+					queryBuilder.addCondition(new QueryCondition("id", null,ConditionType.NULL, FieldType.STRING, "jyr"));
+				}
+			}else{
+				queryBuilder.addCondition(new QueryCondition("id", user.getId(),ConditionType.EQ, FieldType.STRING, "jyr"));
+			}
+		
+		} catch (ServiceException e) {
+			return JSON.toJSONStringWithDateFormat("",
+					"yyyy-MM-dd HH:mm:ss",
+					SerializerFeature.WriteDateUseDateFormat,
+					SerializerFeature.DisableCircularReferenceDetect);
+		}
+		
+		return JSON.toJSONStringWithDateFormat(electronicLendService.getElectronicLendList(
+				queryBuilder, query.getNowPage(), query.getPageSize()),
+				"yyyy-MM-dd HH:mm:ss",
+				SerializerFeature.WriteDateUseDateFormat,
+				SerializerFeature.DisableCircularReferenceDetect);
+	}
+	
+	
+	
+	
+	/**
+	 * @Description 获取所有电子借阅集合
+	 * @MethodName getElectronicLendList
+	 * @author bao
+	 * @date 2017年5月14日
+	 * @param dtGridPager
+	 * @param request
+	 * @return String
+	 */
+	@RequestMapping(value = "/getAllElectronicLendList")
+	@ResponseBody
+	@LogService(description = "获取所有电子借阅集合")
+	public String getAllElectronicLendList(String dtGridPager, HttpServletRequest request){
+		User user = this.getCurrentUser(request);
+		DataGridQuery query = parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("delFlag", Integer.valueOf(0),ConditionType.EQ, FieldType.INTEGER, null));
+		queryBuilder.addCondition(new QueryCondition("jyzt","审核中,借阅成功",ConditionType.IN, FieldType.STRING, null));
+		Calendar cal = Calendar.getInstance();  
+        cal.setTime(new Date());  
+        cal.add(Calendar.DATE, -5);  
+        
+		queryBuilder.addCondition(new QueryCondition("updateTime",cal.getTime(),ConditionType.GT, FieldType.DATE, null));
+		try {
+			UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+			//if("fileAdmin".equalsIgnoreCase(department.getDuty().getCode()) || "depLeader".equalsIgnoreCase(department.getDuty().getCode())){
+			if(commonService.isAdminOrFileAdmin(user)){
+				List<User> users = commonService.findUsersByDeptId(department.getDepartment().getId());
+				List<String> userList = new ArrayList<String>();
+				for(User u : users){
+					userList.add(u.getId());
+				}
+				String str = StringUtils.join(userList.toArray(), ",");
+				if(users.size()>0){
+					queryBuilder.addCondition(new QueryCondition("id", str,ConditionType.IN, FieldType.STRING, "jyr"));
+				}else{
+					queryBuilder.addCondition(new QueryCondition("id", null,ConditionType.NULL, FieldType.STRING, "jyr"));
+				}
+			}else{
+				queryBuilder.addCondition(new QueryCondition("id", user.getId(),ConditionType.EQ, FieldType.STRING, "jyr"));
+			}
+		} catch (ServiceException e) {
+			return JSON.toJSONStringWithDateFormat("",
+					"yyyy-MM-dd HH:mm:ss",
+					SerializerFeature.WriteDateUseDateFormat,
+					SerializerFeature.DisableCircularReferenceDetect);
+		}
+		return JSON.toJSONStringWithDateFormat(electronicLendService.getElectronicLendList(
+				queryBuilder, query.getNowPage(), query.getPageSize()),
+				"yyyy-MM-dd HH:mm:ss",
+				SerializerFeature.WriteDateUseDateFormat,
+				SerializerFeature.DisableCircularReferenceDetect);
+	}
+	
+	
+	/**
+ 	 * @Description 选择下一节点人员信息
+ 	 * @MethodName nextstepView
+ 	 * @author bao
+ 	 * @date 2017年5月5日
+ 	 * @param request
+ 	 * @param tablename
+ 	 * @return
+ 	 * @throws ServiceException ModelAndView
+ 	 */
+     @RequestMapping(value = "/nextstepView")
+     public ModelAndView nextstepView(HttpServletRequest request,String tablename,String ids,String flag) throws ServiceException{
+         ModelAndView modelAndView = this.createNormalView("/web/fileUse/electronicLend/nextstep.vm");
+         
+         //获得流程定义id
+         String condition = " name = '电子借阅流程'";
+         List<BaseEntityInf> processes = customArchiveService.getEntitiesByConditions("ptp_bpm_process", condition);
+         String processId = processes.get(0).get("id");
+         
+         
+         modelAndView.addObject("processId",processId);
+         modelAndView.addObject("tablename", tablename);
+         modelAndView.addObject("ids", ids);
+         modelAndView.addObject("flag", flag);
+         //通过tablename获得流程定义id
+         
+         
+         return modelAndView;
+ 	 }
+     
+     
+     
+     
+    /**
+     *  @Description 跳转到登记界面
+     * @MethodName registerView
+     * @author bao
+     * @date 2017年5月15日
+     * @param request
+     * @param id
+     * @return ModelAndView
+     */
+    @RequestMapping(value = "/registerView")
+ 	public ModelAndView registerView(HttpServletRequest request,String id) {
+ 		ModelAndView modelAndView = this.createNormalView("/web/fileUse/electronicLend/register.vm");
+ 		
+ 		modelAndView.addObject("id", id);
+ 		return modelAndView;
+ 	}
+     
+    
+    
+    /**
+	 * @MethodName save
+	 * @Description 保存流程对象
+	 * @author Pan Jilong
+	 * @date 2017年2月27日
+	 * @param indispatch
+	 * @return
+	 */
+	@RequestMapping(value = "/registerInfo")
+	@ResponseBody
+	@LogService(description = "保存流程对象")
+	public ResultModel<String> registerInfo(HttpServletRequest request, @RequestBody Map<String, Object> obj) {
+		ResultModel<String> resultModel = new ResultModel<String>();
+		try{
+			ElectronicLend data = BeanUtils.cloneObject(ElectronicLend.class, obj.get("data"));
+			
+			
+			ElectronicLend electronicLend = commonService.findById(data.getId(), ElectronicLend.class);
+			electronicLend.setJymd(data.getJymd());
+			electronicLend.setBz(data.getBz());
+			electronicLend.setJysj(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+			electronicLend.setJyzt("已登记");
+			electronicLendService.saveOrUpdate(electronicLend);
+			
+		
+		}catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg("更新失败");
+		} 
+		return resultModel;
+	}
+    
+     
+     	/**
+		 * @MethodName getNextstepUsers
+		 * @Description 获取下一步的人员
+		 * @author Pan Jilong
+		 * @date 2017年3月2日
+		 * @return
+		 */
+		@RequestMapping(value = "/getNextstepUsers")
+		@ResponseBody
+		@LogService(description = "获取下一步的人员")
+		public String getNextstepUsers(HttpServletRequest request, String dtGridPager) {
+			//查询
+			DataGridQuery query = parseToQuery(dtGridPager);
+			
+			//参数获取
+			String processId = (String) query.getParameters().get("processId").toString();
+			//获取数据
+			DataGrid<User> dtgrid = new DataGrid<User>();
+			
+			//获取所有节点
+			List<ProcUnit> allUnits = bpmQueryService.getAllUnits(processId);
+			HandlerGroup group = null;
+			if (allUnits.size() > 2) {
+				group = allUnits.get(2).getGroup();
+			} else {
+				group = allUnits.get(1).getGroup();
+			}
+			
+			//获取所有的处理对象
+			List<Handler> handlers = group.getHandlers();
+			if (handlers != null && handlers.size() > 0) {
+				//循环获取该处理对象中的所有人员
+				List<User> us  = new ArrayList<User>();
+				for (Handler handler : handlers) {
+					Set<String> targets = handler.getTargets();
+					us = this.convertHandlerToUser(handler.getType(), targets);
+				}
+				//赋值
+				dtgrid.setExhibitDatas(us);
+				dtgrid.setRecordCount(us.size());
+			}
+			
+			return JSON.toJSONStringWithDateFormat(
+					dtgrid,
+	                "M-d HH:mm",
+	                SerializerFeature.WriteDateUseDateFormat,
+	                SerializerFeature.DisableCircularReferenceDetect);
+		}
+		
+		
+		/**
+		 * @Description发起流程 
+		 * @MethodName startProcess
+		 * @author bao
+		 * @date 2017年5月15日
+		 * @param request
+		 * @param obj
+		 * @return ResultModel<String>
+		 */
+		@SuppressWarnings("unchecked")
+        @RequestMapping(value = "/startProcess")
+		@ResponseBody
+		@LogService(description = "发起流程")
+		public ResultModel<String> startProcess(HttpServletRequest request, @RequestBody Map<String, Object> obj) {
+			ResultModel<String> resultModel = new ResultModel<String>();
+			try {
+				
+				List<String> businessIds =  (List<String>)obj.get("businessIds");
+				
+				for(String businessId : businessIds){
+					//获取当前用户，即发起人
+					User user = this.getCurrentUser(request);
+					UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+					//启动参数的普通字段属性
+					StartParam startParam = BeanUtils.cloneObject(StartParam.class, obj.get("startParam"));
+					startParam.setBusinessId(businessId);
+					String tablename = businessId.substring(0, businessId.indexOf(","));
+					String tableid = businessId.substring(businessId.indexOf(",")+1);
+					
+					//发起流程的第一个节点直接为当前使用默认
+					startParam.setNextHandlers(null);
+					
+					//发起流程的第一个节点直接为当前使用默认
+					//传入参数， 启动流程
+					processService.startProcess(startParam, department);
+						
+						
+					//获取待办任务列表
+					DataGrid<Task> tasks = bpmQueryService.queryTask(user.getId(), startParam.getProcessId(), 1, -1);
+					Task task = null;
+					//找到第一个任务节点
+					if (tasks != null && tasks.getRecordCount() > 0) {
+						for (Task t : tasks.getExhibitDatas()) {
+							if (t.getBusinessId().equals(startParam.getBusinessId())) {
+								task = t;
+								break;
+							}
+						}
+					}
+					//找到下一步
+					List<NextStep> nextSteps = bpmQueryService.getNextSteps(task.getId());
+					NextStep nextStep = null;
+					if (nextSteps != null && nextSteps.size() > 0) {
+						nextStep = nextSteps.get(0);
+					}
+					//启动参数的下一步执行人的集合
+					Set<UserDepartment> nextDepartments = null;
+					if (obj.get("nextHandlers") != null) {
+						nextDepartments = new HashSet<UserDepartment>();
+						List<String> list = (List<String>)obj.get("nextHandlers");
+						for (String nextId : list) {
+						    User nextUser = commonService.findById(nextId, User.class);
+						    UserDepartment nextDepartment = commonService.findUserDepartmentByUserId(nextUser.getId());
+						    nextDepartments.add(nextDepartment);
+						}
+					}
+					
+					//执行下一步的任务节点
+					Executor executor = new Executor();
+					executor.setTaskId(task.getId());
+					executor.setOutcome(nextStep.getKey());
+					executor.setOperate(TaskOperate.APPROVE);
+					executor.setNextHandlers(nextDepartments);
+					processService.handTask(executor, department);
+					
+					ElectronicLend electronicLend = commonService.findById(tableid, ElectronicLend.class);
+					electronicLend.setJyzt("审核中");
+					electronicLendService.saveOrUpdate(electronicLend);
+				}
+					
+			}catch (ServiceException e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg(e.getMessage());
+				e.printStackTrace();
+			} catch (Exception e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg("提交失败");
+			} 
+			return resultModel;
+		}
+		
+		
+		
+		/**
+		 * @Description 待办列表页面
+		 * @MethodName toDoTaskView
+		 * @author bao
+		 * @date 2017年5月7日
+		 * @param request
+		 * @return
+		 * @throws ServiceException ModelAndView
+		 */
+	     @RequestMapping(value = "/toDoTaskView")
+	     public ModelAndView toDoTaskView(HttpServletRequest request) throws ServiceException{
+	         ModelAndView modelAndView = this.createNormalView("/web/fileUse/electronicLend/lendExam.vm");
+	         
+	         //获得流程定义id
+	         String condition = " name = '电子借阅流程'";
+	         List<BaseEntityInf> processes = customArchiveService.getEntitiesByConditions("ptp_bpm_process", condition);
+	         String processId = processes.get(0).get("id");
+	         modelAndView.addObject("processId", processId);
+	         modelAndView.addObject("tablename", "pfm_electronic_lending");
+	         return modelAndView;
+	 	 }
+		
+		
+	     /**
+			 * @Description 获得待办列表
+			 * @MethodName getToDoTasks
+			 * @author bao
+			 * @date 2017年5月7日
+			 * @param request
+			 * @param dtGridPager
+			 * @param processId
+			 * @return String
+			 */
+			@RequestMapping(value = "/getToDoTasks")
+			@ResponseBody
+			@LogService(description = "获取待办列表")
+			public String getToDoTasks(HttpServletRequest request, String dtGridPager,String processId) {
+				User user = this.getCurrentUser(request);
+				DataGridQuery query = parseToQuery(dtGridPager);
+				
+				//申明dtgrid所需属性
+				DataGrid<DtoElectronicLend> dataGrid = new DataGrid<DtoElectronicLend>();
+				dataGrid.setNowPage(query.getNowPage());
+				dataGrid.setPageSize(query.getPageSize());
+				Integer recordCount = 0;
+				try {
+					//获取该流程的对应实体类全限定名
+					List<DtoElectronicLend> datas = new ArrayList<DtoElectronicLend>();
+					//待办任务列表
+					DataGrid<Task> tasks = bpmQueryService.queryTask(user.getId(), processId, query.getNowPage(), query.getPageSize());
+					if (tasks != null && tasks.getRecordCount() > 0) {
+						int skipcnt = 0;
+						for (Task task : tasks.getExhibitDatas()) {
+							String businessId = task.getBusinessId();
+							String tablename = businessId.substring(0, businessId.indexOf(","));
+							String tableid = businessId.substring(businessId.indexOf(",")+1);
+							if("undefined".equals(tablename) || "undefined".equals(tableid)) {
+								skipcnt = skipcnt + 1;
+								continue ;
+							}
+							
+							//循环任务列表, 赋值
+							ElectronicLend electronicLend = commonService.findById(tableid, ElectronicLend.class);
+							try{
+								DtoElectronicLend dtoElectronicLend = new DtoElectronicLend();
+								dtoElectronicLend.setBusinessId(businessId);
+								dtoElectronicLend.setNodeName(task.getName());
+								dtoElectronicLend.setJyr(electronicLend.getJyr().getName());
+								dtoElectronicLend.setBm(electronicLend.getBm());
+								dtoElectronicLend.setId(electronicLend.getId());
+								dtoElectronicLend.setDh(electronicLend.getDh());
+								dtoElectronicLend.setBz(electronicLend.getBz());
+								dtoElectronicLend.setTm(electronicLend.getTm());
+								dtoElectronicLend.setDaid(electronicLend.getDaid());
+								dtoElectronicLend.setJymd(electronicLend.getJymd());
+								dtoElectronicLend.setJysj(electronicLend.getJysj());
+								dtoElectronicLend.setJyzt(electronicLend.getJyzt());
+								datas.add(dtoElectronicLend);
+							}catch(NullPointerException e){
+								continue;
+							}
+						}
+						recordCount = tasks.getRecordCount();
+					}
+					dataGrid.setExhibitDatas(datas);
+					dataGrid.setRecordCount(recordCount);
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				} 
+				
+				return JSON.toJSONStringWithDateFormat(
+					  	dataGrid,
+		                "yyyy-MM-dd",
+		                SerializerFeature.WriteDateUseDateFormat,
+		                SerializerFeature.DisableCircularReferenceDetect);
+				
+			}
+	     
+	     
+			
+			/**
+			 * @Description 更新状态
+			 * @MethodName updataStatus
+			 * @author bao
+			 * @date 2017年5月15日
+			 * @param request
+			 * @param id
+			 * @return ResultModel<String>
+			 */
+	        @RequestMapping(value = "/updataStatus")
+			@ResponseBody
+			@LogService(description = "更新状态")
+			public ResultModel<String> updataStatus(HttpServletRequest request, @RequestBody Map<String, Object> obj) {
+				ResultModel<String> resultModel = new ResultModel<String>();
+				try{
+					String id = (String)obj.get("id");
+					ElectronicLend electronicLend = commonService.findById(id, ElectronicLend.class);
+					electronicLend.setJyzt(String.valueOf(2));
+					
+					electronicLendService.saveOrUpdate(electronicLend);
+				}catch (ServiceException e) {
+					resultModel.setSuccess(false);
+					resultModel.setMsg(e.getMessage());
+					e.printStackTrace();
+				} catch (Exception e) {
+					resultModel.setSuccess(false);
+					resultModel.setMsg("更新失败");
+				} 
+				return resultModel;
+			}
+			
+			
+			/**
+			 * @Description 流程扭转
+			 * @MethodName handProcess
+			 * @author bao
+			 * @date 2017年5月7日
+			 * @param request
+			 * @param obj
+			 * @return ResultModel<String>
+			 * @throws ServiceException 
+			 */
+			@RequestMapping(value = "/handProcess")
+			@ResponseBody
+			@LogService(description = "流程扭转")
+			public ResultModel<String> handProcess(HttpServletRequest request, @RequestBody Map<String, Object> obj) throws ServiceException {
+				ResultModel<String> resultModel = new ResultModel<String>();
+				User user = this.getCurrentUser(request);
+				UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+				try {
+					//解析数据
+					HandParam handParam = BeanUtils.cloneObject(HandParam.class, obj.get("handParam"));
+					
+					String businessId = handParam.getBusinessId();
+					String tablename = businessId.substring(0, businessId.indexOf(","));
+					String tableid = businessId.substring(businessId.indexOf(",")+1);
+					
+					
+					
+					//任务对象ID
+					DataGrid<Task> tasks = bpmQueryService.queryTask(user.getId(), handParam.getProcessId(), 1, -1);
+					Task task = null;
+					//找到任务对象（所有节点使用同一个taskId）
+					if (tasks != null && tasks.getRecordCount() > 0) {
+						for (Task t : tasks.getExhibitDatas()) {
+							if (t.getBusinessId().equals(businessId)) {
+								task = t;
+								break;
+							}
+						}
+					}
+					
+					Executor executor = new Executor();
+					//找到指定类型的下一步
+					
+					Boolean isAgree = false;
+					
+					NextStep nextStep = null;
+					List<NextStep> nextSteps = bpmQueryService.getNextSteps(task.getId());
+					if (nextSteps != null && nextSteps.size() > 0) {
+						if (nextSteps.size() == 1) {
+							nextStep = nextSteps.get(0);
+						} else {
+							if(StringUtil.isEmpty(handParam.getExpression())){
+								for (NextStep step : nextSteps) {
+									if(step.getOperate().equals(handParam.getOperate()) && StringUtils.isEmpty(step.getExpression())){
+										if(step.getOperate().equals("APPROVE")){
+											isAgree = true;
+										}
+										nextStep = step;
+										break;
+									}
+								}
+							}else{
+								for (NextStep step : nextSteps) {
+									if(StringUtils.isNotEmpty(step.getExpression())){
+										if(step.getOperate().equals("APPROVE") && StringUtils.isEmpty(step.getExpression())){
+											isAgree = true;
+										}
+										nextStep = step;
+										break;
+									}
+								}
+							}
+						}
+					}
+					
+					
+					
+					//设置下一次执行人
+					Set<UserDepartment> nextHandlerUsers = new HashSet<UserDepartment>();
+					if (obj.get("nextHandlers") != null) {
+						List<String> nextHandlers = (List<String>)obj.get("nextHandlers");
+						for (String uid : nextHandlers) {
+							User us = commonService.findById(uid, User.class);
+							UserDepartment userd = new UserDepartment();
+							userd.setUser(us);
+							nextHandlerUsers.add(userd);
+						}
+						executor.setNextHandlers(new HashSet<UserDepartment>(nextHandlerUsers));
+					}
+					
+					//执行到下一步
+					executor.setTaskId(task.getId());
+					executor.setOutcome(nextStep.getKey());
+					executor.setOperate(this.convertOperateType(handParam.getOperate()));
+					processService.handTask(executor, department);
+					
+					ElectronicLend electronicLend = commonService.findById(tableid, ElectronicLend.class);
+					if(isAgree){
+						electronicLend.setJyzt("借阅成功");
+					}
+					if("REJECT".equals(handParam.getOperate())){
+						electronicLend.setJyzt("已拒绝");
+					}
+					electronicLend.setUpdateTime(new Date());
+					electronicLendService.saveOrUpdate(electronicLend);
+				}catch (ServiceException e) {
+					resultModel.setSuccess(false);
+					resultModel.setMsg(e.getMessage());
+				}catch (Exception e) {
+					resultModel.setSuccess(false);
+					resultModel.setMsg("提交失败");
+				}  
+				
+				return resultModel;
+			}
+			
+			
+			
+			
+			/**
+			 * @MethodName getOperateType
+			 * @Description 转换操作类型
+			 * @author Pan Jilong
+			 * @date 2017年3月1日
+			 * @param operate
+			 * @return
+			 */
+			private TaskOperate convertOperateType(String operate) {
+				if (TaskOperate.APPROVE.toString().equals(operate)) {
+					return TaskOperate.APPROVE;
+				} else if(TaskOperate.REJECT.toString().equals(operate)) {
+					return TaskOperate.REJECT;
+				} else if (TaskOperate.FIRST.toString().equals(operate)) {
+					return TaskOperate.FIRST;
+				} else if (TaskOperate.CANCEL.toString().equals(operate)) {
+					return TaskOperate.CANCEL;
+				} else if (TaskOperate.BACK.toString().equals(operate)) {
+					return TaskOperate.BACK;
+				} else if (TaskOperate.STOP.toString().equals(operate)) {
+					return TaskOperate.STOP;
+				} else if (TaskOperate.JUMP.toString().equals(operate)) {
+					return TaskOperate.JUMP;
+				}
+				return null;
+			}
+			
+			
+		/**
+		 * @Description 获得用户
+		 * @MethodName convertHandlerToUser
+		 * @author bao
+		 * @date 2017年5月5日
+		 * @param handType
+		 * @param targets
+		 * @return List<User>
+		 */
+		private List<User> convertHandlerToUser(HandlerType handType, Set<String> targets) {
+			List<User> uds = new ArrayList<User>();
+			switch (handType) {
+				case ROLE :
+					//根据角色，查找人员
+					for (String rid : targets) {
+						List<User> us = commonService.findUsersByRoleId(rid);
+						uds.addAll(us);
+					}
+					break;
+				case USER :
+					//获取人员
+					for (String uid : targets) {
+						uds.add(commonService.findById(uid, User.class));
+					}
+					break;
+				case DUTY :
+					//根据职务，查找人员
+					for (String dutyid : targets) {
+						List<User> us = commonService.findUsersByDutyId(dutyid);
+						uds.addAll(us);
+					}
+					break;
+				case CREATEER :
+					//获取人员
+					for (String uid : targets) {
+						uds.add(commonService.findById(uid, User.class));
+					}
+					break;
+				case DEPARTMENT :
+					//根据部门，查找人员（下属所有部门的人员都需要查找到）
+					for (String did : targets) {
+						List<User> us = commonService.findUsersByDeptId(did);
+						uds.addAll(us);
+					}
+					break;
+			}
+			return uds;
+		}
+		
+		/**
+		 * 
+		 * @Description:导出相应的可查看的电子借阅记录
+		 * @author:bao
+		 * @time:2017年7月4日 下午2:16:09
+		 */
+		@RequestMapping(value = "/exportElectronicLend/{ids}")
+		@ResponseBody
+		@LogService(description = "档案自定义表单部分批量导出")
+		public ResultModel<String> exportFileDef(
+				HttpServletRequest request,
+				HttpServletResponse response,
+				@PathVariable("ids")String ids){
+			ResultModel<String> resultModel = new ResultModel<String>();
+			try{
+				User user = this.getCurrentUser(request);
+				List<String> idList = new ArrayList<String>();
+				if(StringUtil.isEmpty(ids)){
+					QueryBuilder queryBuilder = new QueryBuilder();
+					queryBuilder.addCondition(new QueryCondition("delFlag", Integer.valueOf(0),ConditionType.EQ, FieldType.INTEGER, null));
+					queryBuilder.addCondition(new QueryCondition("jyzt","审核中,借阅成功",ConditionType.IN, FieldType.STRING, null));
+					UserDepartment department = commonService.findUserDepartmentByUserId(user.getId());
+					if("fileAdmin".equalsIgnoreCase(department.getDuty().getCode()) || "depLeader".equalsIgnoreCase(department.getDuty().getCode())){
+						List<User> users = commonService.findUsersByDeptId(department.getDepartment().getId());
+						List<String> userList = new ArrayList<String>();
+						for(User u : users){
+							userList.add(u.getId());
+						}
+						String str = StringUtils.join(userList.toArray(), ",");
+						if(users.size()>0){
+							queryBuilder.addCondition(new QueryCondition("id", str,ConditionType.IN, FieldType.STRING, "jyr"));
+						}else{
+							queryBuilder.addCondition(new QueryCondition("id", null,ConditionType.NULL, FieldType.STRING, "jyr"));
+						}
+					}else{
+						queryBuilder.addCondition(new QueryCondition("id", user.getId(),ConditionType.EQ, FieldType.STRING, "jyr"));
+					}
+					idList = electronicLendService.getElectronicLendIds(queryBuilder);
+				}else{
+						
+					idList = Arrays.asList(ids.split(","));
+				}
+					
+					
+				// 获得所有数据
+		        HSSFWorkbook workbook = new HSSFWorkbook();			//生成工作簿
+				HSSFSheet sheet = workbook.createSheet("电子借阅导出记录");		//生成工作页
+				sheet.setDefaultColumnWidth(15);				//sheet默认列宽
+				HSSFCellStyle style = workbook.createCellStyle();	//生成样式
+				
+				HSSFCellStyle cellStyle=workbook.createCellStyle();       //设置自动换行的样式
+				cellStyle.setWrapText(true);
+				
+				//导出excel的样式
+				style.setFillForegroundColor(HSSFColor.WHITE.index);  
+		        style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);  
+		        style.setBorderBottom(HSSFCellStyle.BORDER_THIN);  
+		        style.setBorderLeft(HSSFCellStyle.BORDER_THIN);  
+		        style.setBorderRight(HSSFCellStyle.BORDER_THIN);  
+		        style.setBorderTop(HSSFCellStyle.BORDER_THIN);  
+		        style.setAlignment(HSSFCellStyle.ALIGN_CENTER); 
+				
+		        // 生成一个字体  
+		        HSSFFont font = workbook.createFont();  
+		        font.setColor(HSSFColor.BLACK.index);  
+		        font.setFontHeightInPoints((short) 12);  
+		        font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD); 
+		        style.setFont(font);
+				
+				
+				 HSSFRow rowHeader = sheet.createRow(0);
+				 String[] headers = {"借阅状态","档号","借阅人","文号","题名","备注","借阅目的","借阅时间"};
+				 for(int i = 0;i<headers.length;i++){
+		        	HSSFCell cell = rowHeader.createCell(i);
+					HSSFRichTextString text = new HSSFRichTextString(headers[i]);
+					cell.setCellStyle(style);
+					cell.setCellValue(text);
+					cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+		        	
+				 }
+				
+				for(int i = 0;i<idList.size();i++){
+					String id = idList.get(i);
+					ElectronicLend electronicLend = commonService.findById(id, ElectronicLend.class);
+					HSSFRow row = sheet.createRow(i+1);
+					row.createCell(0).setCellValue(electronicLend.getJyzt());
+		        	row.createCell(1).setCellValue(electronicLend.getDh());
+		        	row.createCell(2).setCellValue(electronicLend.getJyr().getName());
+		        	row.createCell(3).setCellValue(electronicLend.getWh());
+		        	row.createCell(4).setCellValue(electronicLend.getTm());
+		        	row.createCell(5).setCellValue(electronicLend.getBz());
+		        	row.createCell(6).setCellValue(electronicLend.getJymd());
+		        	row.createCell(7).setCellValue(electronicLend.getJysj());
+					
+				}
+				 
+				
+				OutputStream output=response.getOutputStream();  
+		        response.reset();  
+		        response.setHeader("Content-disposition", "attachment; filename="+new String("电子借阅记录.xls".getBytes("utf-8"), "iso8859-1"));  
+		        response.setContentType("application/msexcel");          
+		        workbook.write(output);  
+		        output.close();  
+					
+			}catch (ServiceException e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg(e.getMessage());
+			}catch(Exception e){
+				resultModel.setSuccess(false);
+				resultModel.setMsg("批量导出失败");
+			} 
+			return resultModel;
+		}
+		
+		/**
+		 * 
+		 * @Description:判断是否有借阅效果
+		 * @author:bao
+		 * @time:2017年7月17日 下午1:47:31
+		 */
+		@RequestMapping(value = "/getJyxg")
+		@ResponseBody
+		@LogService(description = "判断借阅效果是否为空")
+		public ResultModel<Boolean> getJyxg(String id){
+			ResultModel<Boolean>  resultModel = new ResultModel<Boolean>();
+			try{
+				Boolean hasJyxg = false;
+				ElectronicLend electronicLend = commonService.findById(id, ElectronicLend.class);
+				if(StringUtil.isNotEmpty(electronicLend.getJyxg())){
+					hasJyxg = true;
+				}
+				resultModel.setData(hasJyxg);
+			}catch(Exception e){
+				resultModel.setData(false);
+			}
+			return resultModel;
+		}
+		
+		/**
+		 * 
+		 * @Description:跳转增加借阅效果界面
+		 * @author:bao
+		 * @time:2017年7月17日 下午1:55:30
+		 */
+		@RequestMapping(value = "/toAddJyxg")
+		public ModelAndView toAddJyxg(HttpServletRequest request,String id) throws ServiceException{
+			ModelAndView modelAndView = this.createNormalView("/web/fileUse/electronicLend/addJyxg.vm");
+			modelAndView.addObject("leadid", id);
+			return modelAndView;
+		}
+		
+		/**
+		 * 
+		 * @Description:保存借阅效果
+		 * @author:bao
+		 * @time:2017年7月17日 下午2:55:44
+		 */
+		@RequestMapping(value = "/addJyxg", method = RequestMethod.POST)
+		@ResponseBody
+		@LogService(description = "保存借阅效果")
+		public ResultModel<String> addJyxg(HttpServletRequest request) {
+			ResultModel<String> resultModel = new ResultModel<String>();
+			try{
+				String leadid = request.getParameter("leadid");
+				ElectronicLend electronicLend = commonService.findById(leadid, ElectronicLend.class);
+				String jyxg = request.getParameter("jyxg");
+				electronicLend.setJyxg(jyxg);
+				electronicLendService.saveOrUpdate(electronicLend);
+			}catch (ServiceException e) {
+				resultModel.setSuccess(false);
+				resultModel.setMsg(e.getMessage());
+			}catch(Exception e){
+				resultModel.setSuccess(false);
+				resultModel.setMsg("保存失败");
+			} 
+			return resultModel;
+		}
+}

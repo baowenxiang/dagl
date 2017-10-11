@@ -1,0 +1,93 @@
+var grid;
+
+$(function(){
+    initGrid();
+    initMethod();
+});
+
+function initGrid(){
+	 grid=$.fn.DtGrid.init({
+         loadURL : Util.getRootPath() + "/w/condition/getList",
+         ajaxLoad : true,
+         lang : 'zh-cn',
+         exportFileName : '用户列表',
+         gridContainer : 'tableDataCollect',
+         toolbarContainer : 'pagingDataCollect',
+         pageSize : 20,
+         pageSizeLimit : [20,50,100,300],
+         tools:'', 
+         tableStyle:'table-layout: fixed;word-break: break-all; word-wrap: break-word;',
+         columns : [
+				{
+					id:'dh',
+					title : '<b>档号</b>',
+					type:"string",
+					columnClass:'text-center',
+					columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+					resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+				},
+				{
+					id:'tm',
+					title : '<b>题名</b>',
+					type:"string",
+					columnClass:'text-center',
+					columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+					resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+				
+				},
+				{
+					id:'cwrq',
+					title : '<b>成文日期</b>',
+					type:"string",
+					columnClass:'text-center',
+					columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+					resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+				
+				},
+				{
+					id:'zrz',
+					title : '<b>责任者</b>',
+					type:"string",
+					columnClass:'text-center',
+					columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+					resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}
+				
+				},
+				{
+					id:'zrz',
+					title : '<b>档案类型</b>',
+					type:"string",
+					columnClass:'text-center',
+					columnStyle:'-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;',
+					resolution:function(value, record, column, grid, dataNo, columnNo){
+						return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+					}	
+				}
+			]                       
+     });
+	 refreshGrid();
+}
+
+//刷新表格
+function refreshGrid() {
+	grid.parameters = getParameters();
+	grid.load();
+}
+function getParameters() {
+    return{
+    	tm : $.trim($("[name='tm']").val()),
+    	dh : $.trim($("[name='dh']").val()),
+    	zrz : $.trim($("[name='zrz']").val()),
+    	cwrq_min : $.trim($("[name='cwrq_min']").val()),
+    	cwrq_max : $.trim($("[name='cwrq_max']").val()),
+    	dalx : $.trim($("[name='dalx']").val())
+    }
+}

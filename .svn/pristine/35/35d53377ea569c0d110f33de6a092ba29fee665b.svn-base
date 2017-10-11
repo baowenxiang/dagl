@@ -1,0 +1,41 @@
+package cn.proem.suw.interceptor;
+
+import java.io.PrintWriter;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+/**
+ * 菜单拦截
+ * 
+ * @author Pan Jilong
+ */
+public class MenuInterceptor extends HandlerInterceptorAdapter
+{
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception
+    {
+//        String url = request.getRequestURI().toString();
+        String username = (String) request.getSession().getAttribute("PROFILE_NAME");
+
+        // 过滤空用户和公共资源
+        if (username == null)
+        {
+            // System.out.println("被拦截的URL-->" + url);
+            PrintWriter out = response.getWriter();
+            out.println("<html>");
+            out.println("<script>");
+            out.println("alert('您很久未操作，系统已经自动退出！');");
+            out.println("window.open ('" + request.getContextPath() + "/w/login','_top')");
+            out.println("</script>");
+            out.println("</html>");
+            response.setContentType("text/html;charset=utf-8");
+            return false;
+        }
+        return true;
+    }
+
+}

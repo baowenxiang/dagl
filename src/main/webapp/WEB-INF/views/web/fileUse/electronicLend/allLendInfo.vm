@@ -1,0 +1,28 @@
+##iframe页面主体
+<section class="content">
+    <div class="box box-default">
+        <div class="box-body">
+			<button type="button" class="btn btn-default btn-sm export btn-icon">
+                <svg class="icon" aria-hidden="true">
+                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-download"></use>
+                </svg>
+                <b hidden>导出</b>&nbsp;
+            </button>
+			
+            ##表名
+            <input type="hidden" name="tablename" value="pfm_electronic_lending">
+            ##资料收集分页展示DTgrid
+            <div id="dataCollectContext" >
+                ##查询条件
+                <div id="conditionElectronicLend"></div>
+                ##列表
+                <div id="tableElectronicLend" class="dt-grid-container"></div>
+                ##分页栏
+                <div id="pagingElectronicLend" class="dt-grid-toolbar-container"></div>
+			</div>
+            
+        </div>
+    </div >
+</section> 
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/fileUse/electronicLend/allLendInfo.js"></script>

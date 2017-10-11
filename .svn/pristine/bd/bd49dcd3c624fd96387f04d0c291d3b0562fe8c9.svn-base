@@ -1,0 +1,176 @@
+<html>
+<head>
+<!--jquery-->
+    <!--[if !IE]> -->
+    <script type="text/javascript">
+        window.jQuery || document.write("<script src='${rc.contextPath}/resources/plugins/jquery/jquery-2.0.3.min.js'>"+"<"+"/script>");
+    </script>
+    <!-- <![endif]-->
+    <!--[if IE]>
+    <script type="text/javascript">
+        window.jQuery || document.write("<script src='${rc.contextPath}/resources/plugins/jquery/jquery-1.10.2.min.js'>"+"<"+"/script>");
+    </script>
+    <![endif]-->
+    <link href="${rc.contextPath}/resources/plugins/dtGrid/jquery.dtGrid.min.css" rel="stylesheet" type="text/css">
+    <link href="${rc.contextPath}/resources/plugins/dtGrid/dependents/datePicker/skin/WdatePicker.css" rel="stylesheet" type="text/css" />
+    <link href="${rc.contextPath}/resources/plugins/dtGrid/dependents/datePicker/skin/default/datepicker.css" rel="stylesheet" type="text/css" />
+    <script src="${rc.contextPath}/resources/plugins/dtGrid/jquery.dtGrid.js" type="text/javascript"></script>
+    <script src="${rc.contextPath}/resources/plugins/dtGrid/i18n/zh-cn.js" type="text/javascript"></script>
+    <script src="${rc.contextPath}/resources/plugins/dtGrid/dependents/datePicker/WdatePicker.js" type="text/javascript" defer="defer"></script>
+    
+</head>
+<body>
+        <input type="hidden" name="tablename" value="$!{tablename}" />
+        <input type="hidden" name="tm" value="$!{tm}" />
+        <input type="hidden" name="dh" value="$!{dh}" />
+        ##列表
+        <div id="tableDataCollect" class="dt-grid-container"></div>
+        ##分页栏
+        <div id="pagingDataCollect" class="dt-grid-toolbar-container"></div>
+        <script>
+        
+         var grid;
+$(function(){
+    initGrid();
+    initMethod();
+});
+    //表格初始化
+    function initGrid(){
+        var index = layer.load(1, {shade: [1,'#FFFFFF']});
+        $("#tableDataCollect").children().remove();
+            var tablename = $('[name="tablename"]').val();
+            var tm = $('[name="tm"]').val();
+            var dh = $('[name="dh"]').val();
+            
+            $.ajax({
+                 type: "POST",
+                 async:false,
+                 contentType: "application/json",
+                 url: "/dagl/w/condition/getHeader/" + tablename,
+                 dataType: 'json',
+                 success: function(result) {
+                    var headers = result.datas;
+                    console.log(headers);
+                    grid=$.fn.DtGrid.init({
+                        loadURL : Util.getRootPath() + "/w/condition/getList/"+tablename,
+                        ajaxLoad : true,
+                        lang : 'zh-cn',
+                        exportFileName : '用户列表',
+                        gridContainer : 'tableDataCollect',
+                        toolbarContainer : 'pagingDataCollect',
+                        pageSize : 10,
+                        pageSizeLimit : [10,20,50],
+                        tools:'', 
+                        tableStyle:'table-layout: fixed;word-break: break-all; word-wrap: break-word;',
+                        columns : headers                       
+                    });
+                    parameter = {};
+                    if(tm){
+                        parameter['tm'] = tm;
+                    }
+                    
+                    if(dh){
+                        parameter['dh'] = dh;
+                    }
+                    
+                    grid.parameters = parameter;
+                    console.log(parameter);
+                  
+                    
+                    layer.close(index);
+                    refreshGrid();
+                 }
+        });
+    } 
+  
+    //刷新表格
+    function refreshGrid() {
+        grid.load();
+    }
+    function getParameters() {
+        return{
+        }
+    }
+
+function initMethod(){
+    //点击案卷级详情按钮
+    $("#tableDataCollect").on("click","a.relative",function(){
+        var tablename = $('[name="tablename"]').val();
+        var relatablename = $('[name="relatablename"]').val();
+        var id = $.trim($(this).attr("data-id"));
+        var options = {}
+        var url = Util.getRootPath() + "/w/example/table/relative/"+tablename+"/"+relatablename+"/"+id;
+        options.url = url;
+        options.title = "关联文件展示";
+        window.parent.showModal(options);
+    });
+    
+    
+      //弹出模态框查看详情
+    $("#tableDataCollect").on("click","a.detail",function(){
+        var tablename = $('[name="tablename"]').val();
+        var id = $.trim($(this).attr("data-id"));
+        var options = {}
+        var url = Util.getRootPath() + "/w/example/table/detail/"+tablename+"/"+id;
+        options.url = url;
+        options.title = "详情展示";
+        window.parent.showModal(options);
+    });
+    
+    //点击删除内容
+    $("#tableDataCollect").on("click","a.delete",function(){
+        var tablename = $('[name="tablename"]').val();
+        var id = $.trim($(this).attr("data-id"));
+        $.ajax({
+            type: "GET",
+            contentType: "application/json",
+            url: Util.getRootPath()+"/w/example/table/delete/"+tablename+"/"+id,
+            dataType:'json',
+            success:function(result){
+                
+                if(result.success){
+                    layer.msg(result.msg,{time: 2000});
+                    refreshGrid();
+                }else{
+                    layer.alert(result.msg, {skin: 'layui-layer-lan',closeBtn: 0});
+                }
+            }
+            
+        });
+    });
+    //点击预览内容
+    $("#tableDataCollect").on("click", "img", function(){
+        var index = layer.load(1, {shade: [1,'#FFFFFF']});
+        var fileid = $(this).attr("dagl-uuid");
+        var filename = $(this).attr("title");
+        console.log(filename);
+        $.ajax({
+            type: "GET",
+            url: Util.getRootPath() + "/w/preview/" + fileid,
+            dataType: 'json',
+            async: false,   
+            success: function(result) {
+                var option = {};
+                option.title = filename;
+                if(result.type == 'flv'){
+                    layer.close(index);
+                    option.url = Util.getRootPath() + "/w/preview/video/" + filename + "/" + result.cache;
+                    window.parent.showModal(option);
+                }else{
+                    layer.close(index);
+                    option.url = result.cache;
+                    window.parent.showModal(option);
+                }
+            },
+            error:function(XMLHttpRequest, textStatus, errorThrown){
+                layer.close(index);
+                layer.msg("文件不存在或被删除");
+            },
+        });
+    });
+
+}
+        
+        </script>
+</body>
+</html>

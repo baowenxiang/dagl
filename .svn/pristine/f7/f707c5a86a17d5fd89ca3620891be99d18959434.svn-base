@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="shortcut icon" type="image/x-icon" href="${rc.contextPath}/resources/img/proem.ico" media="screen" />
+	#parse("web/global/title.vm")
+	#parse("web/global/meta.vm")
+	#parse("web/global/resources.vm")
+</head>
+<body class="hold-transition skin-blue-light sidebar-mini fixed" style="overflow:hidden">
+	<div class="wrapper">
+		#parse("web/global/header.vm")
+		#parse("web/global/left.vm")
+		#parse("web/global/right.vm")
+    </div>
+	<input type='hidden' name="businessIds"/>
+</body>
+##Javascript
+<!--<script src="${rc.contextPath}/resources/js/web/common/index.js"></script>-->
+
+<script>
+	//弹出框get请求
+	 function showModal(options){
+           layer.open({
+              type: 2,
+			  title:options.title,
+              area: ['700px', '530px'],
+              fixed: false, //不固定
+              maxmin: true,
+              content: options.url,
+            });
+       }
+	   
+	   function refresh(url){
+	   		$("#mainIframe").attr("src", url);
+	   }
+	
+	
+	
+	
+    	//当前用户皮肤class
+    	var personalSkin = "";
+    	//当前用户皮肤对应的id
+    	var personelSkinId = "";
+    	$(function() {
+    		initPersonalSkin();
+    	});
+		
+      
+	   	//初始化个人皮肤设置
+	   	function initPersonalSkin() {
+	   		//发送请求，获取系统设置
+	   		Util.ajaxSync(
+				Util.getRootPath() + "/w/setting/getSettingMsg",
+				{},
+				function(result){
+					data = result.data;
+					if(data != null){
+						//data = JSON.stringify(result.data);
+						//设置皮肤
+						if(data.skinClass == null || data.skinClass == "null" || data.skinClass == "") {
+							personalSkin = "skin-blue-light sidebar-mini fixed";
+						}else {
+							personalSkin = data.skinClass;
+						}
+						personelSkinId = data.id;
+						
+						//设置平台名称
+						var msg = {};
+						if(data.plateLgName != null && data.plateLgName != "null" && data.plateLgName != "") {
+							//msg.mini = data.plateMiniName;
+							msg.lg = data.plateLgName;
+							//initPlateMsg(msg);
+						}
+						if(data.plateMiniName != null && data.plateMiniName != "null" && data.plateMiniName != "") {
+							msg.mini = data.plateMiniName;
+						}
+						initPlateMsg(msg);
+						//设置皮肤图片
+						if(data.skinPicPath != null && data.skinPicPath != "null" && data.skinPicPath != "") {
+							setSkinPic(data.skinPicPath);
+						}
+						//设置logo图片
+						if(data.headerPicPath != null && data.headerPicPath != "null" && data.headerPicPath != "") {
+							setMenuHeight();
+							$(".wrapper").attr("style","margin-top:88px");
+							setHeaderPic(data.headerPicPath);
+						}
+					}else {
+						personalSkin = "skin-blue-light sidebar-mini fixed";
+					}
+				},function(ex){
+					personalSkin = "skin-blue-light sidebar-mini fixed";
+				}
+			);
+	   		
+	   		$("body").attr("class",personalSkin).addClass("sidebar-mini fixed");
+	   	}
+	   	//初始化皮肤设置后的样式
+		function initBodyStyle(id) {
+			var iclazz = window.localStorage.getItem(id);
+	   		$("body").attr("class",iclazz).addClass("sidebar-mini fixed");
+	   	}
+	   	//隐藏header图片
+	   	function hidePic() {
+	   		//还原wrapper高度
+	   		$(".wrapper").removeAttr("style");
+	   		//隐藏图片
+	   		hideHeaderPic();
+	   	}
+	   	//隐藏header和导航样式清空
+	   	function hidePicAndLeft() {
+	   		//还原wrapper高度
+	   		$(".wrapper").removeAttr("style");
+	   		//隐藏图片
+	   		hideHeaderPic();
+	   		 //还原左侧菜单高度
+			$(".sidebar-menu.leftMenu").attr("style","");   
+	   	}
+		//还原皮肤设置
+		function returnBodyStyle(skinClass) {
+			$("body").attr("class",skinClass).addClass("sidebar-mini fixed");
+		}
+		//设置平台名称以及缩略名
+		function initPlateMsg(msg) {
+			//调用子页面方法
+			setPlateMsg(msg);
+		}
+    </script>
+</html>

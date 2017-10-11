@@ -1,0 +1,114 @@
+package cn.proem.dagl.web.fileTransfer.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.entity.Department;
+import cn.proem.core.entity.User;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.fileControl.entity.FileControl;
+import cn.proem.dagl.web.fileControl.service.FileControlService;
+import cn.proem.dagl.web.fileTransfer.entity.TransferRecorder;
+import cn.proem.dagl.web.fileTransfer.service.FileTransferService;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+
+@Controller
+@RequestMapping("/w/fileTransfered")
+public class TransferedFileController extends BaseCtrlModel {
+	
+	@Autowired
+	private FileTransferService fileTransferService;
+	@Autowired
+	CommonService commonService;
+	@Autowired
+	private CustomArchiveService customArchiveService;
+	
+	
+	/**
+	 * 初始化已移交档案页面
+	 * @return
+	 */
+	@RequestMapping("/initview")
+	public ModelAndView initFileControlView(){
+		
+		ModelAndView view = this.createNormalView("/web/fileTransfer/transferedInitView.vm");
+		
+		return view;
+		
+	}
+	
+	/**
+	 * 获取公开档案列表
+	 */
+	@RequestMapping("/getTransferedFileList")
+	@ResponseBody
+	@LogService(description = "获取公开档案列表")
+	public String getTransferedFileList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		//QueryBuilder queryBuilder = query.generateQueryBuilder();
+		//queryBuilder.addCondition(new QueryCondition("delFlag",Integer.parseInt("0"),ConditionType.SQL,FieldType.INTEGER,null));
+		//DataGrid<TransferRecorder> dataGrid = fileTransferService.getTransferedFileDataGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		//dataGrid.getExhibitDatas();
+		
+		String tablename = " PFM_FILE_TRANSFER ";
+		DataGrid<Map<String,Object>> grid =  fileTransferService.getAllTransferedFileDataGrid(tablename, query.getNowPage(), query.getPageSize());
+		
+		List<Map<String,Object>> dataList = new ArrayList<Map<String,Object>>();
+		for(Map<String,Object> map :grid.getExhibitDatas()){
+			Map<String,Object> dataMap = new HashMap<String, Object>();
+			dataMap.put("tm", map.get("TM"));
+			dataMap.put("uuid", map.get("UUID"));
+			dataMap.put("userId", map.get("CREATE_ID"));
+			dataMap.put("startTime", map.get("START_TIME"));
+			dataMap.put("endTime", map.get("END_TIME"));
+			
+			dataMap.put("nodeName", map.get("STATE"));
+			dataMap.put("oldCompany", map.get("TRANSFCOMPANY_ID")==null?"":commonService.findById(map.get("TRANSFCOMPANY_ID").toString(), Department.class).getFullName());
+			dataMap.put("newCompany", map.get("RECEICOMPANY_ID")==null?"":commonService.findById(map.get("RECEICOMPANY_ID").toString(), Department.class).getFullName());
+			dataList.add(dataMap);
+		}
+		grid.setExhibitDatas(dataList);
+		
+		
+		return JSON.toJSONStringWithDateFormat(grid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+		
+	}
+	
+	
+	@RequestMapping("/getUserById")
+	@ResponseBody
+	@LogService(description = "根据id获得用户对象")
+	public ResultModel<User> getUserById(HttpServletRequest request,@RequestBody Map<String,String> obj){
+		ResultModel<User> resultModel = new ResultModel<User>();
+		
+		User user = commonService.findById(obj.get("userId"), User.class);
+		
+		resultModel.setData(user);
+		return resultModel;
+	}
+
+}

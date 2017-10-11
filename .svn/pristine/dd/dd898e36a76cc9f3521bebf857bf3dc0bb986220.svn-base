@@ -1,0 +1,99 @@
+package cn.proem.dagl.web.oaservice.controller;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.entity.User;
+import cn.proem.dagl.web.message.entity.Message;
+import cn.proem.dagl.web.message.service.MessageService;
+import cn.proem.dagl.web.oaservice.service.OagdService;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+
+@Controller
+@RequestMapping(value = "/w/OAService")
+public class OAServiceController extends BaseCtrlModel {
+	@Autowired
+	private OagdService oagdService;
+	@Autowired
+	private MessageService msgService;
+	
+	private Map<String, Message> msgs = new HashMap<String, Message>();
+	
+	@RequestMapping(value = "/getOaServiceData")
+	@ResponseBody
+	@LogService(description = "定时获取OA接口数据")
+	public void getOaData() {
+		oagdService.addOaGdSj(this.getFilePath(),"","");
+    }
+	
+	@RequestMapping(value = "/getOaDataByDate")
+	@ResponseBody
+	@LogService(description = "根据日期获取OA接口数据")
+	public ResultModel<String> getOaDataByDate(String startDate,String endDate) {
+		ResultModel<String> resultModal = new ResultModel<String>();
+		Long threadid = oagdService.addOaGdSj(this.getFilePath(),startDate,endDate);
+		resultModal.setSuccess(true);
+		resultModal.setData(threadid.toString());
+		return resultModal;
+    }
+	
+	@RequestMapping(value = "/OADateChoose")
+	public ModelAndView OADateChoose(HttpServletRequest request) {
+		ModelAndView modelAndView = this.createNormalView("/web/document/OAdate.vm");
+		return modelAndView;
+	}
+	
+	@RequestMapping(value = "/process")
+	@ResponseBody
+	public ResultModel<String> getProcess(HttpServletRequest request, String threadid){
+	    User user = this.getCurrentUser(request);
+	    ResultModel<String> resultModal = new ResultModel<String>();
+	    
+	    int[] process = oagdService.getProcess(Long.parseLong(threadid));
+	    List<String> datas = new ArrayList<String>();
+	    Message msg = null;
+	    if(!msgs.containsKey(threadid)){
+	        msg = new Message();
+	        msg.setType("TASK");
+	        msg.setSendUser(user);
+	        msg.setReceUser(user);
+	        msg.setCreateTime(new Date());
+	        msg.setIsRead("idRead_0");
+	        msg.setContent(String.valueOf(process[0]) + "," + String.valueOf(process[1]));
+	    }else{
+	        msg = msgs.get(threadid);
+	        msg.setUpdateTime(new Date());
+	        msg.setIsRead("idRead_0");
+            msg.setContent(String.valueOf(process[0]) + "," + String.valueOf(process[1]));
+	    }
+	    msgs.put(threadid, msg);
+	    try {
+            msgService.saveOrUpdateMessage(msg);
+            resultModal.setSuccess(true);
+            datas.add(String.valueOf(process[0]));
+            datas.add(String.valueOf(process[1]));
+        } catch (ServiceException e) {
+            resultModal.setSuccess(false);
+            resultModal.setMsg(e.getMessage());
+        }
+	    resultModal.setDatas(datas);
+	    return resultModal;
+	}
+	
+}

@@ -1,0 +1,47 @@
+/*附件样式*/
+.headPic-file{
+	overflow: hidden;
+	padding: 0;
+}
+.headPic-file>div{
+	display: inline-block;
+	height: 34px;
+	line-height: 34px;
+	border: 1px solid #CCCCCC;
+	margin-bottom: 2px;
+	padding: 0 12px;
+	text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+	/*box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;*/
+}
+.headPic-file>div>a{
+	padding-left: 10px;
+	color: #2C6F89;
+}
+.headPic-file>div>span.file-remove{
+	cursor: pointer;
+	position: absolute;
+	right: 10px;
+}
+.headPic-file>div>span.file-remove:HOVER{
+	color: #A70000;
+}
+ul.layui-nav{
+	/*height: 44px;*/
+	background-color: #F0F0F0;
+	border-radius : 0;
+}
+ul.layui-nav p{
+	height: 44px;
+	color:#000000;
+	line-height:44px;
+	width: 20%;
+	display: inline-block;
+	margin: 0;
+}
+.btns {
+	height: 44px;
+	line-height:44px;
+	width: 20%;
+	display: inline-block;
+	float: right
+}

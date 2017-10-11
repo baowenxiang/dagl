@@ -1,0 +1,38 @@
+
+##iframe页面主体
+<section class="content">
+
+
+   <form method="post" action="searchIndex" style="margin:150px auto;width:50%">
+   
+ <!--  	 <div class="layui-form-item">
+     <label class="layui-form-label">关键词</label>
+	    <div class="layui-input-block" ">
+	      <input type="text" id="key" name="key" required  lay-verify="required" placeholder="请输入检索关键词" autocomplete="off" class="layui-input">
+	    </div>
+     </div> -->
+     
+     <div class="input-group">
+        <input type="text"  id="key" name="key" class="form-control">
+        <span class="input-group-btn">
+            <button type="submit" class="btn btn-info btn-flat">全文搜索</button>
+        </span>
+    </div>
+
+   </form>
+</section>
+     <script>
+        $(function(){
+            $("form").submit(function(){
+				var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+                var keyword = $("#key").val();
+                if($.trim(keyword)==""){
+                    window.location.reload();
+					layer.close(index);
+                    return false;
+                }
+            });
+        });
+     </script>
+
+	

@@ -1,0 +1,11 @@
+<aside class="main-sidebar">
+  <section class="sidebar">
+    <ul class="sidebar-menu leftMenu">
+    </ul>
+    ##占位
+    <div style="height:100px;"></div>
+  </section>
+</aside>
+<script src="${rc.contextPath}/resources/js/web/common/left.js"></script>
+##CSS
+<link href="${rc.contextPath}/resources/css/web/common/left.css" rel="stylesheet" />

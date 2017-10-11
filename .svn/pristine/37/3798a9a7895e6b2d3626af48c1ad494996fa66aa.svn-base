@@ -1,0 +1,135 @@
+package cn.proem.dagl.web.fuzzyQuery.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.archives.entity.DTableName;
+import cn.proem.dagl.web.fuzzyQuery.entity.ArchiveCollect;
+import cn.proem.dagl.web.fuzzyQuery.service.FuzzyQueryService;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.table.dao.GeneralServiceDao;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.suw.web.docu.entity.DocuAttachment;
+
+@Service
+@Transactional
+public class FuzzyQueryServiceImpl implements FuzzyQueryService {
+	
+	@Autowired
+	private GeneralDao generalDao;
+	
+	@Autowired
+	private GeneralServiceDao generalServiceDao;
+	/**
+	 * 获取原文
+	 */
+	@Override
+	public List<Ywgj> getYwgjList(QueryBuilder queryBuilder) {
+
+		List<Ywgj> list = generalDao.queryByCriteria(Ywgj.class, queryBuilder, null, 0, -1);
+		
+		return list;
+	}
+	/**
+	 * 获取管养附件
+	 */
+	@Override
+	public List<DocuAttachment> getDocuAttachmentList(QueryBuilder queryBuilder) {
+		
+		List<DocuAttachment> list = generalDao.queryByCriteria(DocuAttachment.class, queryBuilder, null, 0, -1);
+		
+		return list;
+	}
+	
+	/**
+	 * @return 
+	 * @Method: FileAndArchiveInfo 
+	 * @Description: 家里文件与档案关联
+	 * @see cn.proem.dagl.web.fuzzyQuery.service.FuzzyQueryService#FileAndArchiveInfo()
+	 */
+    @Override
+    public Map<String, String> FileAndArchiveInfo(String fileid) {
+        Map<String, String> archive = null;
+        //获得相关档号
+        Ywgj ywgj = generalDao.findById(fileid, Ywgj.class);
+        if(ywgj != null){
+            ArchiveCollect archiveCollect = generalDao.findById(ywgj.getZlsj(), ArchiveCollect.class);
+            if(archiveCollect != null){
+                archive = new HashMap<String, String>();
+                archive.put("dm", archiveCollect.getZwm());
+                archive.put("dh", archiveCollect.getDh());
+            }
+        }
+        return archive;
+    }
+    
+    /**
+     * @Method: 汇总档案信息 
+     * @Description: TODO 
+     * @see cn.proem.dagl.web.fuzzyQuery.service.FuzzyQueryService#collectArchiveInfo()
+     */
+    @Override
+    @Transactional
+    public void collectArchiveInfo() {
+        // 清空表数据
+        String dropsql = "DELETE FROM pdagl_qwjs";
+        // 插入表数据
+        String insertsql = "insert into pdagl_qwjs " +
+                     "select "
+                     +   "'%s' as zwm, "
+                     +   "'%s' as ywm, "
+                     +   "t.uuid, " 
+                     +   "t.dh, " // 档案基本信息
+                     +   "t.companynum, t.evercompanynum " //组织权限控制  
+                     + "from %s t "
+                     + "where ISARCHIVE = '3' and DELFLAG = '0'"; //存在的档案
+        QueryBuilder queryBuilder = new QueryBuilder();
+        //未被删除
+        queryBuilder.addCondition(new QueryCondition("delFlag", "0", ConditionType.EQ, FieldType.INTEGER));
+        // 获得数据库表名
+        List<DTableName> tables = generalDao.queryByCriteria(DTableName.class, queryBuilder, null, 0, -1);
+        
+        // 清空表记录
+        generalDao.executeSQL(dropsql);
+        for(DTableName tablename: tables){
+            if("man_dabg_wsd".equals(tablename.getBm())){
+                continue;
+            }
+            String sql = String.format(insertsql, tablename.getZwm(), tablename.getBm(), tablename.getBm());
+            // 插入每个档案记录
+            generalDao.executeSQL(sql);
+        }
+    }
+    
+    /**
+     * @Method: 汇总档案信息 
+     * @Description: TODO 
+     * @see cn.proem.dagl.web.fuzzyQuery.service.FuzzyQueryService#collectArchiveInfo()
+     */
+    @Override
+    public Map<String, Object> findRecord(String zlsj) {
+        String sql = "SELECT * FROM v_pdagl_record WHERE zlsj = '" + zlsj +"'";
+        Object conditions = null;
+        Map<String, Object> dainfo = generalDao.getObject(sql, conditions);
+        if(dainfo != null){
+            String bm  =(String) dainfo.get("YWM");
+            String das = "SELECT * FROM " + bm + " WHERE uuid = '" + zlsj + "'";
+            Map<String, Object> da = generalDao.getObject(das, conditions);
+            da.put("DALX", dainfo.get("ZWM"));
+            return da;
+        }
+        return null;
+    }
+    
+    
+}

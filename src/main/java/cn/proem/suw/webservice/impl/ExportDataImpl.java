@@ -1,0 +1,252 @@
+package cn.proem.suw.webservice.impl;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import cn.proem.suw.web.common.constant.Path;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.docu.entity.DocWDetail;
+import cn.proem.suw.web.docu.entity.DocuAttachment;
+import cn.proem.suw.web.docu.entity.DocuDetail;
+import cn.proem.suw.web.docu.service.DocuService;
+import cn.proem.suw.web.log.eneity.CXFLog;
+import cn.proem.suw.web.log.service.LogRecordService;
+import cn.proem.suw.webservice.ExportData;
+import cn.proem.suw.webservice.model.CxfFileWrapper;
+import cn.proem.suw.webservice.model.ResponseModel;
+
+@Service
+public class ExportDataImpl implements ExportData {
+	
+	@Resource
+	private LogRecordService logRecordService;
+
+	@Resource
+	private DocuService docuService;
+	
+	@Override
+	public ResponseModel exportDocuDetails(List<DocuDetail> docuDetails) {
+		ResponseModel responseModel = new ResponseModel();
+		String id = null;
+		String title = null;
+		try {
+			
+			for (DocuDetail docuDetail : docuDetails) {
+				id = docuDetail.getId();
+				title = docuDetail.getId();
+				
+				CXFLog log = new CXFLog();
+				log.setInfName("ExportData");
+				log.setMethodName("exportDocuDetails");
+				log.setRefId(id);
+				log.setTitle(title);
+				docuService.importDocu(docuDetail);
+				logRecordService.save(log);
+			}
+		} catch (ServiceException e) {
+			responseModel.setSuccess(false);
+			responseModel.setMsg(e.getMessage());
+			CXFLog log = new CXFLog();
+			log.setInfName("ExportData");
+			log.setMethodName("exportDocuDetails");
+			log.setRefId(id);
+			log.setTitle(title);
+			log.setMsg(e.getMessage());
+			log.setState(1);
+			try {
+				logRecordService.save(log);
+				return responseModel;
+			} catch (ServiceException e1) {
+				e1.printStackTrace();
+			}
+		
+		} catch (Exception e) {
+			responseModel.setSuccess(false);
+			responseModel.setMsg(e.getMessage());
+			CXFLog log = new CXFLog();
+			log.setInfName("ExportData");
+			log.setMethodName("exportDocuDetails");
+			log.setRefId(id);
+			log.setTitle(title);
+			log.setMsg(e.getMessage());
+			log.setState(1);
+			try {
+				logRecordService.save(log);
+				return responseModel;
+			} catch (ServiceException e1) {
+				
+				e1.printStackTrace();
+			}
+			
+		}
+		
+		return responseModel;
+	}
+
+	@Override
+	public ResponseModel exportAttachments(CxfFileWrapper file) {
+		ResponseModel responseModel = new ResponseModel();
+		CXFLog log = new CXFLog();
+ 		log.setInfName("ExportData");
+ 		log.setMethodName("exportAttachments");
+        OutputStream os = null;
+        InputStream is = null;
+        BufferedOutputStream bos = null;
+        try {
+            is = file.getFile().getInputStream();
+            
+            //File dest = new File("D:\\team_cj\\files\\"+System.currentTimeMillis()+"_"+file.getFileName());
+            File dest = new File(getFilePath()+Path.UPLOAD_DOCU_ATTACHMENT_PATH+System.currentTimeMillis()+"_"+file.getFileName());
+            os = new FileOutputStream(dest);
+            bos = new BufferedOutputStream(os);
+            byte[] buffer = new byte[1024*1024];
+            int len = 0;
+            while ((len = is.read(buffer)) != -1) {
+                bos.write(buffer, 0, len);
+            }
+            bos.flush();
+            //持久化
+            DocuAttachment docuAttachment = new DocuAttachment();
+            docuAttachment.setId(file.getId());
+            docuAttachment.setFjhz(file.getFileExtension());
+            docuAttachment.setFjmc(file.getFileName());
+            docuAttachment.setYsjid(file.getYsjid());
+            //docuAttachment.setFjnr(dest.getPath());
+            docuAttachment.setFjnr(Path.UPLOAD_DOCU_ATTACHMENT_PATH+dest.getName());
+            log.setRefId(file.getId());
+			log.setTitle(file.getYsjid());
+            docuService.importAtta(docuAttachment);
+			//logService.save(log);
+        } catch (ServiceException e) {
+        	responseModel.setSuccess(false);
+        	responseModel.setMsg(e.getMessage());
+			log.setMsg(e.getMessage());
+			log.setState(1);
+			return responseModel;
+        } catch (Exception e) {
+        	responseModel.setSuccess(false);
+        	responseModel.setMsg(e.getMessage());
+        	log.setMsg(e.getMessage());
+			log.setState(1);
+			return responseModel;
+        } finally {
+        	try {
+        		logRecordService.save(log);
+			} catch (ServiceException e1) {
+				e1.printStackTrace();
+			}
+            if(bos != null){
+                try{
+                    bos.close();
+                }catch(Exception e){                    
+                }
+            }
+            if(os != null){
+                try{
+                    os.close();
+                }catch(Exception e){                    
+                }
+            }
+            if(is != null){
+                try{
+                    is.close();
+                }catch(Exception e){                    
+                }
+            }
+        }
+        return responseModel;
+	}
+	
+	/**
+	 * 获取文件资源所在路径
+	 * @return
+	 */
+	public String getFilePath() {
+		String classesPath = this.getClass().getClassLoader().getResource("").getPath().replaceAll("%20", " ");  
+        String tempdir;
+        String classPath[] = classesPath.split("webapps");
+        tempdir = classPath[0];
+        tempdir += "webapps/";
+        tempdir += File.separator;
+        return tempdir;
+	}
+
+    @Override
+    public ResponseModel exportDocwDetials(List<DocWDetail> workflows) {
+        ResponseModel responseModel = new ResponseModel();
+        String id = null;
+        String title = null;
+        
+        try {
+            
+            if(workflows == null || workflows.isEmpty()){
+                CXFLog log = new CXFLog();
+                log.setInfName("ExportData");
+                log.setMethodName("exportDocwDetials");
+                log.setRefId(id);
+                log.setTitle(title);
+                logRecordService.save(log);
+                responseModel.setSuccess(false);
+                responseModel.setMsg("传入业务模块数据为空");
+                return responseModel;
+            }
+            
+            for (DocWDetail workflow : workflows) {
+                id = workflow.getId();
+                title = workflow.getId();
+                
+                CXFLog log = new CXFLog();
+                log.setInfName("ExportData");
+                log.setMethodName("exportDocwDetials");
+                log.setRefId(id);
+                log.setTitle(title);
+                docuService.importWorkFlow(workflow);
+                logRecordService.save(log);
+            }
+        } catch (ServiceException e) {
+            responseModel.setSuccess(false);
+            responseModel.setMsg(e.getMessage());
+            CXFLog log = new CXFLog();
+            log.setInfName("ExportData");
+            log.setMethodName("exportDocwDetials");
+            log.setRefId(id);
+            log.setTitle(title);
+            log.setMsg(e.getMessage());
+            log.setState(1);
+            try {
+                logRecordService.save(log);
+                return responseModel;
+            } catch (ServiceException e1) {
+                e1.printStackTrace();
+            }
+        
+        } catch (Exception e) {
+            responseModel.setSuccess(false);
+            responseModel.setMsg(e.getMessage());
+            CXFLog log = new CXFLog();
+            log.setInfName("ExportData");
+            log.setMethodName("exportDocwDetials");
+            log.setRefId(id);
+            log.setTitle(title);
+            log.setMsg(e.getMessage());
+            log.setState(1);
+            try {
+                logRecordService.save(log);
+                return responseModel;
+            } catch (ServiceException e1) {
+                e1.printStackTrace();
+            }
+        }
+        
+        return responseModel;
+    }
+
+}

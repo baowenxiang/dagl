@@ -1,0 +1,52 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body">
+        <div class="form-group">
+            <button type="button" class="btn btn-default btn-sm export btn-icon">
+                <svg class="icon" aria-hidden="true">
+					<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-download"></use>
+                </svg>
+                <b hidden>导出</b>&nbsp;
+            </button>
+        </div>	
+		<div class="form-group">
+			<label class="col-sm-2 control-label eddit-label">表名</label>
+			<div class="col-sm-6">
+				<select id="tablenameSelect" class="form-control">
+                     <option value="">请选择</option>
+				</select>
+			</div>
+        </div>
+		
+  </div>
+</div>
+</section>
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/dataCenter/exportCenter.js"></script>
+<script >
+	$(function(){
+		//加载档案类型
+		$.ajax({
+			url : Util.getRootPath()+"/w/zlzl/zlsj/getFileTypeByDicno",
+			type:'POST', 
+			async:true,
+			data:{
+				dno:'DALX'
+			},
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				if(data.success){
+					var html = '';
+					var datas = data.datas;
+					for(var i = 0 ;i<datas.length;i++){
+						html += '<option value="'+datas[i].dvno+'">'+datas[i].dvalue+'</option>'
+					}
+					$("#tablenameSelect").append(html);
+				}
+			},
+			error:function(ex) {
+				layer.alert("查询请求失败！", {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		});
+	});
+</script>

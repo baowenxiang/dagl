@@ -1,0 +1,243 @@
+package cn.proem.dagl.web.tj.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.Order;
+import cn.proem.core.model.OrderType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.tj.entity.GclOrder;
+import cn.proem.dagl.web.tj.service.TJService;
+
+@Service
+public class TJServiceImpl implements TJService {
+    @Resource
+    private GeneralDao generalDao;
+    
+    /**
+     * @Method: tjWjGcl 
+     * @Description: 不包括接受档案-文件级别
+     * @param company
+     * @return 
+     * @see cn.proem.dagl.web.tj.service.TJService#tjWjGcl(java.lang.String)
+     */
+    @Override
+    public List<Map<String, Object>> tjWjGcl(String company) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select zwm as \"zwm\", ywm as \"ywm\", ndh as \"ndh\", count(1) as \"cnt\" from (");
+        sql.append("  select t1.zwm, t1.ywm, t1.qzh, t1.ndh, t1.company, t1.oldcompany from v_pdagl_gcl_wj t1");
+        // 自有档案
+        sql.append("  where company = '" + company + "' and");
+        sql.append("        (oldcompany = '" + company + "' or");
+        sql.append("         oldcompany is null) ");
+        sql.append("  UNION ALL");
+        sql.append("  select t2.zwm, t2.ywm, t2.qzh, t2.ndh, t2.company, t2.oldcompany from v_pdagl_gcl_wj t2");
+        // 移交档案
+        sql.append("  where company != '" + company + "' and");
+        sql.append("        oldcompany = '" + company + "' )");
+        sql.append(" group by zwm, ywm, ndh");
+        sql.append(" order by zwm, ywm, ndh");
+        return generalDao.getObjectList(sql.toString(), 0, -1);
+    }
+    
+    /**
+     * @Method: tjAjGcl 
+     * @Description: 不包括接受档案-案卷级别
+     * @param company
+     * @return 
+     * @see cn.proem.dagl.web.tj.service.TJService#tjAjGcl(java.lang.String)
+     */
+    @Override
+    public List<Map<String, Object>> tjAjGcl(String company) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select zwm as \"zwm\", ywm as \"ywm\", ndh as \"ndh\", count(1) as \"cnt\" from (");
+        sql.append("  select t1.zwm, t1.ywm, t1.qzh, t1.ndh, t1.company, t1.oldcompany from v_pdagl_gcl_aj t1");
+        // 自由档案
+        sql.append("  where company = '" + company + "' and");
+        sql.append("        (oldcompany = '" + company + "' or");
+        sql.append("         oldcompany is null) ");
+        sql.append("  UNION ALL");
+        // 移交档案
+        sql.append("  select t2.zwm, t2.ywm, t2.qzh, t2.ndh, t2.company, t2.oldcompany from v_pdagl_gcl_aj t2");
+        sql.append("  where company != '" + company + "' and");
+        sql.append("        oldcompany = '" + company + "' )");
+        sql.append(" group by zwm, ywm, ndh");
+        sql.append(" order by zwm, ndh");
+        return generalDao.getObjectList(sql.toString(), 0, -1);
+    }
+    
+    /**
+     * @Method: tjNdhArea 
+     * @Description: 年度列表
+     * @param company
+     * @return 
+     * @see cn.proem.dagl.web.tj.service.TJService#tjNdhArea(java.lang.String)
+     */
+    @Override
+    public List<Map<String, Object>> tjNdhArea(String company){
+        StringBuilder sql = new StringBuilder();
+        sql.append("select distinct ndh as \"ndh\"");
+        sql.append(" from (select t1.zwm, t1.qzh, t1.ndh, t1.company, t1.oldcompany");
+        sql.append(" from v_pdagl_gcl t1 where company = '" + company + "' and (oldcompany = '" + company + "' or oldcompany is null)");
+        sql.append(" UNION ALL");
+        sql.append(" select t2.zwm, t2.qzh, t2.ndh, t2.company, t2.oldcompany");
+        sql.append(" from v_pdagl_gcl t2");
+        sql.append(" where company != '" + company + "'");
+        sql.append(" and oldcompany = '" + company + "')");
+        sql.append(" order by ndh");
+        return generalDao.getObjectList(sql.toString(), 0, -1);
+    }
+
+    /**
+     * @Method: tjWjGclA 
+     * @Description: 包括接受档案-文件级别
+     * @param company
+     * @return 
+     * @see cn.proem.dagl.web.tj.service.TJService#tjWjGclA(java.lang.String)
+     */
+    @Override
+    public List<Map<String, Object>> tjWjGclA(String company) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select zwm as \"zwm\", ywm as \"ywm\", ndh as \"ndh\", count(1) as \"cnt\" from (");
+        sql.append("  select t1.zwm, t1.ywm, t1.qzh, t1.ndh, t1.company, t1.oldcompany from v_pdagl_gcl_wj t1");
+        // 包括接受档案
+        sql.append("  where company = '" + company + "'");
+        sql.append("  UNION ALL");
+        // 移交档案
+        sql.append("  select t2.zwm, t2.ywm, t2.qzh, t2.ndh, t2.company, t2.oldcompany from v_pdagl_gcl_wj t2");
+        sql.append("  where company != '" + company + "' and");
+        sql.append("        oldcompany = '" + company + "' )");
+        sql.append(" group by zwm, ywm, ndh");
+        sql.append(" order by zwm, ywm ,ndh");
+        return generalDao.getObjectList(sql.toString(), 0, -1);
+    }
+
+    /**
+     * @Method: tjAjGclA 
+     * @Description: 包括接受档案-案卷级
+     * @param company
+     * @return 
+     * @see cn.proem.dagl.web.tj.service.TJService#tjAjGclA(java.lang.String)
+     */
+    @Override
+    public List<Map<String, Object>> tjAjGclA(String company) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select zwm as \"zwm\", ywm as \"ywm\", ndh as \"ndh\", count(1) as \"cnt\" from (");
+        sql.append("  select t1.zwm, t1.ywm, t1.qzh, t1.ndh, t1.company, t1.oldcompany from v_pdagl_gcl_aj t1");
+        // 包括接受档案
+        sql.append("  where company = '" + company + "' ");
+        sql.append("  UNION ALL");
+        // 移交档案
+        sql.append("  select t2.zwm, t2.ywm, t2.qzh, t2.ndh, t2.company, t2.oldcompany from v_pdagl_gcl_aj t2");
+        sql.append("  where company != '" + company + "' and");
+        sql.append("        oldcompany = '" + company + "' )");
+        sql.append(" group by zwm, ywm, ndh");
+        sql.append(" order by zwm, ywm, ndh");
+        return generalDao.getObjectList(sql.toString(), 0, -1);
+    }
+
+    /**
+     * @Method: tjNdhAreaA 
+     * @Description: 年度列表包括接受档案
+     * @param company
+     * @return 
+     * @see cn.proem.dagl.web.tj.service.TJService#tjNdhAreaA(java.lang.String)
+     */
+    @Override
+    public List<Map<String, Object>> tjNdhAreaA(String company) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select distinct ndh as \"ndh\"");
+        sql.append(" from (select t1.zwm, t1.qzh, t1.ndh, t1.company, t1.oldcompany");
+        sql.append(" from v_pdagl_gcl t1 where company = '" + company + "'");
+        sql.append(" UNION ALL");
+        sql.append(" select t2.zwm, t2.qzh, t2.ndh, t2.company, t2.oldcompany");
+        sql.append(" from v_pdagl_gcl t2");
+        sql.append(" where company != '" + company + "'");
+        sql.append(" and oldcompany = '" + company + "')");
+        sql.append(" order by ndh");
+        return generalDao.getObjectList(sql.toString(), 0, -1);
+    }
+
+    @Override
+    @Transactional
+    public void tjGclSaveOrUpdate(List<String> orders, String type, String company) {
+        String sql  = "delete from pdagl_gcl_order where company= '" + company + "' and type='" + type + "'";
+        generalDao.executeSQL(sql);
+        for(int i=0; i< orders.size(); i++){
+            GclOrder ord = new GclOrder();
+            ord.setCompany(company);
+            ord.setType(type);
+            ord.setYwm(orders.get(i));
+            ord.setOrder(i);
+            generalDao.save(ord);
+        }
+    }
+
+    @Override
+    public List<GclOrder> tjGclFind(String type, String company) {
+            QueryBuilder queryBuilder = new QueryBuilder();
+            Order[] orders = new Order[1];
+            orders[0] = new Order("ord", OrderType.ASC);
+            queryBuilder.addCondition(new QueryCondition("company", company, ConditionType.EQ, FieldType.STRING, null));
+            queryBuilder.addCondition(new QueryCondition("type", type, ConditionType.EQ, FieldType.STRING, null));
+            return generalDao.queryByCriteria(GclOrder.class, queryBuilder, orders, 0, -1);
+    }
+
+    @Override
+    public List<String> designMl(String company) {
+        // select distinct t.ndh from v_pdagl_record t order by ndh;
+        // select distinct t.mj from v_pdagl_record t order by mj;
+        // select distinct t.bgqx from v_pdagl_record t order by bgqx;
+        // select distinct t.zwm from v_pdagl_record t order by zwm;
+        String sql = "select distinct zwm as \"zwm\" from v_pdagl_record where company = '" + company + "' order by zwm";
+        List<String> result = new ArrayList<String>();
+        List<Map<String, Object>> list = generalDao.getObjectList(sql, 0, -1);
+        for(Map<String, Object> ele : list){
+            result.add((String) ele.get("zwm"));
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> designMj(String company) {
+        String sql = "select distinct mj as \"mj\" from v_pdagl_record where company = '" + company + "' order by mj";
+        List<Map<String, Object>> list = generalDao.getObjectList(sql, 0, -1);
+        List<String> result = new ArrayList<String>();
+        for(Map<String, Object> ele : list){
+            result.add((String) ele.get("mj"));
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> designBgqx(String company) {
+        String sql = "select distinct bgqx as \"bgqx\" from v_pdagl_record where company = '" + company + "' order by bgqx";
+        List<String> result = new ArrayList<String>();
+        List<Map<String, Object>> list = generalDao.getObjectList(sql, 0, -1);
+        for(Map<String, Object> ele : list){
+            result.add((String) ele.get("bgqx"));
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> designNd(String company) {
+        String sql = "select distinct ndh as \"ndh\" from v_pdagl_record where company = '" + company + "' order by ndh";
+        List<Map<String, Object>> list = generalDao.getObjectList(sql, 0, -1);
+        List<String> result = new ArrayList<String>();
+        for(Map<String, Object> ele : list){
+            result.add((String) ele.get("ndh"));
+        }
+        return result;
+    }
+}

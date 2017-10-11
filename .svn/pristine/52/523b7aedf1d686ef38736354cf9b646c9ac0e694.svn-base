@@ -1,0 +1,19 @@
+<div class="btn-group">
+    <button type="button" class="btn btn-default btn-sm addOAdata btn-icon">
+         <svg class="icon" aria-hidden="true">
+             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+         </svg>
+         <b hidden>OA数据归档</b>&nbsp;
+    </button>
+	<button type="button" class="btn btn-default btn-sm dataCollecting btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-privacy"></use>
+        </svg>
+        <b hidden>资料整理</b>&nbsp;
+    </button>
+</div>
+<script src="${rc.contextPath}/resources/js/web/zlzl/zlsjoa/button.js"></script>
+
+
+	
+

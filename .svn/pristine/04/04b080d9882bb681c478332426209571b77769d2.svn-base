@@ -1,0 +1,143 @@
+var grid;
+$(function(){
+	initGrid();
+	
+	refreshGrid();
+	
+});
+
+function initGrid(){
+	grid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/message/getSendMessageList",
+	    ajaxLoad : true,
+	    gridContainer : 'tableSendMessage',
+	    toolbarContainer : 'pagingSendMessage',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 20,
+	    check : true,
+	    pageSizeLimit : [20,50,100,300],
+	    columns : [
+		       		{
+		       			id:'sendUser',
+		       			title : '<b>发送者姓名</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				
+		       				return value.name;
+		       			}
+		       		},
+		       		{
+		       			id:'receUser',
+		       			title : '<b>发送者姓名</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				
+		       				return value.name;
+		       			}
+		       		},
+		       		{
+		       			id:'sendTime',
+		       			title : '<b>消息发送时间</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				var date = new Date(value);
+		       			    return date.getFullYear()+"年"+(date.getMonth()+1)+"月"+date.getDate()+"日";
+			       		}
+		       		},
+		       		{
+		       			id:'isRead',
+		       			title : '<b>是否已读</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       				if("isRead_0"==value){
+		       					return "未读";
+		       				}else{
+		       					return "已读";
+		       				}
+			       		
+		       			}
+		       		},
+		       		{
+		       			id:'id',
+		       			title : '<b>操作</b>',
+		       			type:"string",
+		       			columnClass:'text-center',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+		       			//存储record类，编辑时使用
+		       				var html = ''; 	
+		       				html += '<div class="btnDiv">';
+		       				html += '	<a title="查看" class="btn btn-default btn-xs looking" data-id="'+value+'">查看</a>';
+	       					html += '	<a title="删除" class="btn btn-primary btn-xs delete" data-id="'+value+'">删除</a>';
+		       				html += '</div>';
+			       			
+		       				return html;
+		       			}
+
+		       		}
+		       		]
+	});
+}
+
+function refreshGrid() {
+	grid.parameters = getParameters();
+	grid.load();
+}
+function getParameters() {
+	
+}
+//点击增加
+$("button.addMessage").on("click",function(){
+	window.parent.layer.open({
+        type: 2,
+		title:"增加消息",
+        area: ['700px', '530px'],
+        fixed: false, //不固定
+        maxmin: true,
+        content: Util.getRootPath() + "/w/message/addSendMessageView",
+      });
+});
+
+
+//点击查看
+$("#tableSendMessage").on("click",".looking",function(){
+	var id = $.trim($(this).attr("data-id"));
+	window.parent.layer.open({
+        type: 2,
+		title:"查看消息",
+        area: ['700px', '530px'],
+        fixed: false, //不固定
+        maxmin: true,
+        content: Util.getRootPath() + "/w/message/lookSendMessageView?id="+id,
+      });
+})
+
+
+//点击查看
+$("#tableSendMessage").on("click",".delete",function(){
+	var id = $.trim($(this).attr("data-id"));
+	$.ajax({
+		url : Util.getRootPath()+"/w/message/deleteMessage",
+		type:'POST', //GET
+		async:false,
+		data:{
+			id:id
+		},
+		dataType:'json',
+		success:function(data,textStatus,jqXHR){
+			if(data.success){
+				layer.msg(data.msg,{time: 2000});
+				refreshGrid();
+			}else{
+				layer.alert(result.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+			}
+		},
+		error:function(ex) {
+			layer.alert("删除请求失败！", {  skin: 'layui-layer-lan',closeBtn: 0});
+		}
+	});
+})

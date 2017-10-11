@@ -1,0 +1,122 @@
+package cn.proem.dagl.web.fuzzyQuery.task;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
+
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.suw.web.common.util.ConfigReader;
+import cn.proem.suw.web.docu.entity.DocuAttachment;
+
+public class CreateIndexThread extends Thread {
+    private List<Ywgj> listYwgj;
+    private List<DocuAttachment> listAttach;
+    public static String FILE_DOC = "doc";
+    public static String FILE_DOCX = "docx";
+    public static String FILE_XLS = "xls";
+    public static String FILE_XLSX = "xlsx";
+    public static String FILE_TXT = "txt";
+    public static String FILE_PDF = "pdf";
+    
+    public CreateIndexThread(List<Ywgj> listYwgj, List<DocuAttachment> listAttach){
+        this.listYwgj = listYwgj;
+        this.listAttach = listAttach;
+    }
+    
+    private String readFile(String path){
+        try{
+            if(path.endsWith(FILE_DOCX)){
+                return ReadFile.readWord2007(path);
+            }else if(path.endsWith(FILE_DOC)){
+                return ReadFile.readWord(path);
+            }else if(path.endsWith(FILE_XLS)){
+                return ReadFile.ReadExcel(path);
+            }else if(path.endsWith(FILE_XLSX)){
+                return ReadFile.readExcel2007(path);
+            }else if(path.endsWith(FILE_TXT)){
+                return ReadFile.readTxt(path);
+            }else if(path.endsWith(FILE_PDF)){
+                return ReadFile.readPdf(path);
+            }else {
+                System.out.println("CreateIndexThread 非文本文件 " + path);
+                return "";
+            }
+        }catch(Exception e){
+            System.out.println("CreateIndexThread 001 发生错误 " + path);
+            e.printStackTrace();
+        }
+        return "";
+    }
+    
+    public void run() {
+        System.out.println("=================索引创建开始=====================");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        // 分析器
+        StandardAnalyzer analyzer = null;
+        IndexWriter indexWriter = null;
+        Document document = null;
+        IndexWriterConfig config = null;
+        try {
+            analyzer = new StandardAnalyzer(Version.LUCENE_40);
+            // analyzer = new IK_CAnalyzer();
+            // analyzer = new PaodingAnalyzer();
+            FSDirectory directory = FSDirectory.open(new File(ConfigReader.readIndexPath()));
+            config = new IndexWriterConfig(Version.LUCENE_40, analyzer);
+            indexWriter = new IndexWriter(directory, config);
+            indexWriter.deleteAll();
+            // 原文挂接建立索引
+            for (Ywgj ywgj : listYwgj) {
+                String filePath = ywgj.getWjdz();
+                String absolutePath = ConfigReader.readAppHome() + filePath;
+                System.out.println(absolutePath);
+                document = new Document();
+                try {
+                    document.add(new TextField("content", readFile(absolutePath), Store.YES));
+                    document.add(new TextField("fileId", ywgj.getId(), Store.YES));
+                    document.add(new TextField("fileName", ywgj.getWjm(), Store.YES));
+                    document.add(new TextField("uploadTime", formatter.format(ywgj.getCreateTime()), Store.YES));
+                    indexWriter.addDocument(document);
+                } catch (Exception e) {
+                    System.out.println("CreateIndexThread 001 发生错误");
+                    e.printStackTrace();
+                }
+            }
+
+            // 管养接口附件建立索引
+            for (DocuAttachment docuAttachment : listAttach) {
+                String filePath = docuAttachment.getFjnr();
+                String absolutePath = ConfigReader.readAppHome() + filePath;
+                document = new Document();
+                document.add(new TextField("content", new FileReader(absolutePath)));
+                document.add(new TextField("fileId", docuAttachment.getId(), Store.YES));
+                document.add(new TextField("fileName", docuAttachment.getFjmc(), Store.YES));
+                indexWriter.addDocument(document);
+            }
+            indexWriter.commit();
+        } catch (Exception e) {
+            System.out.println("CreateIndexThread 002 发生错误");
+            e.printStackTrace();
+        } finally {
+            try {
+                indexWriter.close();
+            } catch (IOException e) {
+                System.out.println("CreateIndexThread 003 发生错误");
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("=================索引创建结束=====================");
+    }
+}

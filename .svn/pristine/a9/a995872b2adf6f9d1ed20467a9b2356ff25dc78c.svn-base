@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<section class="content">
+ <div class="box box-default">
+   <div class="box-body" id="list">
+	<div class="charts_params row">
+	<input type="hidden" value="$tablename" class="tablename"/>
+	<input type="hidden" value="${flag}" class="flag"/>
+	<label class="dtGridPager">$dtGridPager</label>
+        	<div class="charts_table col-xs-12">
+        		#set ($i=0)
+        		<table class='table'>
+        		#foreach($t in $key) 
+        			#if (($i%4)==0)
+        			</tr><tr>
+        			#end
+           				<td>
+							<label class='checkbox-inline'>
+								<input type='checkbox' name='zd_params' id='zd_params' value="$t">
+								<span>${dazd.get($t)}</span>
+							</label>
+						</td>
+                	#set($i=$i+1)
+                #end
+                </tr></table>    
+            </div>
+            <div class="btn_zu col-xs-offset-11">
+                <button type="button" class="btn btn-primary success">完成</button>
+            </div>
+        </div>
+       </div>
+    </div>    
+</section>        
+</body>
+<script type="text/javascript">
+$(function(){
+	$("label.dtGridPager").hide();
+	$(".success").bind("click",function(){
+		##验证复选框不能为空
+		var num=$("input[name='zd_params']:checked");
+		if(num.size()===0){
+			layer.msg('选项不能为空');
+			return;
+		}
+		##字段英文名
+		var paramsval=[];
+		##字段中文名
+		var paramsname=[];
+		num.each(function() {
+			paramsval.push($(this).val());
+			paramsname.push($(this).next().html())
+	    });
+			var tablename = $('.tablename').val();
+			var flag = $.trim($(".flag").val())
+			var dtGridPager = $('.dtGridPager').html();
+           	layer.closeAll(); 
+			parent.location.href = Util.getRootPath() + "/w/example/tools/reportFileDef/"+tablename+'/'+paramsval+'/'+paramsname+'/'+dtGridPager+"/"+flag;
+			
+	})
+})
+</script>
+</html>
+	

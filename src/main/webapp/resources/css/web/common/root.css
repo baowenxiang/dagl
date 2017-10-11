@@ -1,0 +1,29 @@
+@CHARSET "UTF-8";
+/* 控制列表中挂接原文图片的手型 */
+td img {
+	cursor:pointer;
+}
+/* 控制档案详情弹出框两排展示*/
+.layui-form .layui-form-item {
+	width:49%;
+	display:inline-block;
+	vertical-align:top;
+}
+.layui-form .layui-form-label {
+	padding-right:0px;
+	padding-left:10px;
+}
+.layui-form .layui-input-block {
+	margin-left: 90px;
+}
+.layui-form .yw {
+	display:block;
+	width:100%;
+}
+/* 设置表格头部底纹 */
+table thead tr {
+	background-color:#e1e1e1;
+}
+.dt-grid-container {
+	overflow: hidden;
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">	
+</head>
+<body>
+<div id="daglapp" class="site-text site-block">
+	
+    <form class="layui-form">
+		
+		<div class="layui-form-item">
+			<label class="layui-form-label">起始日期</label>
+            <div class="layui-input-block">
+				##<input type="date" name="title" required  lay-verify="required" placeholder="请选择日期" autocomplete="off" class="layui-input">
+				##<input onclick="laydate()">
+				<input name="startDate" class="layui-input" placeholder="请选择开始日期" onclick="layui.laydate({elem: this, istime: true, format: 'YYYY-MM-DD hh:mm:ss'})">
+            </div>
+		</div>
+		
+		<div class="layui-form-item">
+			<label class="layui-form-label">结束日期</label>
+            <div class="layui-input-block">
+				##<input type="date" name="title" required  lay-verify="required" placeholder="请选择日期" autocomplete="off" class="layui-input">
+				##<input onclick="laydate()">
+				<input name="endDate" class="layui-input" placeholder="请选择结束日期" onclick="layui.laydate({elem: this, istime: true, format: 'YYYY-MM-DD hh:mm:ss'})">
+            </div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+				<button class="layui-btn layui-btn-default sub">确定</button>
+				<button class="layui-btn layui-btn-primary closeup" >关闭</button>
+			</div>
+		</div>
+    </form>
+</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script>
+	layui.use('laydate', function(){
+  	var laydate = layui.laydate;
+});
+</script>
+<script src="${rc.contextPath}/resources/js/web/document/OAdate.js"></script>
+
+</html>
+	

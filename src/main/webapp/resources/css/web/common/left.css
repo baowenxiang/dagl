@@ -1,0 +1,10 @@
+.sidebar-menu .treeview-menu {
+	padding-left:0;
+}
+.act {
+	background-color: #e1e1e1 !important;
+	/*border-left:2px solid red;*/
+}
+.leftMenu a:HOVER {
+	background-color: #e1e1e1 !important;
+}

@@ -1,0 +1,38 @@
+package cn.proem.dagl.web.preArchive.service.impl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.preArchive.service.YwgjService;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.util.StringUtil;
+
+@Service
+public class YwgjServiceImpl implements YwgjService {
+	@Autowired
+	private GeneralDao generalDao;
+
+	@Override
+	@Transactional
+	@LogService(description = "保存原文挂档")
+	public void saveAttachment(Ywgj ywgj) throws ServiceException {
+		generalDao.save(ywgj);
+	}
+
+	
+	@Override
+	@Transactional
+	@LogService(description = "逻辑删除原文挂接")
+	public void removeAttachment(String id) throws ServiceException {
+		if(StringUtil.isEmpty(id)){
+			throw new ServiceException("删除的原文ID不能为空");
+		}
+		Ywgj ywhj = generalDao.findById(id, Ywgj.class);
+		ywhj.setDelFlag(1);
+		generalDao.update(ywhj);
+	}
+}

@@ -1,0 +1,27 @@
+ ##iframe页面主体
+ <section class="content">
+	<div class="box box-default">
+      <div class="box-body" >
+ 			##表名展示DTgrid
+			<button type="button" class="btn btn-default btn-sm export btn-icon">
+                <svg class="icon" aria-hidden="true">
+                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-download"></use>
+                </svg>
+                <b hidden>导出</b>&nbsp;
+            </button>
+			##列表
+	    	<div id="transferedFileControlTable" class="dt-grid-container"></div>
+	    	##分页栏
+	    	<div id="pagingTransferedFileControl" class="dt-grid-toolbar-container"></div>		
+	  </div>
+    </div>
+</section> 
+
+        
+##CSS
+##<link href="${rc.contextPath}/resources/css/web/zlzl/zlsj/dataCollect.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/fileTransfer/transferedFileControl.js"></script>
+
+

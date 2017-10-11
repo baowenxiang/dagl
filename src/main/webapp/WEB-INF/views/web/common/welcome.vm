@@ -1,0 +1,523 @@
+#####主体内容
+##style
+##html
+##<link href="${rc.contextPath}/resources/css/web/common/welcome.css" rel="stylesheet">
+<style>
+	.dropdown {
+		display:inline-block;
+	}
+</style>
+<section class="content">
+    #if($!{tasks.size()}>0)
+    <div class="row">
+        <div class="col-xs-12">
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title">待审批</h3>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body table-responsive no-padding">
+              <table class="table table-hover">
+                <tbody class="todoprocess">
+                    <tr>
+                      <th>序号</th>
+                      <th>流程类型</th>
+                      <th>流程任务</th>
+                      <th>发起人</th>
+                      <th>发起时间</th>
+					  <th style="display:none;">跳转链接</th>
+                    </tr>
+                    #foreach($task in $!{tasks})
+                    <tr>
+                      <td>$!{velocityCount}</td>
+                      <td>$task.process</td>
+                      <td>$task.taskname</td>
+                      <td>$task.username</td>
+                      <td>$task.createTime</td>
+					  <td address="${task.url}"></td>
+                    </tr>
+                    #end
+                </tbody>
+               </table>
+            </div>
+            <!-- /.box-body -->
+          </div>
+          <!-- /.box -->
+        </div>
+      </div>
+	#end
+	
+	
+      
+    #if($!{statises.size()}>0)
+    <div class="row">
+        <div class="col-xs-12">
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title">档案数量统计</h3>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body container-fluid">
+             <div class="row">
+                <div class="col-xs-6">
+                  <table class="table table-bordered table-hover">
+                    <tbody>
+                        <tr>
+                          <th>序号</th>
+                          <th>档案名</th>
+                          <th>档案数量</th>
+                        </tr>
+                        #foreach($!{statis} in $!{statises})
+                        <tr>
+                          <td>$!{velocityCount}</td>
+                          <td>$!{statis.name}</td>
+                          <td>$!{statis.num}</td>
+                        </tr>
+                        #end
+                    </tbody>
+                   </table>
+                  </div>
+                  <div class="col-xs-6">
+                        <div id="echart" style="width: 600px;height:400px;"></div>
+                  </div>
+                </div>
+            </div>
+            <!-- /.box-body -->
+          </div>
+          <!-- /.box -->
+        </div>
+        
+      </div>
+      #end
+      
+      ##温湿度记录统计
+	    <div class="row">
+	        <div class="col-xs-12">
+	          <div class="box">
+	            <div class="box-header">
+	              <h3 class="box-title">温湿度统计</h3>
+	              #*<div class="dropdown" id="aa">
+					<button type="button" class="btn dropdown-toggle" id="years_num" data-toggle="dropdown">
+        				按年份查询
+        				<span class="caret"></span>
+    				</button>
+    				<ul class="dropdown-menu years_num" role="menu" aria-labelledby="years_num">
+        				#if($!{yearList})
+        					#foreach($year in $yearList)
+        						<li role="presentation">
+            						<a role="menuitem" tabindex="-1" href="javascript:;">$!{year.YEARS}</a>
+        						</li>
+        					#end
+        				#end
+    				</ul>
+				</div>
+				<div class="dropdown">
+					<button type="button" class="btn dropdown-toggle" id="months_num" data-toggle="dropdown">
+        				按月份查询
+        				<span class="caret"></span>
+    				</button>
+    				<ul class="dropdown-menu months_num" role="menu" aria-labelledby="months_num">
+        				#foreach($month in [1..12])
+        					<li role="presentation">
+            					<a role="menuitem" tabindex="-1" href="javascript:;">$month</a>
+        					</li>
+        				#end
+    				</ul>
+				</div>*#
+				<div class="dropdown">
+					<button type="button" class="btn dropdown-toggle" id="week" data-toggle="dropdown">
+        				按周查看
+        				<span class="caret"></span>
+    				</button>
+    				<ul class="dropdown-menu week" role="menu" aria-labelledby="week">
+        				
+    				</ul>
+				</div>
+	            </div>
+	            <!-- /.box-header -->
+	            <div class="box-body container-fluid">
+	             <div class="row">
+	                #*<div class="col-xs-6">
+	                  <table class="table table-bordered table-hover">
+	                    <tbody>
+	                        <tr>
+	                          <th>序号</th>
+	                          <th>档案名</th>
+	                          <th>档案数量</th>
+	                        </tr>
+	                        #foreach($!{statis} in $!{statises})
+	                        <tr>
+	                          <td>$!{velocityCount}</td>
+	                          <td>$!{statis.name}</td>
+	                          <td>$!{statis.num}</td>
+	                        </tr>
+	                        #end
+	                    </tbody>
+	                   </table>
+	                  </div>*#
+	                  <div class="col-xs-6">
+	                        <div id="temperatureEChart" style="width: 600px;height:400px;"></div>
+	                  </div>
+	                </div>
+	            </div>
+	            <!-- /.box-body -->
+	          </div>
+	          <!-- /.box -->
+	        </div>
+	        
+	      </div>
+    <script type="text/javascript">
+		$(function(){
+		
+			
+			$("tbody.todoprocess>tr:not(:first)").on("click",function(){
+				var processName = $.trim($(this).children().eq(1).text());
+				console.log(processName);
+                var url = $(this).children().last().attr("address");
+				window.parent.refresh(url);
+				if("预归档流程"== processName){
+					$("#mainIframe", window.parent.document).attr("dagl-location", "<i class='fa fa-list'></i> 档案归档待办");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="档案归档待办"]').addClass("act");
+    				
+                }else if("档案划控流程"== processName){
+					$("#mainIframe", window.parent.document).attr("dagl-location", "<i class='fa fa-list'></i> 档案划控 <i class='fa fa-angle-right'></i><b>档案划控审核</b>");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="档案划控审核"]').addClass("act").parent("ul").css('display','block').addClass("menu-open");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="档案划控"]').addClass("active");
+					
+                }else if("档案移交流程"== processName){
+					$("#mainIframe", window.parent.document).attr("dagl-location", "<i class='fa fa-list'></i> 档案移交 <i class='fa fa-angle-right'></i><b>档案移交审核</b>");
+                	$(window.parent.document).find('ul.leftMenu li[dagl-location="档案移交审核"]').addClass("act").parent("ul").css('display','block').addClass("menu-open");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="档案移交"]').addClass("active");
+                }else if("电子借阅流程"== processName){
+					$("#mainIframe", window.parent.document).attr("dagl-location", "<i class='fa fa-list'></i> 电子借阅 <i class='fa fa-angle-right'></i><b>借阅审核</b>");
+                	$(window.parent.document).find('ul.leftMenu li[dagl-location="借阅审核"]').addClass("act").parent("ul").css('display','block').addClass("menu-open");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="电子借阅"]').addClass("active");
+                }else if("修改保管期限流程"== processName){
+					$("#mainIframe", window.parent.document).attr("dagl-location", "<i class='fa fa-list'></i> 档案鉴定 <i class='fa fa-angle-right'></i> 保管期限修改 <i class='fa fa-angle-right'></i><b>修改保管期限审核</b>");
+                	$(window.parent.document).find('ul.leftMenu li[dagl-location="修改保管期限审核"]').addClass("act").parent("ul").css('display','block').addClass("menu-open");
+                	$(window.parent.document).find('ul.leftMenu li[dagl-location="修改保管期限审核"]').parent().parent().parent("ul").css('display','block').addClass("menu-open");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="保管期限修改"]').addClass("active");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="档案鉴定"]').addClass("active");
+                }else{
+					$("#mainIframe", window.parent.document).attr("dagl-location", "<i class='fa fa-list'></i> 档案鉴定 <i class='fa fa-angle-right'></i> 档案销毁 <i class='fa fa-angle-right'></i><b>档案销毁审核</b>");
+                	$(window.parent.document).find('ul.leftMenu li[dagl-location="档案销毁审核"]').addClass("act").parent("ul").css('display','block').addClass("menu-open");
+                	$(window.parent.document).find('ul.leftMenu li[dagl-location="档案销毁审核"]').addClass("act").parent().parent().parent("ul").css('display','block').addClass("menu-open");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="档案销毁"]').addClass("active");
+					$(window.parent.document).find('ul.leftMenu li[dagl-location="档案鉴定"]').addClass("active");
+                }
+				
+			});
+		})
+
+		
+		//温湿度统计表的年月默认为当前年月
+    	//var years_num = new Date().getFullYear();
+    	//var month_total = new Date().getMonth()+1;
+    	var formatStr = "";
+    	var str = "";
+    	$(function() {
+    		initWeekDate();
+    		initDAChart();
+    		//getTemperatureData(years_num,month_total);
+    		//initYear();
+    		//initMonth();
+    		getWeekList("");
+    		getDataByWeek(formatStr,str);
+    		weekOnClick();
+    		getMoreDate();
+    	});
+    	//获取当前日期的相应星期数据
+    	function initWeekDate() {
+    		var now = new Date(); //当前日期
+			var nowDayOfWeek = now.getDay(); //今天本周的第几天
+			var nowDay = now.getDate(); //当前日
+			var nowMonth = now.getMonth(); //当前月
+			var nowYear = now.getYear(); //当前年
+			nowYear += (nowYear < 2000) ? 1900 : 0; // 
+			
+			var weekStartDate = new Date(nowYear, nowMonth, nowDay - nowDayOfWeek);
+			var weekEndDate = new Date(nowYear, nowMonth, nowDay + (6 - nowDayOfWeek));
+			
+			formatStr = formatDate(weekStartDate) + " " + formatDate(weekEndDate);
+			var num = Math.ceil((weekEndDate.getDate() + 1) / 7);
+			str = formatDateStr(weekStartDate) + "-" + formatDateStr(weekEndDate) + "(本月第" + num + "周)";
+    	}
+    	//格局化日期：yyyy-MM-dd
+		function formatDate(date) {
+			var myyear = date.getFullYear();
+			var mymonth = date.getMonth()+1;
+			var myweekday = date.getDate() + 1;
+			
+			if(mymonth < 10){
+			mymonth = "0" + mymonth;
+			}
+			if(myweekday < 10){
+			myweekday = "0" + myweekday;
+			}
+			return (myyear+"-"+mymonth + "-" + myweekday);
+		}
+		//获取日期字符串：mm月dd日-mm月dd日
+		function formatDateStr(date) {
+			var mymonth = date.getMonth()+1;
+			var myweekday = date.getDate() + 1;
+			return (mymonth + "月" + myweekday + "日");
+		}
+    	//获取星期下拉框
+    	function getWeekList(lastDate) {
+    		var num = 0;
+    		var date = new Date();
+    		//判断存不存在"加载更多",0表示已经存在
+    		var flag = 0;
+    		if(lastDate == null || lastDate == "") {
+    			lastDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() ;
+    			flag = 1;
+    		}
+    		Util.ajaxSync(
+				Util.getRootPath()+"/w/temperature/getDateList",
+                {
+					num : num,
+					lastDate : lastDate
+                },
+                function(result){
+					if(result.success){
+						result = result.datas;
+						var html = '';
+						for(var i = 0;i < result.length;i++) {
+							html += '<li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:;" data-week="' + result[i].formatDate + '">' + result[i].date + '</a></li>';
+						}
+						if(flag == 0) {
+							$(".week").find(".more").remove();
+						}
+						html += '<li role="presentation" class="more"><a role="menuitem" tabindex="-1" href="javascript:;">加载更多...</a></li>';
+						$(".week").append(html);
+					}
+                }
+			 )
+    	}
+    	//加载更多按钮点击事件
+    	function getMoreDate() {
+    		$(".week").on('click',".more",function() {
+    			var lastDate = $(this).prev().find("a").attr("data-week");
+    			getWeekList(lastDate);
+    		});
+    	}
+    	//温湿度统计部分的周选择事件
+    	function weekOnClick() {
+    		$(".week").on("click","li",function() {
+				var week = $(this).text().trim();
+				var weekFormat = $(this).find("a").attr("data-week");
+				//getTemperatureData(years_num,month_total);
+				if(weekFormat == undefined || weekFormat == null || weekFormat == "" || weekFormat == "null") {
+					
+				}else {
+					getDataByWeek(weekFormat,week);
+				}
+			});
+    	}
+    	//根据周获取温湿度记录
+    	function getDataByWeek(weekFormat,week) {
+    		Util.ajaxSync(
+				Util.getRootPath()+"/w/temperature/getRecordByWeek",
+                {
+					weekFormat : weekFormat,
+                },
+                function(result){
+					if(result.success){
+						result = result.datas;
+						initTemperatureChart(week,result);
+					}
+                }
+			 )
+    	}
+    	//暂时闲置
+    	//温湿度统计部分的年份选择事件
+    	function initYear() {
+    		$(".years_num li").on("click",function() {
+				years_num = $(this).text().trim();//获取当前点击的年份
+				month_total = "";
+				getTemperatureData(years_num,month_total);
+			});
+    	}
+    	//暂时闲置
+    	//温湿度统计部分的月份选择事件
+    	function initMonth() {
+    		$(".months_num li").on("click",function() {
+				month_total = $(this).text().trim();
+				getTemperatureData(years_num,month_total);
+			});
+    	}
+    	//暂时闲置
+    	//根据年月获取温湿度数据
+    	function getTemperatureData(year,month) {
+    		Util.ajax(
+				Util.getRootPath()+"/w/temperature/getRecordByYearAndMonth",
+                {
+					year : year,
+					month : month
+                },
+                function(result){
+					if(result.success){
+						result = result.datas;
+						initTemperatureChart(year,month,result);
+					}
+                }
+			 )
+    	}
+    	//暂时闲置
+    	//加载统计表名
+    	function initText(year,month) {
+    		if(year != "") {
+    			text = year + '年';
+    		}
+    		if(month != "") {
+    			text += month + '月';
+    		}
+    		text += '温湿度统计';
+    		return text;
+    	}
+    	//取出结果集中的数据
+    	function getWDdata(temperatureData,i) {
+    		var data = temperatureData[i];
+    		var wdData = [];
+    		for (var day in data) {
+				wdData.push(data[day]);
+			}
+			return wdData;
+    	}
+    	//暂时闲置
+    	//获取统计表中的X轴坐标
+    	function getXdata(temperatureData) {
+    		var data = temperatureData[0];
+    		var xData = [];
+    		for (var day in data) {
+				xData.push(day);
+			}
+			return xData;
+    	}
+    	//加载温湿度统计表
+    	function initTemperatureChart(week,temperatureData) {
+    		//温度数据
+    		var wdData = getWDdata(temperatureData,0);
+    		//湿度数据
+    		var sdData = getWDdata(temperatureData,1);
+    		var xData = ['周一上午','周一下午','周二上午','周二下午','周三上午','周三下午','周四上午','周四下午','周五上午','周五下午','周六上午','周六下午','周日上午','周日下午'];
+    		/*if(month == null || month == "") {
+    			xData = ['1','2','3','4','5','6','7','8','9','10','11','12'];
+    		}else {
+	    		//x轴坐标数据
+	    		xData = getXdata(temperatureData);
+    		}*/
+    		
+    		var temperatureChart = echarts.init(document.getElementById('temperatureEChart'));
+    		
+	    	var toption = {
+				    title : {
+				        text: week + "温湿度统计",
+				        textStyle:{
+					        //字体大小
+							fontSize:14
+					
+					    }
+				    },
+				    tooltip : {
+				        trigger: 'axis'
+				    },
+				    legend: {
+				    	x: 'right', // 'center' | 'left' | {number},
+				        data:['温度','湿度']
+				    },
+				    xAxis : [
+				        {
+				            type : 'category',
+				            boundaryGap : false,
+				            data : xData
+				        }
+				    ],
+				    yAxis : [
+				        {
+				            type : 'value',
+				            axisLabel : {
+				                formatter: '{value} '
+				            }
+				        }
+				    ],
+				    series : [
+				        {
+				            name:'温度',
+				            type:'line',
+				            data:wdData,
+				            markLine : {
+				                data : [
+				                    {type : 'average', name: '平均值'}
+				                ]
+				            }
+				        },
+				        {
+				            name:'湿度',
+				            type:'line',
+				            data:sdData,
+				            markLine : {
+				                data : [
+				                    {type : 'average', name : '平均值'}
+				                ]
+				            }
+				        }
+				    ]
+				};
+			temperatureChart.setOption(toption);
+    	}
+    	
+    	//加载档案数量统计表
+        function initDAChart() {
+        	// 基于准备好的dom，初始化echarts实例
+	        var myChart = echarts.init(document.getElementById('echart'));
+	        // 指定图表的配置项和数据
+	        var option = {
+	        title : {
+	            text: '各类档案数量',
+	            x:'center'
+	        },
+	        tooltip : {
+	            trigger: 'item',
+	            formatter: "{a} <br/>{b} : {c} ({d}%)"
+	        },
+	        legend: {
+	            orient: 'vertical',
+	            left: 'left',
+	            data: [#foreach($!{statis} in $!{statises})
+	                    '$!{statis.name}',
+	                   #end]
+	        },
+	        series : [
+	            {
+	                name: '档案数量',
+	                type: 'pie',
+	                radius : '55%',
+	                center: ['50%', '60%'],
+	                data:[
+	                #foreach($!{statis} in $!{statises})
+	                {value:$!{statis.num}, name:'$!{statis.name}'},
+	                #end],
+	                itemStyle: {
+	                    emphasis: {
+	                        shadowBlur: 10,
+	                        shadowOffsetX: 0,
+	                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+	                    }
+	                }
+	            }
+	        ]
+	    };
+	     myChart.setOption(option);
+	     $(document).ready(function(){
+	  
+			$(this).bind("click",function(){
+			   //header图片隐藏
+			  	parent.hidePicAndLeft();
+				
+			})
+	     }); 
+        }
+    
+    </script>
+</section>	

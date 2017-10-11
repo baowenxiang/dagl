@@ -1,0 +1,29 @@
+@CHARSET "UTF-8";
+.site-block{
+	padding: 20px;
+}
+
+.site-text{
+	position: relative;
+}
+
+*{
+	box-sizing:inherit;
+	-moz-box-sizing:inherit; /* Firefox */
+	-webkit-box-sizing:inherit; /* Safari */
+}
+
+.table-fixed{
+	table-layout: fixed
+}
+
+.text-fixed{
+	-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%;
+}
+
+
+
+
+
+
+

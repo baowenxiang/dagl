@@ -1,0 +1,355 @@
+##iframe页面主体
+<section class="content" id="content">
+    <div class="row" style="margin-bottom:5px;">
+        <div class="col-md-12">
+            <table id="ml">
+                <tr>
+                    <td><small>门&emsp;&emsp;类:&emsp;</small></td>
+                    <td>
+                        <button name='ml_all' class="btn btn-primary btn-xs active" data-toggle="button" aria-pressed="false">全部</button>
+                        #foreach($ml in $!{mls})
+                            <button name='$!{ml.lx}' class="btn btn-primary btn-xs" data-toggle="button" aria-pressed="false">$!{ml.lxm}</button>
+                        #end
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:5px;">
+      <div class="col-md-12">
+        <small>鉴定时间:&emsp;从&nbsp;</small>
+        <select id="from">
+             #foreach($nd in $!{nds}) 
+                <option value='$!{nd.lxm}'>$!{nd.lx}</option>
+             #end
+        </select>
+        <small>&nbsp;到&nbsp;</small>
+        <select id="to">
+             #foreach($nd in $!{nds}) 
+                <option value='$!{nd.lxm}'>$!{nd.lx}</option>
+             #end
+        </select>
+        &nbsp;&nbsp;
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:5px;">
+      <div class="col-md-12">
+        <small>鉴定内容:&emsp;</small>
+        <select id="hk">
+             <option value='hk_all'>全部</option>
+             #foreach($nr in $!{nrs}) 
+                <option value='$!{nr.lx}'>$!{nr.lxm}</option>
+             #end
+        </select>
+      </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1 pull-right">
+            <button type="button" id="start" class="btn btn-block btn-info btn-sm">确认</button>
+        </div>
+         
+    </div>
+    <div class="row reportTitle" hidden>
+        <div class="col-md-12 text-center">
+            <h3 id="report_caption">####~####年度 档案-文件级 划控统计</h3>
+        </div>
+    </div>
+    <div class="row reportContent" id="reportContent" hidden> 
+        <div class="col-md-12">
+            <div class="table-responsive" data-pattern="priority-columns">
+                    <table cellspacing="0" id="report_table" class="table table-small-font table-bordered table-striped">
+                        <thead id="report_header">
+                        </thead>
+                        <tbody id="report_body">
+                        </tbody>
+                        <tfoot id="report_foot">
+                        </tfoot>
+                    </table>
+                </div>
+        </div>
+    </div>
+    <div class="row reportPic" hidden>
+        <div class="col-md-11 picarea">
+            <div id="main" style="width:1100px;height:400px;"></div>
+        </div>
+    </div>
+    <div class="row reportPic" hidden>
+        <div class="col-md-1 pull-right">
+            <button type="button" id="print" class="btn btn-block btn-info btn-sm">打印</button>
+        </div>
+    </div>
+</section>
+     <script>
+        var title = "";
+        $(function(){
+            $("#print").click(function(){
+                  var pdf = new jsPDF('p','pt','a4');
+                  pdf.addHTML(document.getElementById("reportContent"), function() {
+                     pdf.save('test.pdf');
+                  });
+                   
+            });
+            // 门类管理
+            $("[name='ml_all']").click(function(){
+                $("button.active", "#ml").not("[name='ml_all']").removeClass("active");
+            });
+            
+            $("button", "#ml").not("[name='ml_all']").click(function(){
+                $("[name='ml_all']").removeClass("active");
+            });
+            
+            $("#start").click(function(){
+                // 获得门类
+                var mls = [];
+                var mlms = [];
+                $("button.active", "#ml").each(function(){
+                    mls.push($(this).attr("name"));
+                    mlms.push($(this).text());
+                });
+                
+                // 门类中文名
+                var mllist = [];
+                var mlmlist = [];
+                
+                var hk = "";
+                hk = $("#hk").val();
+                $("button", "#ml").not("[name='ml_all']").each(function(){
+                    mllist.push($(this).attr("name"));
+                    mlmlist.push($(this).text());
+                });
+                
+                // 年份
+                var from = $("#from").val();
+                var to = $("#to").val();
+                
+                //门类检查
+                if(mls.length < 1){
+                    layer.msg('请选择统计门类');
+                // 年份检查
+                }else if(to < from){
+                    layer.msg('结束年度要大于或等于开始年度');
+                }else{
+                    $(".reportTitle").hide();
+                    $(".reportContent").hide();
+                    $(".reportPic").hide();
+                    clearTable();
+                    $.ajax({
+                        type: "POST",
+                        url: Util.getRootPath() + "/w/tj/jd/report",
+                        data:{"from": from, "to": to, "mls": mls, "hk": hk},
+                        success:function(result){
+                            $(".reportTitle").show();
+                            $(".reportContent").show();
+                            $(".reportPic").show();
+                            // 报表数据
+                           var report = result.report;
+                           title = "";
+                           var colcnt = 0;
+                           if(from == to){
+                                title = from + " ";
+                           }else{
+                                title= from + "~" +　to + " ";
+                           }
+                           
+                           if(mls.length==1 && mls[0] != "ml_all"){
+                                title = title + " " + mlms[0];
+                           }
+                           
+                           if(hk != "hk_all"){
+                                title = title + " " + hk;
+                           }
+                           title = title + " 统计";
+                           
+                           //报表标题
+                           $("#report_caption").text(title);
+                           
+                           ####### 统计报表表头>>> #########
+                           var header = "<tr>"
+                           if(!(mls.length==1 && mls[0] != "ml_all")){
+                                header = header + "<td>门类</td>"
+                                colcnt = colcnt + 1;
+                           }
+                           
+                           if(hk == "hk_all"){
+                               header = header + "<td>鉴定内容</td>"
+                           }
+                           header = header + "<td>数量</td>"
+                           colcnt = colcnt + 2;
+                           
+                           header = header + "</tr>"
+                           $("#report_header").append(header);
+                           ####### <<<统计报表表头  #########
+                           
+                           
+                           ####### 统计报表数据>>>  #########
+                           if(report.length == 0){
+                                var content = "<tr><td colspan='" + colcnt + "' >不存在统计数据</td></tr>"
+                                $("#report_body").append(content);
+                           }else{
+                                for(var idx=0; idx < report.length; idx++){
+                                   var row = "<tr>";
+                                   // 门类
+                                   if(!(mls.length==1 && mls[0] != "ml_all")){
+                                       row = row + "<td>" + report[idx].mlm + "</td>";
+                                   }
+                                   // 划控
+                                   if(hk == "hk_all"){
+                                       row = row + "<td>" + report[idx].hk + "</td>";
+                                   }
+                                   
+                                   row = row +"<td>" + report[idx].cnt + "</td>";
+                                   row = row + "</tr>";
+                                   $("#report_body").append(row);
+                                }
+                                
+                                 
+                               
+                           }
+                           
+                           for(var i = 0; i < colcnt-2; i++){
+                                    autoRowSpan('report_table', 1, i);
+                           }
+                           ####### <<<统计报表数据  #########
+                           var hks = new Array;
+                           if(mls.length==1 && mls[0] == "ml_all"){
+                                mlms = mlmlist;
+                           }
+                           
+                           
+                           if(hk == "hk_all"){
+                               $("#hk option").not("[value='hk_all']").each(function(){
+                                    hks.push($(this).text());
+                               });
+                           }else{
+                               hks.push(hk);
+                           }
+                           picdata = getData(report, mlms, hks);
+                           drawZZ("main", title, mlms, picdata, hks);
+                        },
+                        error:function(error){
+                        
+                        }
+                      });
+                    
+                }
+                
+            });
+        });
+        
+        function autoRowSpan(tableId,row,col)  
+        {  
+            var tb = document.getElementById(tableId); 
+            var lastValue="";  
+            var value="";  
+            var pos=1;
+            for(var i=row;i<tb.rows.length;i++)  
+            {  
+                try{
+                    value = tb.rows[i].cells[col].innerText;
+                }catch(e){
+                
+                }  
+                if(lastValue == value)  
+                {   
+                        try{
+                            if(tb.rows[i].cells[col-1].style.display == "none"){
+                                tb.rows[i].cells[col].style.display = "none";  
+                                tb.rows[i-pos].cells[col].rowSpan = tb.rows[i-pos].cells[col].rowSpan + 1;
+                                pos++
+                            }
+                        }catch(e){
+                                tb.rows[i].cells[col].style.display = "none";  
+                                tb.rows[i-pos].cells[col].rowSpan = tb.rows[i-pos].cells[col].rowSpan + 1;
+                                pos++
+                        }
+                }else{  
+                    lastValue = value;  
+                    pos=1;
+                }  
+            }   
+        }
+        
+        function clearTable(){
+            $("#report_header").empty();
+            $("#report_body").empty();
+            $("#report_foot").empty();
+        }
+        
+        function drawZZ(picid, title, x, y,leg){
+            var app = echarts.init(document.getElementById(picid));
+            app.title = '坐标轴刻度与标签对齐';
+            option = {
+                 title: {
+                    text: title,
+                },
+                tooltip : {
+                    trigger: 'axis',
+                    axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                        type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+                legend: {
+                    data:leg
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis : [
+                    {
+                        type : 'category',
+                        data : x,
+                        axisTick: {
+                            alignWithLabel: true
+                        }
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value'
+                    }
+                ],
+                series : y
+            };
+            app.setOption(option);
+        }
+        
+
+        
+        function getData(datas, mlms, leg){
+            var result = new Array;
+            var das = new Array(leg.length);
+            for(var j=0; j<leg.length; j++){
+                das[j] = new Array(mlms.length);
+                das[j].fill(0);
+            }
+            
+            for(var i=0; i<datas.length;i++) {
+                var no = mlms.indexOf(datas[i].mlm);
+                if(no != -1){
+                    var noj = leg.indexOf(datas[i].hk);
+                    if(noj != -1){
+                        das[noj][no] = das[noj][no] + datas[i].cnt;
+                    }
+                }
+                
+                
+            }
+            
+            for(var j=0; j<leg.length; j++ ){
+                var temp = {}
+                temp.name = leg[j];
+                temp.type = "bar";
+                temp.data = das[j];
+                result.push(temp);
+            }
+            return result;
+        }
+     </script>
+     <script src="${rc.contextPath}/resources/plugins/jsPdf/jspdf.min.js"></script>
+     <script src="${rc.contextPath}/resources/plugins/jsPdf/html2canvas.min.js"></script>
+
+
+    

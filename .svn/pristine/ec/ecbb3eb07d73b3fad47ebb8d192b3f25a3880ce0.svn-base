@@ -1,0 +1,314 @@
+ ##iframe页面主体
+ <section class="content">
+ <div class="box box-default">
+   <div class="box-body" id="list">
+ 	<div class="row">
+ 		<div class="col-xs-6" style="width:35%">
+ 			<div class="btn-group">
+ 				<button type="button" class="btn btn-default btn-sm btn-icon addTableNameGrid">
+	                <svg class="icon" aria-hidden="true">
+	                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+	                </svg>
+	                <b hidden>添加档案表</b>&nbsp;
+                </button>
+ 			</div>
+ 			##表名展示DTgrid
+		    <div id="tableNameCollectContext">
+		    	##增加按钮
+		    	##<button title="增加记录" type="button" class="btn btn-info btn-sm addTableNameGrid"><i class="fa fa-plus"></i></button>	    
+		    	##查询条件
+		    	<div id="conditionDataCollect"></div>
+		    	##列表
+		    	<div id="tableNameTable" class="dt-grid-container"></div>
+		    	##分页栏
+		    	<div id="pagingTableName" class="dt-grid-toolbar-container"></div>
+		    </div>
+ 		</div>
+ 		<div class="col-xs-6" style="width:65%">
+ 			<div class="btn-group">
+ 				<button type="button" class="btn btn-default btn-sm btn-icon addTableFieldGrid">
+	                <svg class="icon" aria-hidden="true">
+	                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+	                </svg>
+	                <b hidden>添加表字段</b>&nbsp;
+                </button>
+ 			</div>
+ 		    ##字段值展示DTgrid
+ 		    <div id="tableFieldCollectContext">
+	    		##增加按钮
+		    	##<button title="增加记录" type="button" class="btn btn-info btn-sm addTableFieldGrid"><i class="fa fa-plus"></i></button>
+		    	##查询条件
+		    	<div id="conditionDataCollect"></div>
+		    	##列表
+		    	<div id="tableFieldTable" class="dt-grid-container"></div>
+		    	##分页栏
+		    	<div id="pagingTableField" class="dt-grid-toolbar-container"></div>
+    	    </div>
+ 		</div>
+ 	</div>
+  </div>
+</div>   
+
+	##表名修改资料收集模态框
+	<div class="modal" id="tableNameUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog" style="width: 800px;">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1"></h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+						<input name="tableNameId"  type="hidden"/>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">表英文名</label>
+    				    	<div class="col-sm-7">
+    				        	<input name="bm" class="form-control">
+    				    	</div>
+    				    </div>
+    				    
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">表中文名</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" name="zwm">
+    				    	</div>
+    				    </div>
+    				    
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">说明</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="caption">
+    				    	</div>
+    				    </div>
+    				    
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">弹出框的列数</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control" placeholder="请输入数字" name="columns">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+						    <div class="col-sm-offset-2 col-sm-10">
+						      <div class="checkbox">
+						        <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox1" name="sfzym" value="option1">是否专题
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox2"  name="sfxsfxk" value="option2">是否案卷级
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox3"  name="sfdajcb" value="option3">是否文件级
+								  </label>
+								  <!--
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox4"  name="sfdtb" value="option4">是否动态表 
+								  </label>
+								  -->
+						      </div>
+						    </div>
+						  </div>
+    				    
+    				
+                     </form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+                    <button type="button" class="btn btn-primary tableNameDataUpdate">保存</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+	
+	##查看资料收集模态框
+	
+	##字段值修改资料收集模态框
+	<div class="modal" id="tableFieldUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog" style="width: 800px;">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1"></h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+						<input name="tableFieldId" type="hidden"/>
+    					<!--<div class="form-group">
+    						<label class="col-sm-3 control-label">表名</label>
+    				    	<div class="col-sm-7">
+    				        	<input name="tableName" class="form-control">
+    				    	</div>
+    				    </div>-->
+    				    <input name="tableName" class="form-control" type="hidden">
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">字段英文名</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" name="zdywm">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">字段中文名</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="zdzwm">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">字段类型</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="zdlx" type="hidden">
+    						    <select id="zdlx" class="form-control">
+							      <option value="">请选择字段类型</option>
+							      <!--
+							      <option value="0">字符型</option>
+							      <option value="1">日期型</option>
+							      <option value="2">下拉框</option>
+							      <option value="3">文本框</option>
+							      <option value="4">复选框</option>
+							      <option value="5">数字型</option>
+							      <option value="6">可输入下拉框</option>
+							      -->
+							      #foreach($val in $!{zdlxList})  
+    								<option value="$!{val.dvno}">$!{val.dvalue}</option>  
+    							  #end
+							    </select>
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">字段长度</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control" placeholder="请输入数字"  name="zdcd">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">对应字典项</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="did">
+    				    	</div>
+    				    </div>
+    				     <div class="form-group">
+    						<label class="col-sm-3 control-label">显示序号</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control" placeholder="请输入数字" name="xsxh">
+    				    	</div>
+    				    </div>
+    				    <!--
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">默认值</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="mrz">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">宽度</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control" placeholder="请输入数字" name="width">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">对齐方式</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="align">
+    				    	</div>
+    				    </div>
+    				     <div class="form-group">
+    						<label class="col-sm-3 control-label">说明</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="sm">
+    				    	</div>
+    				    </div>
+    				     <div class="form-group">
+    						<label class="col-sm-3 control-label">日期格式</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="rqgs">
+    				    	</div>
+    				    </div>
+    				    
+    				     <div class="form-group">
+    						<label class="col-sm-3 control-label">占用列数</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control" placeholder="请输入数字" name="zyls">
+    				    	</div>
+    				    </div>
+    				    
+    				     <div class="form-group">
+    						<label class="col-sm-3 control-label">占用行数</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control" placeholder="请输入数字" name="zyhs">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">排序类型</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="pxlx">
+    				    	</div>
+    				    </div>
+    				    -->
+    				    <div class="form-group">
+						    <div class="col-sm-offset-2 col-sm-10">
+						      <div class="checkbox">
+						        <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox1" name="sfcxx" value="option1">是否查询项
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox2"  name="sfgyxxx" value="option2">是否概要信息项
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox4"  name="sfbtx" value="option4">是否必填项
+								  </label>
+								  <!--
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox3"  name="sfkzzd" value="option3">是否可扩展字段 
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox4"  name="sfsy" value="option4">是否使用 
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox4"  name="sfkbj" value="option4">是否可编辑
+								  </label>
+								   <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox4"  name="sfbbxxx" value="option4">是否报表信息项
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox4"  name="sfdjl" value="option4">是否冻结列
+								  </label>
+								  <label class="checkbox-inline">
+								    <input type="checkbox" id="inlineCheckbox4"  name="sfkxg" value="option4">是否可修改
+								  </label>
+								  -->
+						      </div>
+						    </div>
+						  </div>
+    				    
+    				
+                     </form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+                    <button type="button" class="btn btn-primary tableFieldDataUpdate">保存</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+	
+	##查看资料收集模态框
+	
+</section>     
+        
+##CSS
+##<link href="${rc.contextPath}/resources/css/web/zlzl/zlsj/dataCollect.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/archive/tableName.js"></script>
+<script src="${rc.contextPath}/resources/js/web/archive/tableField.js"></script>
+
+<script>
+	$(function(){
+		$("button b").show();
+	
+	})
+</script>

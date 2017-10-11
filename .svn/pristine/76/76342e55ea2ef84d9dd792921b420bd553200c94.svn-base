@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- layer -->
+    <link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+    <link href="${rc.contextPath}/resources/css/web/common/detail.css" rel="stylesheet">    
+    <link href="${rc.contextPath}/resources/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body{
+          margin-top:0px;
+          margin-left:5px;
+          margin-right:5px;
+        }
+        .row {
+            margin:5px;
+        }
+    </style>
+</head>
+<body>
+<form claslayui-tab-brief action="">
+        <div class="layui-tab layui-tab-card" lay-filter="docDemoTabBrief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">基本信息</li>
+                <li>原文</li> 
+                <li>目录信息</li>
+                <li>业务行为</li>
+                <li>部门用户</li>
+                <li>数字签名</li>
+                <li>锁定签名</li>
+                <li>封包结构</li>
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    <div class="container-fluid  form-inline">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>封装包格式描述</label>
+                                    <input type="text" class="form-control" style="width:875px;" value="$!{fzbgems}" name="fzbgems">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="exampleInputName2">版本&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" id="bb" class="form-control" style="width:350px;" value="$!{bb}" name="bb">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="exampleInputName2">封装包类型&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{fzblx}" name="fzblx">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                      <div class="form-group">
+                                        <label for="exampleInputName2">封装包创建时间</label>
+                                        <input type="text" class="form-control" style="width:350px;" id="fzbcjsj" value="$!{fzbcjsj}" name="fzbcjsj">
+                                      </div>
+                            </div>
+                            <div class="col-sm-6">
+                                      <div class="form-group">
+                                        <label for="exampleInputName2">封装包创建单位</label>
+                                        <input type="text" class="form-control" style="width:350px;" value="$!{fzbcjdw}" name="fzbcjdw">
+                                      </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label for="exampleInputName2">档案馆代码&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{dagdm}" name="dagdm">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label for="exampleInputName2">全宗名称&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{qzmc}" name="qzmc">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>电子文件号&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{dzwjh}" name="dzwjh">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>全宗号&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{qzh}" name="qzh">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>目录号&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{mlh}" name="mlh">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>年度&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{nd}" id="nd" name="nd">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>保管期限&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{bgqx}" name="bgqx">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>机构或问题&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{jghwt}" name="jghwt">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>类别号&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{lbh}" name="lbh">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>室编案卷号&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{sbajh}" name="sbajh">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>馆编案卷号&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{gbjh}" name="gbjh">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>室编件号&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{sbjh}" name="sbjh">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>馆编件号&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{gbjh}" name="gbjh">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>页号&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{yh}" name="yh">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                  <div class="form-group">
+                                    <label>题名&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:875px;" value="$!{tm}" name="tm">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>责任者&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{zrz}" name="zrz">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>文件编号&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{wjbh}" name="wjbh">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>日期&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{rq}" name="rq">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>密级&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{mj}" name="mj">
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>页数&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{ys}" name="ys">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>控制标识&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{kzbs}" name="kzbs">
+                                  </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>语种&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{yz}" name="yz">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>稿本&emsp;&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{gb}" name="gb">
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ## 原文
+                <div class="layui-tab-item">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>文档标识符</th>
+                          <th>文档序号</th>
+                          <th>计算机文件名</th>
+                          <th>计算机文件大小</th>
+                          <th>扫描分辨率</th>
+                          <th>扫描色彩模式</th>
+                          <th>反编码关键字</th>
+                          <th>原文</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        #if(${ywlist})
+                             #foreach($yw in $!{ywlist}) 
+                                <tr>
+                                  <td>$!{yw.wdbsf}</td>
+                                  <td>$velocityCount</td>
+                                  <td>$!{yw.jsjwjm}</td>
+                                  <td>$!{yw.jsjwjdx}</td>
+                                  <td>$!{yw.smfbl}</td>
+                                  <td>$!{yw.smscms}</td>
+                                  <td>$!{yw.fbmgjz}</td>
+                                  <td>$!{yw.bmsj}</td>
+                                  <td class="yw">$!{yw.yw}</td>
+                                </tr>
+                            #end
+                        #else
+                            <tr><td colspan='9' >不存在数据</td></tr>
+                        #end
+                      </tbody>
+                    </table>
+                </div>
+                ## 目录信息
+                <div class="layui-tab-item">
+                    <div class="container-fluid  form-inline">
+                        
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>全宗号&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{qzh}" name="qzh">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>年度&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{nd}" id="mlnd" name="nd">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>保管期限&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{bgqx}" name="bgqx">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>类别号&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{lbh}" name="lbh">
+                                  </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>室编件号&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{sbjh}" name="sbjh">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>题名&emsp;&emsp;&emsp;&emsp;</label>
+                                    <textarea class="form-control" style="width:855px;"  name="tm" rows="3">$!{tm}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>关键词&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{gjc}" name="gjc">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>文件编号</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{wjbh}" name="wjbh">
+                                  </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>日期&emsp;&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{rq}" name="rq">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>密级&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{mj}" name="mj">
+                                  </div>
+                            </div>
+                        </div>  
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>流水号&emsp;&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{lsh}" name="lsh">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>拟稿人&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{ngr}" name="ngr">
+                                  </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-6 ">
+                                  <div class="form-group">
+                                    <label>文件组合类型</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{wjzhlx}" name="wjzhlx">
+                                  </div>
+                            </div>
+                            <div class="col-sm-6">
+                                  <div class="form-group">
+                                    <label>语种&emsp;&emsp;</label>
+                                    <input type="text" class="form-control" style="width:350px;" value="$!{yz}" name="yz">
+                                  </div>
+                            </div>
+                        </div>
+                        
+                     </div>
+                </div>
+                ##业务行为
+                <div class="layui-tab-item">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>业务标识符</th>
+                          <th>机构人员名称</th>
+                          <th>业务行为</th>
+                          <th>业务状态</th>
+                          <th>行为时间</th>
+                          <th>行为依据</th>
+                          <th>行为描述</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      #if(${ywxwlist})
+                          #foreach($ywxw in $!{ywxwlist}) 
+                          <tr>
+                              <td>$!{ywxw.ywbsf}</td>
+                              <td>$!{ywxw.jgrymc}</td>
+                              <td>$!{ywxw.xwyj}</td>
+                              <td>$!{ywxw.xwsj}</td>
+                              <td>$!{ywxw.xwms}</td>
+                              <td>$!{ywxw.ywzt}</td>
+                              <td>$!{ywxw.ywxw}</td>
+                            </tr>
+                          #end
+                      #else
+                            <tr><td colspan='7' >不存在数据</td></tr>
+                      #end
+                      </tbody>
+                    </table>
+                </div>
+                ##部门用户
+                <div class="layui-tab-item">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>机构人员标识符</th>
+                          <th>机构人员类型</th>
+                          <th>机构人员名称</th>
+                          <th>组织机构代码</th>
+                          <th>个人职位</th>
+                          <th>所属单位</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      #if(${bmyhlist})
+                          #foreach($bmyh in $!{bmyhlist}) 
+                          <tr>
+                              <td>$!{bmyh.jgrybsf}</td>
+                              <td>$!{bmyh.jgrylx}</td>
+                              <td>$!{bmyh.jgrymc}</td>
+                              <td>$!{bmyh.zzjgdm}</td>
+                              <td>$!{bmyh.grzw}</td>
+                              <td>$!{bmyh.ssdw}</td>
+                          </tr>
+                          #end
+                      #else
+                        <tr><td colspan='6' >不存在数据</td></tr>
+                      #end
+                      </tbody>
+                    </table>
+                </div>
+                ##数字签名
+                <div class="layui-tab-item">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>签名标识符</th>
+                          <th>签名规则</th>
+                          <th>签名时间</th>
+                          <th>签名人</th>
+                          <th>签名算法标识</th>
+                          <th>数字证书</th>
+                          <th>签名结果</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        #if(${qmlist})
+                            #foreach($qm in $!{qmlist}) 
+                            <tr>
+                              <td>$!{qm.qmbsf}</td>
+                              <td>$!{qm.qmgz}</td>
+                              <td id="qmsj">$!{qm.qmsj}</td>
+                              <td>$!{qm.qmr}</td>
+                              <td>$!{qm.qmsfbs}</td>
+                              <td  title="$!{qm.szzs}"><a href="$!{qm.szzspath}"><img src="${rc.contextPath}/resources/plugins/ca/certificate_2-16.png" /></a></td>
+                              <td>$!{qm.qmjg}</td>
+                            </tr>
+                            #end
+                        #else
+                            <tr><td colspan='7' >不存在数据</td></tr>
+                        #end
+                      </tbody>
+                    </table>
+                </div>
+                ##锁定签名
+                <div class="layui-tab-item">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>被锁定签名标识符</th>
+                          <th>签名规则</th>
+                          <th>签名时间</th>
+                          <th>签名人</th>
+                          <th>签名算法标识</th>
+                          <th>数字证书</th>
+                          <th>签名结果</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      <tbody>
+                        #if(${sdqm})
+                            <tr>
+                              <td>$!{sdqm.qmbsf}</td>
+                              <td>$!{sdqm.qmgz}</td>
+                              <td id="sdqmsj">$!{sdqm.qmsj}</td>
+                              <td>$!{sdqm.qmr}</td>
+                              <td>$!{sdqm.qmsfbs}</td>
+                              <td title="$!{sdqm.szzs}"><a href="$!{sdqm.szzspath}"><img src="${rc.contextPath}/resources/plugins/ca/certificate_2-16.png" /></a></td>
+                              <td>$!{sdqm.qmjg}</td>
+                            </tr>
+                        #else
+                            <tr><td colspan='7' >不存在数据</td></tr>
+                        #end
+                      </tbody>
+                      </tbody>
+                    </table>
+                </div>
+                ##封包结构
+                <div class="layui-tab-item">
+                <textarea id="fbjg" style="width:1334px;height:400px;overflow:scroll;resize:none;" >
+                   ${fbjg}
+                </textarea>
+                </div>
+            </div>
+        </div>
+    </form>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/common/Util.js"></script>
+<script>
+function rename(key){
+    var map = {
+        'EncaPkgFormatDesc': '封装包格式描述',
+        'Version': '版本',
+        'EncaPkgType': '封装包类型',
+        'EncaPkgTypeDesc': '封装包类型描述',
+        'EncaPkgCreateTime': '封装包创建时间',
+        'EncaPkgCreator': '封装包创建单位',
+        'Aggrhierarchy': '聚合层次',
+        'ArchiveFromUnit': '来源',
+        'ElecDocNo': '电子文件号',
+        'FondNo': '全宗号',
+        'DirectoryNo': '目录号',
+        'Year': '年度',
+        'StoragePeriod': '保管期限',
+        'Institutions': '机构或问题',
+        'ClassNo': '类别号',
+        'RoomCaseNo': '室案件编号',
+        'TubeCaseNo': '管案件编号',
+        'RoomNo': '馆编件号',
+        'TubeNo': '室编件号',
+        'PageNo': '页号',
+        'Title': '题名',
+        'ResponsePeople': '责任者',
+        'DateE': '日期',
+        'Dense': '密级',
+        'RecdGroupType': '文件组合类型',
+        'OfflineCarrierNo': '载体',
+        'IntePropRightDesc': '',
+        'AuthorizedObject': '授权对象',
+        'AuthorizedBehavior': '授权行为',
+        'ControlId': '控制标识',
+        'DocumentId': '文档标识符',
+        'RecdNo': '文档序号',
+        'StateOnMainOrAttament': '文档主从声明',
+        'Title': '题名',
+        'CompFileName': '计算机文件名',
+        'CompFileSize': '计算机文件大小',
+        'EocodeDesc': '编码描述',
+        'RenderKey': '反编码关键字',
+        'EncodeData': '编码数据',
+        'BusEntId': '业务标识符',
+        'AgentEntId': '机构人员标识符',
+        'RecdId': '文件标识符',
+        'BusState': '业务状态',
+        'BusBehavior': '业务行为',
+        'BehaviorTime': '行为时间',
+        'BehaviorReason': '行为依据',
+        'BehaviorDesc': '行为描述',
+        'AgentEntId': '机构人员标识符',
+        'InstPeopleType': '机构人员类型',
+        'InstPeopleName': '机构人员名称',
+        'InstUnitCode': '组织机构代码',
+        'PeoplePosition': '个人职位',
+        'SignatureId': '签名算法标识',
+        'LockedSignatureId': '被锁定签名标识符',
+        'SignatureRole': '签名规则',
+        'SignatureTime': '签名时间',
+        'SignaturePeople': '签名人',
+        'SignatureResult': '签名结果',
+        'Certificate': '证书块',
+        'SignatureAlgoId': '签名算法标识',
+    };
+    
+    if(map[key]){
+        return map[key];
+    }else{
+        return key;
+    }
+}
+
+layui.use(['element','jquery','layer'], function(){
+  var element = layui.element();
+  var $=layui.jquery;
+  var layer = layui.layer;
+  var dosomething = layer.load(1, {shade: [1,'#FFFFFF']});
+  // 版本清除时区信息
+   if($("#bb").val().length > 4){
+        $("#bb").val($("#bb").val().slice(0,4));
+   }
+   
+   if($("#nd").val().length > 10){
+        $("#nd").val($("#nd").val().slice(0,10));
+   }
+   
+   if($("#mlnd").val().length > 10){
+        $("#mlnd").val($("#mlnd").val().slice(0,10));
+   }
+   
+   if($("#fzbcjsj").val().length > 19){
+        $("#fzbcjsj").val($("#fzbcjsj").val().slice(0,19).replace("T", " "));
+   }
+   
+   if($("#qmsj").text().length > 19){
+        $("#qmsj").text($("#qmsj").text().slice(0,19).replace("T", " "));
+   }
+   
+   if($("#sdqmsj").text().length > 19){
+        $("#sdqmsj").text($("#sdqmsj").text().slice(0,19).replace("T", " "));
+   }
+   
+   $("input").each(function(){
+        var $this = $(this);
+        if($this.val().length > 2){
+            if($this.val().slice(-2)=="-无"){
+                $this.val("");
+            }
+        }
+   });
+   
+   $("td").each(function(){
+        var $this = $(this);
+        if($this.text().length > 2){
+            if($this.text().slice(-2)=="-无"){
+                $this.text("");
+            }
+        }
+        
+   });
+   
+  var text = $("#fbjg").val();
+  var lines = text.split("\n");
+  text = "";
+  for(var i=0; i<lines.length;i++){
+    var reg = new RegExp(">([^</]+)</");
+    if(i==0) continue;
+    var line = lines[i].substring(0,lines[i].indexOf("</"));
+    if($.trim(line).length == 0) continue;
+    var start = line.indexOf("<");
+    var end = line.indexOf(">");
+    var ywm = line.slice(start+1, end);
+    var nywm = '';
+    if(ywm.indexOf('EncodeData')>=0){
+       nywm = 'EncodeData';
+       continue;
+    }else if(ywm.indexOf('Certificate')>=0){
+       nywm = ywm;
+       continue;
+    }else{
+       nywm = ywm;
+    }
+    var zwm = rename(nywm);
+    line = line.replace("<"+ywm+">", zwm + ": ");
+    line = line + "\n";
+    text = text + line;
+  }
+  $("#fbjg").val(text);
+   // 年度清除时间信息
+   
+   $("td.yw").each(function(index, element){
+            var wjdz =  $.trim($(this).text()); //  /uploadFile/eep/temp/2、HTTP.doc
+            var wjlx = wjdz.substring(wjdz.lastIndexOf(".")+1);
+            var html = '';
+            if(wjlx == 'pdf'){
+                html += '<img  wjdz="'+wjdz+'" src="' + Util.getRootPath() + '/resources/img/icon_16/pdf.svg" />';
+            }else if(wjlx == 'doc' || wjlx == 'docx'){
+                html += '<img  wjdz="'+wjdz+'" src="' + Util.getRootPath() + '/resources/img/icon_16/word.svg" />';
+            }else if(wjlx == 'xlsx' || wjlx == 'xls'){
+                html += '<img  wjdz="'+wjdz+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/excel.svg" />';
+            }else if(Util.isAudio(wjlx)){
+                html += '<img  wjdz="'+wjdz+'" src="' + Util.getRootPath() + '/resources/img/icon_16/音频.svg" />';
+            }else if(Util.isVedio(wjlx)){
+                html += '<img wjdz="'+wjdz+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/视频.svg" />';
+            }else if(Util.isPIC(wjlx)){
+                html += '<img  wjdz="'+wjdz+'" src="' + Util.getRootPath() + '/resources/img/icon_16/pic.svg" />';
+            }else if(wjlx == 'txt'){
+                html += '<img wjdz="'+wjdz+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/txt.svg" />';
+            }
+            else{
+                html += '<img wjdz="'+wjdz+'"   src="' + Util.getRootPath() + '/resources/img/icon_16/文件.svg" />';
+            }
+            $(this).html(html);
+        }); 
+        
+        $("td.yw").on("click", "img", function(){
+            var index = layer.load(1, {shade: [0.1,'#FFFFFF']});
+            var wjdz = $(this).attr('wjdz');
+            
+            $.ajax({
+                type: "GET",
+                url: Util.getRootPath() + "/w/example/eep/preview?wjdz=" + wjdz,
+                dataType: 'json',
+                async: true,    
+                success: function(result) {
+                    var filename = result.name;
+                    var cache = result.cache;
+                    var option = {};
+                    option.title = result.name;
+                    
+                    layer.close(index);
+                    //视频格式转成flv
+                    if(result.type == 'flv'){
+                        layer.close(index);
+                        option.url = Util.getRootPath() + "/w/preview/video/" + filename + "/" + cache;
+                        // window.parent.showModal(option);
+                        parent.parent.layer.open({
+                          type: 2,
+                          title:filename,
+                          area: ['700px', '530px'],
+                          fixed: false, //不固定
+                          maxmin: true,
+                          content: option.url,
+                        });
+                    }else if(result.type == 'mp3'){
+                        parent.parent.layer.open({
+                            type: 2,
+                            title:filename,
+                            area: ['450px', '200px'],
+                            fixed: false, //不固定
+                            maxmin: true,
+                            content: Util.getRootPath() + "/w/example/eep/viewAudio?wjdz="+wjdz,
+                          });
+                    }else if(result.type == 'others'){
+                        layer.confirm('其他格式的文件不能预览,是否需要下载?', {
+                              skin: 'layui-layer-lan',
+                              btn: ['是','否'] //按钮
+                        }, function(index){
+                            layer.close(index);
+                            window.location.href = Util.getRootPath() + "/w/common/downLoadAttach?filePath="+result.cache+"&fileName="+result.name;
+                        },function(index){
+                             layer.close(index);
+                        });
+                        
+                    }else if(result.type == 'pdf'){
+                        var wjdz1 = wjdz.replace(/\//g,"%2F");
+                        parent.parent.layer.open({
+                              type: 2,
+                              title:filename,
+                              area: ['700px', '530px'],
+                              fixed: false, //不固定
+                              maxmin: true,
+                              content: Util.getRootPath()+"/resources/plugins/pdfJs/generic/web/viewer.html?file="+Util.getRootPath()+"/w/example/eep/displayPDF/"+wjdz1,
+                        });
+                    }else{
+                        layer.close(index);
+                        //图片 word excel txt pdf
+                        option.url = result.cache;
+                        parent.parent.layer.open({
+                          type: 2,
+                          title:filename,
+                          area: ['700px', '530px'],
+                          fixed: false, //不固定
+                          maxmin: true,
+                          content: option.url,
+                        });
+                    }
+                },
+                error:function(XMLHttpRequest, textStatus, errorThrown){
+                    layer.close(index);
+                    layer.msg("文件不存在或被删除");
+                }
+            });
+    
+        });
+        
+        layer.close(dosomething);
+});
+</script>
+</body>
+</html>
+</script>
+</body>
+</html>
+	

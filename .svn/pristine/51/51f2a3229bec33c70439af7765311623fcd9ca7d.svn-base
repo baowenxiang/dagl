@@ -1,0 +1,666 @@
+package cn.proem.dagl.web.archives.service.impl;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.dagl.web.archives.entity.DEntity;
+import cn.proem.dagl.web.archives.entity.DField;
+import cn.proem.dagl.web.archives.entity.DOrder;
+import cn.proem.dagl.web.archives.entity.DTable;
+import cn.proem.dagl.web.archives.entity.DTableField;
+import cn.proem.dagl.web.archives.entity.DTableName;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.util.StringUtil;
+
+/**
+ * 自定义档案操作
+ */
+@Service
+public class CustomArchiveServiceImpl implements CustomArchiveService {
+    private Map<String, DTable> deftable = new HashMap<String,DTable>();
+	private final String DROPTABLE = "DROP TABLE %s";
+	private static final String stringFormat = "'%s'";
+	private final String DESCTABLE = "SELECT "
+			+ " c.COLUMN_NAME AS FIELD, "
+			+ " c.DATA_TYPE AS TYPE, "
+			+ " c.DATA_LENGTH AS LENGTH, "
+			+ " c.DATA_PRECISION AS PRECISION, "
+			+ " c.DATA_DEFAULT AS DEF, "
+			+ " c.NULLABLE AS NULLABLE, "
+			+ " (SELECT "
+			+ "   'PRI' "
+			+ " FROM"
+			+ "   user_constraints A "
+			+ " LEFT JOIN user_cons_columns b ON A .constraint_name = b.constraint_name "
+			+ " WHERE A .table_name = '%s' "
+			+ " AND A .constraint_type = 'P' "
+			+ " AND b.column_name = c.COLUMN_NAME "
+			+ " AND rownum = 1) AS KEY "
+			+ " FROM "
+			+ " user_tab_columns c "
+			+ " WHERE "
+			+ " Table_Name = '%s'";
+	
+	private final String SELECTALL = "SELECT * FROM %s %s";
+	private final String ISEXISTS = "SELECT TABLE_NAME FROM "
+                                    + "USER_TABLES "
+                                    + "WHERE TABLE_NAME='%s'";
+	private final String SELECTWHERE = "SELECT * FROM %s WHERE %s";
+	private final String SELECTNWORDER = "SELECT * FROM %s %s ORDER BY %s";
+	private final String SELECTWORDER = "SELECT * FROM %s WHERE %s ORDER BY %s";
+	private final String RENAMETABLE = "RENAME %s TO %s";
+	private final String RENAMECONST = "ALTER TABLE %s RENAME CONSTRAINT %s TO %s";
+	
+	private final String SELECTPAGING =	"SELECT * FROM ( "  
+													+"		SELECT A.*, ROWNUM RN "  
+													+"		FROM (SELECT * FROM %s WHERE %s) A " 
+													+"		WHERE ROWNUM <= %d	" 
+													+"	)" 
+													+"		WHERE RN > %d" ; 
+	
+	
+	private final String SEP = ", %s";
+	// 表描述字段 字段名
+	private final String DESC_FIELD = "FIELD";
+	// 表描述字段 类型
+	private final String DESC_TYPE = "TYPE";
+	// 表描述字段 是否为空
+	private final String DESC_NULL = "NULLABLE";
+	// 表描述字段 主键
+	private final String DESC_KEY = "KEY";
+	// 是否判断
+	private final String YES = "Y";
+	/*
+	 * // 表描述字段 默认值 private final String DESC_DEFU = "Default"; // 表描述字段其他
+	 * private final String DESC_EXRA = "Exra";
+	 */
+
+	/**
+	 * 数据库操作层
+	 */
+	@Resource
+	private GeneralDao generalDao;
+	
+    @Override
+    public void alterAchive(String tablename) throws ServiceException {
+
+        DTable dtable = new DTable(tablename);
+        //uuid
+        dtable.add(DField.UUID, DTable.VARCHAR2, 36, false);
+        //资料id
+        dtable.add(DField.DATAID, DTable.VARCHAR2,36);
+        //归档状态
+        dtable.add(DField.ISARCHIVE, DTable.VARCHAR2,1);
+        //是否删除
+        dtable.add(DField.DELFLAG, DTable.VARCHAR2,1);
+        //是否划控
+        dtable.add(DField.HKKZ, DTable.VARCHAR2,100);
+        //是否鉴定
+        dtable.add(DField.SFJD, DTable.VARCHAR2,100);
+        //集团号
+        dtable.add(DField.NOWCAMP, DTable.VARCHAR2,100);
+        //旧集团号
+        dtable.add(DField.OLDCAMP, DTable.VARCHAR2,100);
+        //登录人员
+        dtable.add(DField.CREATEUSER, DTable.VARCHAR2,100);
+        //更新人员
+        dtable.add(DField.UPDATEUSER, DTable.VARCHAR2,100);
+        //新建时间
+        dtable.add(DField.CREATETIME, DTable.VARCHAR2,100);
+        //更新时间
+        dtable.add(DField.UPDATETIME, DTable.VARCHAR2,100);
+
+        //主键
+        List<String> pri = new ArrayList<String>();        
+        pri.add(DField.UUID);
+        dtable.setPrimary(pri);
+        
+        List<BaseEntityInf> fields = this.getFields(tablename);
+        for(BaseEntityInf field : fields){
+            dtable.add((String)field.get("zdywm"), DTable.VARCHAR2,((BigDecimal)field.get("zdcd")).intValue(), "0".equals((String)field.get("sfbtx"))?true:false);
+        }
+        
+        this.alterAchive(dtable);
+    }
+
+    @Override
+    public void alterAchive(DTable table) throws ServiceException{
+        // 修改表表名
+        String newtable = table.getName();
+        // 新建临时表
+        Random rand = new Random();
+        String temp = table.getName() + rand.nextInt(10);
+        table.setName(temp);
+        this.createTable(table);
+        
+        // 复制数据
+        List<BaseEntityInf> entities = this.getAllEntities(newtable);
+        List<BaseEntityInf> fields = this.getFields(newtable);
+        List<String> fieldnames = new ArrayList<String>();
+        
+        for(BaseEntityInf field:fields){
+            fieldnames.add((String) field.get("zdywm"));
+        }
+        
+        fieldnames.add(DField.UUID);
+        fieldnames.add(DField.DELFLAG);
+        fieldnames.add(DField.DATAID);
+        fieldnames.add(DField.ISARCHIVE);
+        fieldnames.add(DField.NOWCAMP);
+        fieldnames.add(DField.OLDCAMP);
+        fieldnames.add(DField.SFJD);
+        fieldnames.add(DField.HKKZ);
+        fieldnames.add(DField.CREATETIME);
+        fieldnames.add(DField.CREATEUSER);
+        fieldnames.add(DField.UPDATETIME);
+        fieldnames.add(DField.UPDATEUSER);
+        
+        for(BaseEntityInf entity: entities){
+            DEntity ne = (DEntity) entity;
+            ne.setTable(temp);
+            ne.setFields(fieldnames);
+            try {
+                this.save(ne);
+            } catch (ServiceException e) {
+               throw new ServiceException("修改表失败");
+            }
+        }
+        // 删除原来表
+        this.dropTable(newtable);
+        // 修改主键约束名
+        generalDao.executeSQL(String.format(RENAMECONST, temp, "TB_PK_" + temp, "TB_PK_" + newtable));
+        // 修改表名
+        generalDao.executeSQL(String.format(RENAMETABLE, temp, newtable));
+        // 删除缓存表结构
+        if(deftable.get(newtable) != null){
+            deftable.remove(newtable);
+        }
+    }
+	
+	@Override
+	public void createAchive(String tablename) {
+	    List<BaseEntityInf> fields = this.getFields(tablename);
+        DTable dtable = new DTable(tablename);
+        //uuid
+        dtable.add(DField.UUID, DTable.VARCHAR2, 36, false);
+        //资料id
+        dtable.add(DField.DATAID, DTable.VARCHAR2,36);
+        //归档状态
+        dtable.add(DField.ISARCHIVE, DTable.VARCHAR2,1);
+        //是否删除
+        dtable.add(DField.DELFLAG, DTable.VARCHAR2,1);
+        //是否划控
+        dtable.add(DField.HKKZ, DTable.VARCHAR2,100);
+        //是否鉴定
+        dtable.add(DField.SFJD, DTable.VARCHAR2,100);
+        //集团号
+        dtable.add(DField.NOWCAMP, DTable.VARCHAR2,100);
+        //旧集团号
+        dtable.add(DField.OLDCAMP, DTable.VARCHAR2,100);
+        //登录人员
+        dtable.add(DField.CREATEUSER, DTable.VARCHAR2,100);
+        //更新人员
+        dtable.add(DField.UPDATEUSER, DTable.VARCHAR2,100);
+        //新建时间
+        dtable.add(DField.CREATETIME, DTable.VARCHAR2,100);
+        //更新时间
+        dtable.add(DField.UPDATETIME, DTable.VARCHAR2,100);
+        //主键
+        List<String> pri = new ArrayList<String>();        
+        pri.add(DField.UUID);
+        dtable.setPrimary(pri);
+        
+        for(BaseEntityInf field : fields){
+            dtable.add((String)field.get("zdywm"), DTable.VARCHAR2,((BigDecimal)field.get("zdcd")).intValue(), "0".equals((String)field.get("sfbtx"))?true:false);
+        }
+        
+        this.createTable(dtable);
+	}
+
+	/**
+	 * 新建档案表格
+	 */
+	@Override
+	public void createTable(DTable table) {
+		generalDao.executeSQL(table.getDDL());
+	}
+
+	@Override
+	public void dropTable(String tablename) {
+		generalDao.executeSQL(String.format(DROPTABLE, tablename));
+	}
+
+	@Override
+	public void dropAndCreateTable(DTable table) {
+		generalDao.executeSQL(String.format(DROPTABLE, table.getName()));
+		generalDao.executeSQL(table.getDDL());
+	}
+
+	@Override
+	public DEntity getEntity(String tablename) {
+		return this.getTable(tablename).createEntity();
+	}
+
+	@Override
+	public DEntity getEntity(String tablename, String id) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		DEntity entity = this.getTable(tablename).createEntity();
+		entity.set(entity.getPrimary().get(0), id);
+		params = generalDao.getObject(
+				String.format(SELECTALL, entity.getTable(), entity.getWhere()),
+				params);
+		entity.setVals(params);
+		return entity;
+	}
+
+	private DTable getTable(String tablename) {
+	    if(deftable.get(tablename) != null){
+	        return deftable.get(tablename);
+	    }
+		Map<String, Object> params = new HashMap<String, Object>();
+		List<Map<String, Object>> results = generalDao.getObjectList(
+				String.format(DESCTABLE, tablename.toUpperCase(), tablename.toUpperCase()), 0, -1, params);
+		DTable table = new DTable(tablename);
+		List<String> primary = new ArrayList<String>();
+		for (Map<String, Object> field : results) {
+			String fieldname = (String) field.get(DESC_FIELD);
+			String type = (String) field.get(DESC_TYPE);
+			String nullable = (String) field.get(DESC_NULL);
+			table.add(fieldname, type.split("\\(")[0],
+					YES.equals(nullable) ? true : false);
+			if ("PRI".equals(field.get(DESC_KEY))) {
+				primary.add(fieldname);
+			}
+		}
+		table.setPrimary(primary);
+		deftable.put(tablename, table);
+		return table;
+	}
+
+	@Override
+	public String save(BaseEntityInf entity) throws ServiceException {
+		DEntity record = (DEntity) entity;
+		if (generalDao.executeSQL(record.save()) == 0) {
+			throw new ServiceException("新建记录失败");
+		}
+		return (String) record.get(record.getPrimary().get(0));
+	}
+	
+	@Override
+    @Transactional
+	public void saveOrUpdate(BaseEntityInf entity) throws ServiceException {
+	    DEntity record = (DEntity) entity;
+	    generalDao.executeSQL(record.del());
+	    if (generalDao.executeSQL(record.save()) == 0) {
+	        throw new ServiceException("提交数据库失败");
+	    }
+	}
+
+	@Override
+    @Transactional
+	public void del(BaseEntityInf entity) throws ServiceException {
+		DEntity record = (DEntity) entity;
+		if (generalDao.executeSQL(record.del()) == 0) {
+			throw new ServiceException("删除失败");
+		}
+	}
+
+	@Override
+    @Transactional
+	public void update(BaseEntityInf entity) throws ServiceException {
+	    DEntity record = (DEntity) entity;
+		generalDao.executeSQL(record.del());
+		generalDao.executeSQL(record.save());
+	}
+
+	@Override
+	public List<BaseEntityInf> getAllEntities(String tablename) {
+		DEntity entity = this.getTable(tablename).createEntity();
+		List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+		List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTALL, entity.getTable(), ""),
+										 0, -1, new Object[]{});
+		for(Map<String, Object> param : params){
+			entity = this.getTable(tablename).createEntity();
+			entity.setVals(param);
+			entities.add(entity);
+		}
+		return entities;
+	}
+	
+	@Override
+	public List<BaseEntityInf> getEntitiesByConditions(String tablename,
+			Map<String, Object> conditions) {
+		DEntity entity = this.getTable(tablename).createEntity();
+		// 设置查询条件
+		entity.setQuery(conditions);
+		List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+		List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTALL, entity.getTable(), entity.getQuery()),
+										 0, -1, new Object[]{});
+		for(Map<String, Object> param : params){
+			entity = this.getTable(tablename).createEntity();
+			entity.setVals(param);
+			entities.add(entity);
+		}
+		return entities;
+	}
+
+	@Override
+	public BaseEntityInf getEntityByConditions(String tablename,
+			Map<String, Object> conditions) {
+		List<BaseEntityInf> entities = getEntitiesByConditions(tablename, conditions);
+		return entities.get(0);
+	}
+
+    @Override
+    public DataGrid<DTableName> getTableNameDateGrid(QueryBuilder queryBuilder,
+            int nowPage, int pageSize) {
+        DataGrid<DTableName> dataGrid = new DataGrid<DTableName>(nowPage,pageSize);
+        dataGrid.setRecordCount(generalDao.countByCriteria(DTableName.class, queryBuilder));
+        
+        List<DTableName> list = new ArrayList<DTableName>();
+        list = generalDao.queryByCriteria(DTableName.class, queryBuilder, null, dataGrid.getStartRecord(), dataGrid.getPageSize());
+        
+        dataGrid.setExhibitDatas(list);
+        return dataGrid;
+        
+    }
+
+    @Override
+    public DataGrid<DTableField> getTableFieldDateGrid(
+            QueryBuilder queryBuilder, int nowPage, int pageSize) {
+        DataGrid<DTableField> dataGrid = new DataGrid<DTableField>(nowPage,pageSize);
+        dataGrid.setRecordCount(generalDao.countByCriteria(DTableField.class, queryBuilder));
+        
+        List<DTableField> list = new ArrayList<DTableField>();
+        list = generalDao.queryByCriteria(DTableField.class, queryBuilder, null, dataGrid.getStartRecord(), dataGrid.getPageSize());
+        
+        dataGrid.setExhibitDatas(list);
+        return dataGrid;
+    }
+
+    
+    @Override
+    @Transactional
+    @LogService(description="保存或更新表")
+    public void saveOrUpdateDTableName(DTableName tableName)
+            throws ServiceException {
+        if (StringUtil.isEmpty(tableName.getId())) {
+            generalDao.save(tableName);
+        }else{
+            generalDao.update(tableName);
+        }
+        
+    }
+
+    @Override
+    @Transactional
+    @LogService(description="逻辑删除表")
+    public void deleteDTableNameById(String id) throws ServiceException {
+        DTableName tableName = generalDao.findById(id, DTableName.class);
+        tableName.setDelFlag(1);
+        generalDao.update(tableName);
+        
+    }
+
+    @Override
+    @Transactional
+    @LogService(description="保存或更新表字段")
+    public void saveOrUpdateDTableField(DTableField tableField)
+            throws ServiceException {
+        if (StringUtil.isEmpty(tableField.getId())) {
+            generalDao.save(tableField);
+        }else{
+            generalDao.update(tableField);
+        }
+        
+    }
+
+    @Override
+    @Transactional
+    @LogService(description="逻辑删除表字段")
+    public void deleteDTableFieldById(String id) throws ServiceException {
+        DTableField tableField = generalDao.findById(id, DTableField.class);
+        //tableField.setDelFlag(1);
+        //generalDao.update(tableField);
+        
+        generalDao.delete(tableField);
+        
+    }
+
+    @Override
+    public DTableName getDTableNameByTableName(String tableName) {
+        DTableName dTableName = generalDao.findUniqueByProperty("bm", tableName, DTableName.class);
+        return dTableName;
+    }
+
+    @Override
+    public Boolean isExists(String tablename) throws ServiceException {
+        tablename = tablename.toUpperCase();
+        List<Map<String, Object>> tables = generalDao.getObjectList(String.format(ISEXISTS, tablename), 
+                                                                    0, -1, new Object[]{});
+        if(tables.size() == 0){
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public List<BaseEntityInf> getEntitiesByConditions(String tablename, String conditions) {
+        DEntity entity = this.getTable(tablename).createEntity();
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTWHERE, entity.getTable(), conditions),
+                                         0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    }
+
+    @Override
+    public List<BaseEntityInf> getEntitiesByConditions(String tablename, Map<String, Object> conditions,
+            List<DOrder> orders) {
+        StringBuilder ord = new StringBuilder();
+        for(int i = 0; i < orders.size(); i ++){
+            if(i == 0){
+                ord.append(orders.get(i).order());
+            }else{
+                ord.append(String.format(SEP, orders.get(i).order()));
+            }
+        }
+        
+        DEntity entity = this.getTable(tablename).createEntity();
+        entity.setQuery(conditions);
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTNWORDER, entity.getTable(), entity.getQuery(), ord.toString()),
+                                         0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    }
+
+
+    @Override
+    public List<BaseEntityInf> getEntitiesByConditions(String tablename, Map<String, Object> conditions, DOrder order) {
+        DEntity entity = this.getTable(tablename).createEntity();
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        entity.setQuery(conditions);
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTNWORDER, entity.getTable(), entity.getQuery(), order.order()),
+                                         0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    }
+
+    @Override
+    public List<BaseEntityInf> getEntitiesByConditions(String tablename, String conditions, List<DOrder> orders) {
+        StringBuilder ord = new StringBuilder();
+        for(int i = 0; i < orders.size(); i ++){
+            if(i == 0){
+                ord.append(orders.get(i).order());
+            }else{
+                ord.append(String.format(SEP, orders.get(i).order()));
+            }
+        }
+        DEntity entity = this.getTable(tablename).createEntity();
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTWORDER, entity.getTable(), conditions, ord.toString()),
+                0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    }
+    
+    @Override
+    public List<BaseEntityInf> getEntitiesByConditions(String tablename, String conditions, DOrder order) {
+        DEntity entity = this.getTable(tablename).createEntity();
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTWORDER, entity.getTable(),conditions , order.order()),
+                                         0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    }
+    
+    
+    public List<BaseEntityInf> getEntitiesByPaging(String tablename,Map<String,Object> conditions, Integer startRecord,Integer pageSize) {
+
+        DEntity entity = this.getTable(tablename).createEntity();
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        
+        StringBuilder condition = new StringBuilder();
+        int i = 0;
+        for(String key : conditions.keySet()){
+            String fieldname = key;
+            if(i==0){
+            	condition.append(fieldname);
+            }else{
+            	condition.append(" and ");
+            	condition.append(fieldname);
+            }
+            if(conditions.get(fieldname)==null){
+            	condition.append(" is null");
+            }else{
+            	condition.append(" = ");
+            	condition.append(String.format(stringFormat, (String)conditions.get(fieldname))); 
+            }
+            i++;
+        }
+        
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTPAGING, entity.getTable(),condition.toString() ,startRecord+pageSize,startRecord),
+                                         0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    
+    }
+    
+    
+    public List<BaseEntityInf> getEntitiesByPaging(String tablename,String conditions, Integer startRecord,Integer pageSize) {
+
+        DEntity entity = this.getTable(tablename).createEntity();
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTPAGING, entity.getTable(),conditions ,startRecord+pageSize,startRecord),
+                                         0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    
+    }
+    
+    
+    @Override
+    public List<BaseEntityInf> getFields(String tablename) {
+        // 获得表的定义
+        String tabledefined = "pdagl_tablename";
+        Map<String, Object> conditions = new HashMap<String, Object>();
+        conditions.put("bm", tablename);
+        BaseEntityInf table = this.getEntityByConditions(tabledefined, conditions);
+        // 获得表的所有字段并升序排序
+        conditions = new HashMap<String, Object>();
+        conditions.put("tableNameId", table.get("id"));
+        conditions.put("del_flag", "0");
+        List<BaseEntityInf> fields = this.getEntitiesByConditions("pdagl_tablefield", conditions, new DOrder("xsxh"));
+        return fields;
+    }
+
+    @Override
+    public List<BaseEntityInf> getEntitiesByPaging(String tablename, Map<String, Object> conditions, String othersql,
+            Integer startRecord, Integer pageSize) {
+        DEntity entity = this.getTable(tablename).createEntity();
+        List<BaseEntityInf> entities = new ArrayList<BaseEntityInf>();
+        
+        StringBuilder condition = new StringBuilder();
+        int i = 0;
+        for(String key : conditions.keySet()){
+            String fieldname = key;
+            if(i==0){
+                condition.append(fieldname);
+            }else{
+                condition.append(" and ");
+                condition.append(fieldname);
+            }
+            if(conditions.get(fieldname)==null){
+                condition.append(" is null");
+            }else{
+                condition.append(" = ");
+                condition.append(String.format(stringFormat, (String)conditions.get(fieldname))); 
+            }
+            i++;
+        }
+        condition.append(" ");
+        condition.append(othersql);
+        
+        // 设置查询条件
+        List<Map<String, Object>> params = generalDao.getObjectList(String.format(SELECTPAGING, entity.getTable(),condition.toString() ,startRecord+pageSize,startRecord),
+                                         0, -1, new Object[]{});
+        for(Map<String, Object> param : params){
+            entity = this.getTable(tablename).createEntity();
+            entity.setVals(param);
+            entities.add(entity);
+        }
+        return entities;
+    }
+
+}

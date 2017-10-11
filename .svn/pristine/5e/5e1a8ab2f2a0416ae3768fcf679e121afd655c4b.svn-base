@@ -1,0 +1,91 @@
+package cn.proem.suw.web.docu.service.impl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.core.dao.GeneralDao;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.util.StringUtil;
+import cn.proem.suw.web.docu.entity.DocuAttachment;
+import cn.proem.suw.web.docu.entity.DocuDetail;
+import cn.proem.suw.web.docu.entity.Info_Docu_Detail;
+import cn.proem.suw.web.docu.service.DocuService;
+
+@Service
+public class DocuServiceImpl implements DocuService {
+
+	@Autowired
+	private GeneralDao generalDao;
+	
+	@Override
+	@Transactional
+	@LogService(description = "管养系统档案的保存或修改")
+	public void importDocu(DocuDetail docuDetail) throws ServiceException {
+		Info_Docu_Detail info = new Info_Docu_Detail();
+		if (StringUtil.isEmpty(docuDetail.getId())) {
+			throw new ServiceException("ID为空");
+		}
+		if (StringUtil.isEmpty(docuDetail.getGdnd())) {
+			throw new ServiceException("归档年度为空");
+		}
+		if (StringUtil.isEmpty(docuDetail.getTm())) {
+			throw new ServiceException("题名为空");
+		}
+		if (StringUtil.isEmpty(docuDetail.getCwrq())) {
+			throw new ServiceException("成文日期为空");
+		}
+		if (StringUtil.isEmpty(docuDetail.getZrz())) {
+			throw new ServiceException("责任者为空");
+		}
+		if (StringUtil.isEmpty(docuDetail.getXgjg())) {
+			throw new ServiceException("相关部门为空");
+		}
+		if (StringUtil.isEmpty(docuDetail.getXbjg())) {
+			throw new ServiceException("业务档案类型为空");
+		}
+		info.toInfo(docuDetail);
+		if (generalDao.findById(docuDetail.getId(), DocuDetail.class) != null) {
+			if(docuDetail.getDelFlag() == 1){
+				docuDetail.setDelFlag(0);//保证有被逻辑删除后同id文档再次上传可以查得到
+			}
+			
+			generalDao.update(docuDetail);
+			generalDao.update(info);
+		} else {
+			generalDao.save(docuDetail);
+			generalDao.update(info);
+		}
+	}
+
+	@Override
+	@Transactional
+	@LogService(description = "管养系统附件的保存或修改")
+	public void importAtta(DocuAttachment docuAttachment) throws ServiceException {
+		if (StringUtil.isEmpty(docuAttachment.getId())) {
+			throw new ServiceException("ID为空");
+		}
+		if (StringUtil.isEmpty(docuAttachment.getYsjid())) {
+			throw new ServiceException("目录ID为空");
+		}
+		if (StringUtil.isEmpty(docuAttachment.getFjmc())) {
+			throw new ServiceException("附件名称为空");
+		}
+		if (StringUtil.isEmpty(docuAttachment.getFjnr())) {
+			throw new ServiceException("附件内容为空");
+		}
+		if (StringUtil.isEmpty(docuAttachment.getFjhz())) {
+			throw new ServiceException("附件后缀为空");
+		}
+		if (generalDao.findById(docuAttachment.getId(), DocuAttachment.class) != null) {
+			if(docuAttachment.getDelFlag() == 1){
+				docuAttachment.setDelFlag(0);//保证有被逻辑删除后同id文档再次上传可以查得到
+			}
+			generalDao.update(docuAttachment);
+		} else {
+			generalDao.save(docuAttachment);
+		}
+	}
+
+}

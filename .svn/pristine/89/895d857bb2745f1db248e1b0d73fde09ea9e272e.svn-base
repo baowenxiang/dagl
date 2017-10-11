@@ -1,0 +1,93 @@
+//存储附件的集合
+var transferedFileGrid;
+
+$(function(){
+	
+	initTable();
+	
+	
+});
+
+
+
+function initTable(){
+	transferedFileGrid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/fileTransfered/getTransferedFileList",
+	    ajaxLoad : true,
+	    gridContainer : 'transferedFileControlTable',
+	    toolbarContainer : 'pagingTransferedFileControl',
+	    lang : 'zh-cn',
+	    tools : '',
+	    pageSize : 10,
+	    check : false,
+	    pageSizeLimit : [10,20,50],
+	    columns : [
+					
+						{
+							id:'tm',
+							title : '<b>批量移交标题</b>',
+							type:"string",
+							columnClass:'text-center'
+						},
+						{
+							id:'userId',
+							title : '<b>创建人</b>',
+							type:"string",
+							columnClass:'text-center',
+							resolution:function(value, record, column, grid, dataNo, columnNo){
+								var userName;
+								Util.ajaxJsonSync(
+									Util.getRootPath() + "/w/fileTransfered/getUserById",
+									{
+										userId:value
+									},function(result){
+										if (result.success) {
+											userName = result.data.username;
+										}
+									});
+										return userName;
+							}
+						},
+						{
+							id:'startTime',
+							title : '<b>创建时间</b>',
+							type:"string",
+							columnClass:'text-center',
+							resolution:function(value, record, column, grid, dataNo, columnNo){
+								return value.substring(0,10);
+							}
+						},
+						{
+							id:'endTime',
+							title : '<b>结束时间</b>',
+							type:"string",
+							columnClass:'text-center',
+							resolution:function(value, record, column, grid, dataNo, columnNo){
+								return value.substring(0,10);
+							}
+						},
+						{
+							id:'oldCompany',
+							title : '<b>移交公司</b>',
+							type:"string",
+							columnClass:'text-center',
+						},
+						{
+							id:'newCompany',
+							title : '<b>接收公司</b>',
+							type:"string",
+							columnClass:'text-center',
+						}
+						]
+	});
+	refreshTransferedFileGrid();
+}
+
+function refreshTransferedFileGrid() {
+	transferedFileGrid.parameters = getTransferedFileParameters();
+	transferedFileGrid.load();
+}
+function getTransferedFileParameters() {
+	
+}
+

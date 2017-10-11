@@ -1,0 +1,618 @@
+package cn.proem.dagl.web.eep.controller;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.JAXBElement;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.internal.util.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.core.entity.User;
+import cn.proem.core.entity.UserDepartment;
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.core.ca.PCS;
+import cn.proem.dagl.web.dicManager.entity.DictionaryValue;
+import cn.proem.dagl.web.dicManager.service.DicManagerService;
+import cn.proem.dagl.web.eep.service.EEPService;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.dagl.web.tools.util.CommonFile;
+import cn.proem.eep.entity.AgentEnt;
+import cn.proem.eep.entity.AgentEntBlock;
+import cn.proem.eep.entity.ArchivalNo;
+import cn.proem.eep.entity.BusEnt;
+import cn.proem.eep.entity.BusEntBlock;
+import cn.proem.eep.entity.CertiBlock;
+import cn.proem.eep.entity.ContentDesc;
+import cn.proem.eep.entity.DocData;
+import cn.proem.eep.entity.Document;
+import cn.proem.eep.entity.ElecAttribute;
+import cn.proem.eep.entity.ElecRecdsEncaPkg;
+import cn.proem.eep.entity.ElecSignature;
+import cn.proem.eep.entity.ElecsignatureBlock;
+import cn.proem.eep.entity.EncaContent;
+import cn.proem.eep.entity.Encode;
+import cn.proem.eep.entity.EncodeData;
+import cn.proem.eep.entity.FormalFeature;
+import cn.proem.eep.entity.LockSignature;
+import cn.proem.eep.entity.PrivilegeManagement;
+import cn.proem.eep.entity.RecdData;
+import cn.proem.eep.entity.RecdEntity;
+import cn.proem.eep.entity.RecdEntityBlock;
+import cn.proem.eep.entity.SignedObj;
+import cn.proem.eep.entity.StemFrom;
+import cn.proem.eep.entity.StorageLocation;
+import cn.proem.eep.util.Base64Util;
+import cn.proem.eep.util.EEPUtil;
+import cn.proem.eep.util.JaxbUtil;
+import cn.proem.suw.web.common.constant.Path;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.util.ConfigReader;
+import cn.proem.suw.web.common.util.StringUtil;
+
+@Controller
+@RequestMapping(value = "/w/example/eep")
+public class EEPController extends BaseCtrlModel{
+    
+    @Autowired
+    private EEPService eepservice;
+    
+    @RequestMapping(value = "/start/{tablename}")
+    public ModelAndView starteep(HttpServletRequest request, @PathVariable("tablename") String tablename){
+        ModelAndView modelAndView =  new ModelAndView("/web/eep/detail");
+        modelAndView.addObject("tablename", tablename);
+        return modelAndView;
+    }
+      
+    @RequestMapping(value = "/read/{tablename}")
+    public ModelAndView readeep(HttpServletRequest request, @PathVariable("tablename") String tablename){
+        ModelAndView modelAndView =  this.createNormalView("/web/eep/readdetail.vm");
+        modelAndView.addObject("tablename", tablename);
+        return modelAndView;
+    }
+    
+    
+	//上传
+    @RequestMapping(value = "/uploadFile")
+	@ResponseBody
+	public ResultModel<String> uploadFile(HttpServletRequest request,
+			@RequestParam("attachment[]") MultipartFile[] attachments	//映射一个“attachment”请求，文件名包含2进制数据
+			){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		List<String> datas = new ArrayList<String>();
+		
+		
+		if (attachments != null) {						//如果附件不为空
+			for(int i=0;i<attachments.length;i++){		
+				MultipartFile atta = attachments[i];	
+				if (!atta.isEmpty() && (atta != null && !"".equals(atta.getOriginalFilename()))) {
+					String extName = atta.getOriginalFilename().substring(		//把原始文件名赋值到extName 字符串上
+							atta.getOriginalFilename().lastIndexOf("."));		// 获得后缀
+//					String fileType = atta.getOriginalFilename().substring(		//把原始文件名赋值到
+//							atta.getOriginalFilename().lastIndexOf(".")+1);		// 获得后缀
+					String filePath = UUID.randomUUID().toString() + extName;	//UUID生成唯一数字。	
+//					String fileName = atta.getOriginalFilename();
+					
+					
+					SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");	//日期-时间格式化
+					
+					String path = simpleDateFormat.format(new Date());		
+					datas.add(path); 					// 服务器地址
+					datas.add(filePath); 				// 文件名
+					String realpath = this.getFilePath() + Path.UPLOAD_EEP_PATH + path +"/" + filePath;	// 地址：文件资源路径+上传路径+日期+UUID数字文件名
+					File fileTo = new File(realpath);	//文件赋值到fileTO
+					if (!fileTo.exists()) {				//如果文件目录不存在
+						fileTo.mkdirs();  				//那么创建一个目录
+					}
+					try {	
+						atta.transferTo(fileTo);		//将上传文件写入到制定文件夹	
+					} catch (IllegalStateException | IOException e) {	//
+						e.printStackTrace();			//当try语句中出现异常时，会执行catch中的语句并打印错误信息的位置和原因。e为引用对象名称
+					}
+				}
+			}}
+		
+		resultModel.setDatas(datas);			
+		//解析数据
+		return resultModel;
+	}
+    
+    
+    @SuppressWarnings("unchecked")
+	@RequestMapping(value = "/preview/{path}/{filePath}")
+    @ResponseBody
+    public ModelAndView previeweep(HttpServletRequest request, @PathVariable("path") String path,  @PathVariable("filePath") String filePath){
+        ModelAndView modelAndView = new ModelAndView("/web/eep/preview");
+        //String realpath = "realpath";
+        // 封装包格式描述
+        String fzbgems = "fzbgems";
+        // 版本
+        String bb = "bb";
+        //分装包类型
+        String fzblx = "fzblx";
+        //封装包创建时间
+        String fzbcjsj = "fzbcjsj";
+        //封装包创建单位
+        String fzbcjdw = "fzbcjdw";
+        //档案馆代码
+        String dagdm = "dagdm";
+        //全宗名称
+        String qzmc = "qzmc";
+        //电子文件号
+        String dzwjh = "dzwjh";
+        //全宗号
+        String qzh = "qzh";
+        //目录号
+        String mlh = "mlh";
+        //年度
+        XMLGregorianCalendar nd;
+        //保管期限
+        String bgqx = "bgqx";
+        //机构或问题
+        String jghwt = "jghwt";
+        //类别号
+        String lbh = "lbh";
+        //事编案卷号
+        String sbajh = "sbajh";
+        //馆编卷号
+        String gbajh = "gbajh";
+        //事编件号
+        BigInteger sbjh;
+        //馆编件号
+        BigInteger gbjh;
+        //页号
+        String yh = "yh";
+        //题名
+        String tm = "tm";
+        //责任者
+        String zrz = "zrz";
+        //文件编号
+        String wjbh = "wjbh";
+        //日期
+        String rq = "rq";
+        //密级
+        String mj = "mj";
+        //页数
+        String ys = "ys";
+        //控制标识
+        String kzbs = "kzbs";
+        //语种
+        String yz = "yz";
+        //稿本
+        String gb = "gb";
+        //关键词
+        String gjc = "gjc";
+        //流水号
+        String lsh = "lsh";
+        //拟稿人
+        String ngr = "ngr";
+        //文件组合类型
+        String wjzhlx = "wjzhlx";
+        
+        String realpath = this.getFilePath() + Path.UPLOAD_EEP_PATH + path +"/" + filePath + ".eep";		//前台页面中转的地址
+        File file = new File(realpath);		//得到前台页面中转的地址
+		BufferedReader reader = null;		//缓冲字符输入流
+		StringBuilder xml = null;			//字符串变量
+		try {
+			reader = new BufferedReader(new FileReader(file));
+			xml = new StringBuilder();		
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+	           xml.append(line);			//连接一个字符串到末尾
+	        }
+			ElecRecdsEncaPkg pkg = JaxbUtil.converyToJavaBean(xml.toString(), ElecRecdsEncaPkg.class);
+			pkg.getVersion();
+			pkg.getSignedObj();
+			
+			JAXBElement<String> fond = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(1);
+			qzh = fond.getValue();
+			
+			JAXBElement<String> directory = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(3);
+			mlh = directory.getValue();  //kong
+			
+			JAXBElement<XMLGregorianCalendar> year = (JAXBElement<XMLGregorianCalendar>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(5);
+			nd = year.getValue();    //xmlKONG
+			
+			JAXBElement<String> storagePeriod = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(7);
+			bgqx = storagePeriod.getValue(); //kong
+			
+			JAXBElement<String> institutions = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(9);
+			jghwt = institutions.getValue();	//赋值为空  xml
+			
+			JAXBElement<String> classNO = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(11);
+			lbh = classNO.getValue();
+			
+			JAXBElement<String> roomCase = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(13);
+			sbajh = roomCase.getValue();
+			
+			JAXBElement<String> tubeCase = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(15);
+			gbajh = tubeCase.getValue(); // kong
+			
+			JAXBElement<BigInteger> room = (JAXBElement<BigInteger>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(17);
+			sbjh = room.getValue();	//KONG	
+			
+			JAXBElement<BigInteger> tube = (JAXBElement<BigInteger>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(19);
+			gbjh = tube.getValue();	//KONG
+			
+			JAXBElement<String> page = (JAXBElement<String>) pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getArchivalNo().getContent().get(21);
+			yh = page.getValue();
+	
+			
+			//ElecRecdsEncaPkg pkg = JaxbUtil.converyToJavaBean("", ElecRecdsEncaPkg.class);
+	        modelAndView.addObject("fzbgems", pkg.getEncaPkgFormatDesc());
+	        modelAndView.addObject("bb", pkg.getVersion().toString());		
+	        modelAndView.addObject("fzblx", pkg.getSignedObj().getEncaPkgType());				//SignedObj
+	        modelAndView.addObject("fzbcjsj", pkg.getSignedObj().getEncaPkgCreateTime());		//SignedObj
+	        modelAndView.addObject("fzbcjdw", pkg.getSignedObj().getEncaPkgCreator());			//SignedObj
+	        modelAndView.addObject("dagdm", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getStemFrom().getArchiveCode());		//来源:被签名对象，封装内容，文件实体块，文件实体 
+	        modelAndView.addObject("qzmc", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getStemFrom().getFondName());			//来源
+	        modelAndView.addObject("dzwjh", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getElecDocNo());						//文件实体
+	        modelAndView.addObject("qzh", qzh);				//档号
+	        modelAndView.addObject("mlh", mlh);				//档号
+	        modelAndView.addObject("nd", nd);				//档号
+	        modelAndView.addObject("bgqx", bgqx);			//档号
+	        modelAndView.addObject("jghwt", jghwt);			//档号
+	        modelAndView.addObject("lbh", lbh);				//档号
+	        modelAndView.addObject("sbajh", sbajh);			//档号
+	        modelAndView.addObject("gbajh", gbajh);			//档号
+	        modelAndView.addObject("sbjh", sbjh);			//档号
+	        modelAndView.addObject("gbjh", gbjh);			//档号
+	        modelAndView.addObject("yh", yh);				//档号
+	        modelAndView.addObject("tm", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getContentDesc().getTitle());				//内容描述
+	        modelAndView.addObject("zrz", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getContentDesc().getResponsePeople());	//内容描述
+	        modelAndView.addObject("wjbh", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getContentDesc().getFileNo());			//内容描述
+	        modelAndView.addObject("rq", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getContentDesc().getDateE());				//内容描述
+	        modelAndView.addObject("mj", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getContentDesc().getDense());				//内容描述
+	        modelAndView.addObject("ys", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getFormalFeature().getPageNum());			//形式特征
+	        modelAndView.addObject("kzbs", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getPrivilegeManagement().getControlId());				//权限管理
+	        modelAndView.addObject("yz", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getFormalFeature().getLang());			//形式特征
+	        modelAndView.addObject("gb", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getFormalFeature().getManuscript());		//形式特征
+	        modelAndView.addObject("gjc", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getContentDesc().getKeyWord());			//内容描述
+	        modelAndView.addObject("wjbh", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getContentDesc().getFileNo());			//内容描述
+	        modelAndView.addObject("lsh", lsh);			//无
+	        modelAndView.addObject("ngr", ngr);			//无
+	        modelAndView.addObject("wjzhlx", pkg.getSignedObj().getEncaContent().getRecdEntityBlock().getRecdEntity().getFormalFeature().getRecdGroupType());//形式特征
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+        
+        
+        
+        return modelAndView;
+    }
+    
+
+    
+
+	
+    
+    @RequestMapping(value = "/doeep")
+    @ResponseBody
+    public ResultModel<CommonFile> doeep(HttpServletRequest request){
+        String tablename = request.getParameter("tablename");
+        String[] uuids = request.getParameterValues("uuids[]");
+        String sign = request.getParameter("sign");
+    	// 立档单位
+        String lddw = eepservice.getProp("lddw");
+        if(lddw == null) lddw = "立档单位-无";
+        
+        // 档号相关
+    	// 全宗号
+    	String qzh = "全宗号-无";
+    	// 目录号
+    	String mlh = "目录号-无";
+    	// 年度
+    	String nd = "2017";
+    	// 保管期限
+    	String bgqx = "保管期限-无";
+    	// 机构或问题
+    	String jghwt = "机构或问题-无";
+    	// 类别号
+    	String lbh = "类别号-无";
+    	// 室编案件号
+    	String sbajh = "室案件编号-无";
+    	// 馆编案件号
+    	String gbajh = "管案件编号-无";
+    	// 室编件号
+        String sbjh = "0";
+    	// 馆编件号
+    	String gbjh = "0";
+    	// 页号
+    	String yh = "页号-无";
+    	
+    	// 题名
+    	String tm = "题名-无";
+    	// 责任者
+    	String zrz = "责任者-无";
+    	// 日期
+    	String rq = "日期-无";
+    	// 密级
+    	String mj = "密级-无";
+    	
+    	// 文件组合类型
+    	String wjzhlx = "文件组合类型-无";
+    	
+    	// 载体数组
+    	String zt[] = {"载体1", "载体2"};
+    	
+    	// 知识产权说明
+    	String zscqsm = "知识产权说明-无";
+    	// 授权对象
+    	String sqdx = "授权对象-无";
+    	// 授权行为
+    	String sqxw = "授权行为-无";
+    	// 控制标识
+    	String kzbs = "授权行为-无";
+    	
+    	// 文档标识符
+        String wdbsf = "文档标识符-无";
+        // 组从文档声明
+        String zcwdsm = "文档组从说明-无";
+        // 文档序号
+        String wdxh = "0";
+        // 电子文件号
+        String elecDocNo = "电子文件号-无";
+        String jhcc = "聚合层次-无";
+        ResultModel<CommonFile> resultModel = new ResultModel<CommonFile>();
+        List<CommonFile> commonFiles = new ArrayList<CommonFile>();
+	    try{
+	        
+	        for(int idx=0; idx < uuids.length; idx++){
+	            System.out.println("档案标识: " + uuids[idx]);
+	            BaseEntityInf archive = null;
+	            try {
+                    archive = this.eepservice.getArchiveDetail(tablename, uuids[idx]);
+                    // 全宗号
+                    if(archive.get("qzh") != null) qzh = archive.get("qzh");
+                    // 目录号
+                    if(archive.get("mlh") != null) mlh = archive.get("mlh");
+                    // 年度
+                    if(archive.get("ndh") != null) nd = archive.get("ndh");
+                    // 保管期限
+                    if(archive.get("bgqx") != null) bgqx = archive.get("bgqx");
+                    // 机构或问题
+                    if(archive.get("jghwt") != null) jghwt = archive.get("jghwt");
+                    // 类别
+                    if(archive.get("dalbdm") != null) lbh = archive.get("dalbdm");
+                    // 室编案卷号
+                    if(archive.get("sbajh") != null) sbajh = archive.get("sbajh");
+                    // 馆编案卷号
+                    if(archive.get("gbajh") != null) gbajh = archive.get("gbajh");
+                    // 室编件号
+                    if(archive.get("sbjh") != null) sbjh = archive.get("sbjh");
+                    // 馆编件号
+                    if(archive.get("gjbh") != null) gbjh = archive.get("gjbh");
+                    // 页号
+                    if(archive.get("szyh") != null) yh = archive.get("szyh");
+                    // 题名
+                    if(archive.get("tm") != null) tm = archive.get("tm");
+                    // 责任人
+                    if(archive.get("zrz") != null) zrz = archive.get("zrz");
+                    // 密级
+                    if(archive.get("mj") != null) mj = archive.get("mj");
+                    // 日期
+                    if(archive.get("cwrq") != null) rq = archive.get("cwrq");
+                    // 文档序号
+                    if(archive.get("xh") != null) wdxh = archive.get("xh");
+                    // 文档标识
+                    if(archive.get("wdxh") != null ) wdbsf = "修改0-文档" + wdxh;
+                    // 电子文档号
+                    if(archive.get("dzwdh") != null) elecDocNo = archive.get("dzwdh");
+                } catch (ServiceException e1) {
+                    resultModel.setSuccess(false);
+                    resultModel.setMsg(e1.getMessage());
+                }
+	            // 年度
+	            GregorianCalendar cal = new GregorianCalendar();
+	            cal.set(Integer.parseInt(nd), 1, 1);
+	            XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
+	            Calendar c = Calendar.getInstance();//获取一个日历实例  
+	            c.set(2009, 1, 1);//设定日历的日期  
+	            Date version = c.getTime();
+	            EEPUtil util = new EEPUtil(EEPUtil.PKG_DESC, version);
+
+	            // 立档单位
+	            StemFrom stemFrom = util.createStemFrom(lddw);
+	            
+	            // 档号
+	            ArchivalNo archiveNo = util.createArchivalNo(qzh, mlh, calendar, bgqx, 
+	                                                          jghwt, lbh, sbajh, gbajh, 
+	                                                          new BigInteger(sbjh),new BigInteger(gbjh), yh); 
+	            ContentDesc desc = util.createContentDesc(tm, zrz, rq, mj);
+	            FormalFeature feature = util.createFormalFeature(wjzhlx);
+	            // 存储位置
+	            List<String> carryers = new ArrayList<String>();
+	            for(int i = 0; i < zt.length ; i++){
+	                carryers.add(zt[i]);
+	            }
+	            StorageLocation location = util.createStorageLocation(carryers);
+	            // 权限管理
+	            PrivilegeManagement privilege = util.createPrivilegeManagement(zscqsm, sqdx, sqxw, kzbs);
+	            RecdEntityBlock recdEnt = null;
+	            // 文件数据
+	            // 档案原文获得
+                try {
+                    List<DocData> datas = eepservice.getDocs(util, uuids[idx]);
+                    List<Document> docs = new ArrayList<Document>();
+                    
+                    docs.add(util.createDocument(tm, wdbsf, wdxh, zcwdsm, datas));
+                    RecdData recddata = util.createRecdData(docs);
+                    
+                    RecdEntity record = util.createRecdEntity("单件", stemFrom, elecDocNo, archiveNo, desc, feature, location, privilege, null, null, recddata);
+                    recdEnt = util.createRecdEntityBlock(record);
+                } catch (ServiceException e) {
+                    resultModel.setSuccess(false);
+                    resultModel.setMsg(e.getMessage());
+                }
+	            
+	            List<BusEnt> busents = new ArrayList<BusEnt>();
+	            String ywbsf = "业务标识符-无";
+	            // 机构人员标识符
+	            String jgrybsf = "机构人员标识符-无";
+	            // 文件标识符
+	            String wjbsf = "文件标识符-无";
+	            // 业务状态
+	            String ywzt = "业务状态-无";
+	            // 业务行为
+	            String ywxw = "业务行为-无";
+	            // 行为时间
+	            String xwsj = "行为时间-无";
+	            busents.add(util.createBusEnt(ywbsf, jgrybsf, wjbsf, ywzt, ywxw, xwsj));
+	            BusEntBlock busEnt = util.createBusEntBlock(busents);
+	            
+	            // 机构标识符
+	            String jgbsf = "机构标识符-无";
+	            String jgrymc = "机构人员名称-无";
+	            List<AgentEnt> agents = new ArrayList<AgentEnt>();
+	            agents.add(util.createAgentEnt(jgbsf, jgrymc));
+	            AgentEntBlock agentEnt = util.createAgentEntBlock(agents);
+	            
+	            User user = this.getCurrentUser(request);
+	            // 文件创建者
+	            String wjcjz = user.getUsername();
+	            // 封包内容
+	            EncaContent content = util.createEncaContent(recdEnt, busEnt, agentEnt);
+	            // 签名对象
+	            SignedObj signedobj = util.createSignedObj(new Date(), wjcjz, content);
+	            ElecRecdsEncaPkg pkg = null;
+	            if("0".equals(sign)){
+	                pkg = util.createElecRecdsEncaPkg(signedobj);
+	            }else{
+	                PCS pcs = new PCS(ConfigReader.readCAHost(), ConfigReader.readCAPort());
+	                String keyid = ConfigReader.readCAKeyid();
+	                String password = ConfigReader.readCAPassword();
+	                byte[] cert = pcs.getCertByKeyID(keyid).getBytes();
+	                List<byte[]> certs = new ArrayList<byte[]>();
+                    certs.add(cert);
+                    // 证书块
+                    List<CertiBlock> certblocks = new ArrayList<CertiBlock>();
+                    certblocks.add(util.createCertiBlock(certs));
+                    // 签名标识符
+	                String signid = "修改0-签名1";
+	                String locksignid = signid;
+	                // 签名规则
+	                String rule = "PKCS#1";
+	                String lockrule = "PKCS#1";
+	                // 签名时间
+	                GregorianCalendar signcal = new GregorianCalendar();
+	                signcal.setTime(new Date());
+	                XMLGregorianCalendar time = DatatypeFactory.newInstance().newXMLGregorianCalendar(signcal);
+	                // 签名人
+	                String people = eepservice.getProp("qmr");
+	                // 签名算法标识
+	                String algo = "RSA-SHA1";
+	                // 签名结果
+	                System.out.println(JaxbUtil.convertToxml(signedobj));
+	                String pks1 = pcs.createPKCS1(keyid, password, replaceBlank(signedobj.toString()), "1", "0");
+	                	                List<ElecSignature> elecsignatures = new ArrayList<ElecSignature> ();
+	                ElecSignature elecSignature = util.createElecSignature(signid, rule, time, people, Base64.encode(pks1.getBytes()), certblocks, algo);
+	                elecsignatures.add(elecSignature);
+	                ElecsignatureBlock elecsignatureBlock = util.createElecsignatureBlock(elecsignatures);
+	                System.out.println(JaxbUtil.convertToxml(elecsignatureBlock));
+	                signcal.setTime(new Date());
+                    time = DatatypeFactory.newInstance().newXMLGregorianCalendar(signcal);
+                    String lockpks1 = pcs.createPKCS1(keyid, password, replaceBlank(elecsignatureBlock.toString()), "1", "0");
+	                LockSignature lockSignature = util.createLockSignature(elecSignature, lockrule, time, people, Base64.encode(lockpks1.getBytes()), certblocks, algo);
+	                pkg = util.createElecRecdsEncaPkg(signedobj, elecsignatureBlock, lockSignature);
+	            }
+	            
+	            
+	            String filename = "新文件";
+	            if(archive.get("dh") != null){
+	                filename = archive.get("dh");
+	            }else{
+	                filename = uuids[idx];
+	            }
+	            String eepfile = ConfigReader.readAppHome() + Path.UPLOAD_EEP_PATH + filename + ".eep";
+	            System.out.print("开始输出EEP文件: '" + eepfile +"' ...");
+	            PrintWriter pw = new PrintWriter(eepfile);
+	            System.out.println("输出EEP文件： '" + eepfile + "'完成。");
+	            pw.print(JaxbUtil.convertToxml(pkg));
+	            pw.close();
+	            
+	            CommonFile commonFile = new CommonFile();
+	            commonFile.setRealpath(ConfigReader.readAppHome() + Path.UPLOAD_EEP_PATH);
+	            commonFile.setFilename(filename + ".eep");
+	            commonFiles.add(commonFile);
+	        }
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+		}
+	    
+	    resultModel.setSuccess(true);
+	    resultModel.setDatas(commonFiles);
+	    
+		return resultModel;
+    }
+    
+    @RequestMapping("/download")
+    public ResponseEntity<byte[]> download(HttpServletRequest request, String filename) throws IOException {
+        String path=ConfigReader.readAppHome() + Path.UPLOAD_EEP_PATH;  
+        File file=new File(path + filename);  
+        HttpHeaders headers = new HttpHeaders();    
+        String fileName=new String(filename.getBytes("UTF-8"),"iso-8859-1");//为了解决中文名称乱码问题  
+        headers.setContentDispositionFormData("attachment", fileName);   
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);   
+        return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file),    
+                                          headers, HttpStatus.CREATED);
+    }
+    
+    private static String replaceBlank(String str) {
+        String dest = "";
+        if (str!=null) {
+            Pattern p = Pattern.compile("\\s*|\t|\r|\n");
+            Matcher m = p.matcher(str);
+            dest = m.replaceAll("");
+        }
+        return dest;
+    }
+}

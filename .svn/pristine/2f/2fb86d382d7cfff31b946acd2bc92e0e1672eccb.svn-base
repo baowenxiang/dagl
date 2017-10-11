@@ -1,0 +1,36 @@
+<div class="btn-group">
+    <button type="button" class="btn btn-default btn-sm downloadTemplet btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-template"></use>
+        </svg>
+        <b hidden>下载模板</b>&nbsp;
+    </button>
+    <button type="button" class="btn btn-default btn-sm importTemplet btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-upload"></use>
+        </svg>
+        <b hidden>导入</b>&nbsp;
+    </button>
+</div>
+<div class="btn-group">
+	 <button type="button" class="btn btn-default btn-sm addRecord btn-icon">
+         <svg class="icon" aria-hidden="true">
+             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+         </svg>
+         <b hidden>增加</b>&nbsp;
+    </button>
+	<button type="button" class="btn btn-default btn-sm dataCollecting btn-icon">
+        <svg class="icon" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-privacy"></use>
+        </svg>
+        <b hidden>资料整理</b>&nbsp;
+</div>
+
+
+
+
+<script src="${rc.contextPath}/resources/js/web/zlzl/zlsj/button.js"></script>
+
+
+	
+

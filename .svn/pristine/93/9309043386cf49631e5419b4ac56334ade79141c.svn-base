@@ -1,0 +1,45 @@
+<section class="content">
+    <div class="box box-default">
+      <div class="box-body">
+		<div class="btn-group">
+			 <button type="button" class="btn btn-default btn-sm addImportCenter btn-icon">
+                 <svg class="icon" aria-hidden="true">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+                 </svg>
+                 <b hidden>增加记录</b>&nbsp;
+            </button>
+			<button type="button" class="btn btn-default btn-sm import btn-icon">
+                <svg class="icon" aria-hidden="true">
+                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-upload"></use>
+                </svg>
+                <b hidden>导入</b>&nbsp;
+            </button>
+        </div>
+        ##列表
+    	<div id="tableImportDiv" class="dt-grid-container"></div>
+    	##分页栏
+    	<div id="pagingImportDiv" class="dt-grid-toolbar-container"></div>
+      </div>
+    </div>
+    ##CSS
+	<link href="${rc.contextPath}/resources/css/web/dataCenter/importCenter.css" rel="stylesheet" />
+    ##Javascript
+    <script src="${rc.contextPath}/resources/js/web/dataCenter/importCenter.js"></script>
+</section>
+
+
+<script >
+	$(function(){
+		$(".btn-icon").on("mouseenter", function(){
+            $this = $(this);
+            $this.find('b').show();
+         });
+         
+         $(".btn-icon").on("mouseleave", function(){
+            $this = $(this);
+            $this.find('b').hide();
+         });
+	});
+</script>
+
+

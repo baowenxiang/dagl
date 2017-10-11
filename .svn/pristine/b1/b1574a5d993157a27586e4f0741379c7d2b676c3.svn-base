@@ -1,0 +1,81 @@
+ ##iframe页面主体
+ <section class="content">
+    ##上传按钮
+    <form class="mailForm form-horizontal" role="form" >
+        <div class="form-group">
+        	<button type="button" class="btn btn-primary add">发送消息</button>
+        </div>
+    </form>
+    
+      	
+    ##消息展示DTgrid
+    <div style="" id="dataCollectContext" >
+    	##查询条件
+    	<div id="conditionDataCollect">
+    	</div>
+    	##列表
+    	<div id="messageTable" class="dt-grid-container"></div>
+    	##分页栏
+    	<div id="pagingMessage" class="dt-grid-toolbar-container"></div>
+    </div>
+    
+	
+	##修改资料收集模态框
+	<div class="modal" id="messageUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog" style="width: 800px;">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1">信息查看</h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+						<input name="messageId" type="hidden"/>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">消息类型</label>
+    				    	<div class="col-sm-7">
+    				        	<input name="type" class="form-control">
+    				    	</div>
+    				    </div>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">发送者</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" name="sendName">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">发送时间</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="sendTime">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">消息内容</label>
+    				    	<div class="col-sm-7">
+    				    		<input type="textarea" class="form-control" name="content">
+    				    	</div>
+    				   </div>
+    				
+                     </form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+                    <button type="button" class="btn btn-primary dataUpdate">保存</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+	
+	##查看资料收集模态框
+	
+</section>     
+        
+##CSS
+<link href="${rc.contextPath}/resources/css/web/zlzl/zlsj/dataCollect.css" rel="stylesheet" />
+	
+##Javascript
+<script src="${rc.contextPath}/resources/js/web/message/message.js"></script>
+

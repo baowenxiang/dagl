@@ -1,0 +1,14 @@
+package cn.proem.dagl.web.fileTransfer.service;
+
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.dagl.web.fileTransfer.entity.TransferRecorder;
+import cn.proem.suw.web.common.exception.ServiceException;
+
+public interface FileTransferService {
+	
+	public void save(TransferRecorder transferRecorder) throws ServiceException;
+	
+	public DataGrid<TransferRecorder> getTransferedFileDataGrid(QueryBuilder queryBuilder, int nowPage, int pageSize);
+
+}

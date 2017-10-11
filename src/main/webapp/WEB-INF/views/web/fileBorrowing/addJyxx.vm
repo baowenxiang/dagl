@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- layer -->
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/fileBorrowing/detail.css" rel="stylesheet">	
+	<link href="${rc.contextPath}/resources/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<span class="attention">注：红色*为必填项</span>
+<div id="daglapp" class="site-text site-block">
+	##资料id
+    <form class="layui-form">
+		<div class="layui-form-item">
+            <label class="layui-form-label">题名</label>
+            <div class="layui-input-block">
+              <input type="text" name="tm"   class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label"><span class="notNull"> * </span>档号</label>
+            <div class="layui-input-block">
+              <input type="text" name="dh" lay-verify="required"  class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label">文号</label>
+            <div class="layui-input-block">
+              <input type="text" name="wh" class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label">份号</label>
+            <div class="layui-input-block">
+              <input type="text" name="fh" lay-verify="number"  class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label"><span class="notNull"> * </span>借阅目的</label>
+            <div class="layui-input-block">
+              <input type="text" name="jymd" lay-verify="required"  class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label"><span class="notNull"> * </span>借阅人</label>
+            <div class="layui-input-block">
+              <input type="text" name="jyr" lay-verify="required" class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label"><span class="notNull"> * </span>经办人</label>
+            <div class="layui-input-block">
+              <input type="text" name="jbr" lay-verify="required" class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label">批准人</label>
+            <div class="layui-input-block">
+              <input type="text" name="pzr" class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label">机构名称</label>
+            <div class="layui-input-block">
+              <input type="text" name="jgmc" class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label">全文标识</label>
+            <div class="layui-input-block">
+              <input type="text" name="qwbs" class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label"><span class="notNull"> * </span>借阅时间</label>
+            <div class="layui-input-block">
+              <input type="text" name="jysj" lay-verify="date" onclick="layui.laydate({elem: this, istime: true, format: 'YYYY-MM-DD'})"  class="layui-input">
+            </div>
+          </div>
+		<div class="layui-form-item">
+            <label class="layui-form-label"><span class="notNull"> * </span>拟归还时间</label>
+            <div class="layui-input-block">
+              <input type="text" name="nghsj" lay-verify="date" onclick="layui.laydate({elem: this, istime: true, format: 'YYYY-MM-DD'})"  class="layui-input">
+            </div>
+          </div>
+		
+		
+		<div class="layui-form-item yw">
+			<div class="layui-input-block">
+				<button class="layui-btn layui-btn-default" lay-submit lay-filter="save">保存</button>
+				<a class="layui-btn layui-btn-primary closeup" >关闭</a>
+			</div>
+		</div>
+    </form>
+</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/fileBorrowing/addJyxx.js"></script>
+</html>
+	

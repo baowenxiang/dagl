@@ -1,0 +1,156 @@
+<section class="content">
+    <div class="box box-default">
+        <div class="box-body">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default btn-sm addGrid btn-icon">
+                     <svg class="icon" aria-hidden="true">
+                         <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-add_database"></use>
+                     </svg>
+                     <b hidden>增加</b>&nbsp;
+                </button>
+                <button type="button" class="btn btn-default btn-sm btn-icon batchdelete">
+                    <svg class="icon" aria-hidden="true">
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-delete_database"></use>
+                    </svg>
+                    <b hidden>删除</b>&nbsp;
+                </button>
+            </div>
+            ##列表
+            <div id="tableDataCollect_schedule" class="dt-grid-container"></div>
+            ##分页栏
+            <div id="pagingDataCollect_schedule" class="dt-grid-toolbar-container"></div>
+        </div>
+    </div>
+    <script>
+     var schedule_column = [
+            {id:'TASKNAME', title:'任务名', type:'string', columnClass:'text-center'},
+            {id:'EXECUTETIME', title:'任务执行时间', type:'string', columnClass:'text-center'},
+            {id:'URL', title:'任务调用地址', type:'string', columnClass:'text-center'},
+            {id:'STATE', title:'状态', type:'string', columnClass:'text-center'},
+            {id:'operation', title:'操作', type:'string', columnClass:'text-center', resolution:function(value, record, column, grid, dataNo, columnNo){
+                var content = '';
+                content += '<button class="btn btn-xs btn-default edit" onclick="edit(\''+record.ID+'\');"><i class="fa fa-edit"></i>  编辑</button>';
+                content += '  ';
+                content += '<button class="btn btn-xs btn-danger del" onclick="del(\''+record.ID+'\');"><i class="fa fa-trash-o"></i>  删除</button>';
+                return content;
+            }}
+            
+        ];
+     var schedule_options= {
+          lang : 'zh-cn',
+          ajaxLoad : true,
+          loadURL : '/dagl/w/schedule/tasks',
+          exportFileName : '定时任务',
+          columns : schedule_column,
+          gridContainer : 'tableDataCollect_schedule',
+          toolbarContainer : 'pagingDataCollect_schedule',
+          check: true,
+          tools : '',
+          pageSize : 10,
+          pageSizeLimit : [10, 20, 50]
+      };
+      var schedule = $.fn.DtGrid.init(schedule_options);
+      $("button.btn-icon").on("mouseenter", function(){
+         $this = $(this);
+         $this.find('b').show();
+      });
+      
+      $("button.btn-icon").on("mouseleave", function(){
+         $this = $(this);
+         $this.find('b').hide();
+      });
+      
+      
+        
+      $("button.batchdelete").on("click",function(){
+          var tasks = schedule.getCheckedRecords();
+          if(tasks.length==0){
+              parent.layer.alert("请选择对象项目", {skin: 'layui-layer-lan',closeBtn: 0});
+              return;
+          }
+          task = new Array();
+          for(var i=0; i<tasks.length; i++){
+             var temp = {};
+             temp['uuid'] = tasks[i].ID;
+             temp['state'] = tasks[i].STATE;
+             temp['url'] = tasks[i].URL;
+             temp['taskname'] = tasks[i].TASKNAME;
+             temp['tasktime'] = tasks[i].EXECUTETIME;
+             task.push(temp);
+          }
+          $.ajax({
+              type: "POST",
+              contentType: "application/json",
+              url: "/dagl/w/schedule/del/tasks",
+              data: JSON.stringify(task),
+              dataType:'json',
+              success:function(result){
+                      parent.layer.msg("删除成功",{time: 2000});
+                      schedule.reload(true);
+              },
+              error: function(result){
+                      parent.layer.msg("删除失败",{time: 2000});
+              },
+          
+          });
+    
+        });
+    
+        //点击增加记录
+        $('button.addGrid').on("click",function(){
+            var options = {
+              type: 2,
+              title: "任务编辑",
+              area: ['500px', '390px'],
+              fixed: false, //不固定
+              content: "/dagl/w/schedule/task/edit",
+              end:function(){
+                schedule.reload(true);
+              },
+            }
+            parent.layer.open(options);
+        });
+        
+      function edit(dataid){
+        var options = {
+              type: 2,
+              title: "任务编辑",
+              area: ['500px', '390px'],
+              fixed: false, //不固定
+              content: "/dagl/w/schedule/task/edit?id=" + dataid,
+              end:function(){
+                schedule.reload(true);
+              },
+            }
+            parent.layer.open(options);
+      }
+      
+      function del(dataid){
+        var task = [];
+        temp = {};
+        temp.uuid = dataid;
+        task.push(temp);
+        parent.layer.confirm('确认删除？',function(index){
+            $.ajax({
+              type: "POST",
+              contentType: "application/json",
+              url: "/dagl/w/schedule/del/tasks",
+              data: JSON.stringify(task),
+              dataType:'json',
+              success:function(result){
+                      parent.layer.msg("删除成功",{time: 2000});
+                      schedule.reload(true);
+              },
+              error: function(result){
+                      parent.layer.msg("删除失败",{time: 2000});
+              },
+          
+          });
+            parent.layer.close(index);
+        });
+      }
+      $(function(){
+          schedule.load();
+      });
+    </script>
+</section>

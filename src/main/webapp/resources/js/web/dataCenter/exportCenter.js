@@ -1,0 +1,22 @@
+$(function(){
+	/*$(".btn-icon").on("mouseenter", function(){
+        $this = $(this);
+        $this.find('b').show();
+     });
+     
+     $(".btn-icon").on("mouseleave", function(){
+        $this = $(this);
+        $this.find('b').hide();
+     });*/
+	$("button b").show();
+	
+	
+	
+	$("button.export").on("click",function(){
+		var tablename = $.trim($("#tablenameSelect option:selected").val());
+		if(Util.checkNull(tablename)){
+			return;
+		}
+		location.href = Util.getRootPath() + "/w/example/tools/exportFileDef/"+tablename+"/"+1;
+	});
+});

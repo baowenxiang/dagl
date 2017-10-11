@@ -1,0 +1,14 @@
+package cn.proem.dagl.web.tj.service;
+
+import java.util.List;
+import java.util.Map;
+
+public interface TJService {
+    List<Map<String, Object>> tjNdhArea(String company);
+    List<Map<String, Object>> tjWjGcl(String company);
+    List<Map<String, Object>> tjAjGcl(String company);
+    
+    List<Map<String, Object>> tjWjGclA(String company);
+    List<Map<String, Object>> tjAjGclA(String company);
+    List<Map<String, Object>> tjNdhAreaA(String company);
+}

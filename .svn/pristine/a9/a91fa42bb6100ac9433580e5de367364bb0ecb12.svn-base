@@ -1,0 +1,88 @@
+$(function(){
+	initMethod();
+	
+	
+	listenSubmit();
+});
+
+function initMethod(){
+	//关闭
+	$(".closeup").on("click",function(){
+		var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+        parent.layer.close(index);
+	});
+	
+}
+
+
+function listenSubmit(){
+	layui.use(['form','jquery','laydate'], function(){
+		var laydate = layui.laydate;
+	    var $ = layui.jquery,
+	    form = layui.form();
+	    
+	    //选择预归档档案uuid集合
+	    var uuids = [];
+		var files = parent.mainIframe.grid.getCheckedRecords();
+		for(var i = 0;i<files.length;i++){
+			uuids.push(files[i].uuid);
+		}
+		
+
+	    //监听提交
+		form.on('submit(update)', function(data){
+			var fields = {};
+			fields['uuids'] = uuids;//修改的uuid数组
+			
+			
+			var flag = false;
+		    var daglfixfields = $('[name^="dagl_fix_"]');//是否修改
+		    
+		    var autofields = new Array();
+		    daglfixfields.each(function(){
+		    	if(data.field[$(this).attr('name')]){//修改按钮是否勾选
+		    		flag = true;
+		    		var fieldname = $($(this).parent().find('[name]')[0]).attr('name');//需要修改的input框name e.g dh
+		    		fields[fieldname] = data.field[fieldname];//自增字段
+		    		
+		    		//自增字段
+		    		var idx = $(this).attr('name').substring(9); //数字
+		    		var autoname = "dagl_auto_" + idx;
+		    		if(data.field[autoname]){
+		    			autofields.push(fieldname);
+		    		}
+		    	}
+		    });
+		    if(!flag){
+		    	layer.alert("请选择一种字段修改！", {skin: 'layui-layer-lan',closeBtn: 0});
+				return false;
+		    }
+		    
+		    fields['autofields'] = autofields; //自增字段集合
+		    var tablename = $.trim($('[name="tablename"]').val());
+			$.ajax({
+		          url:Util.getRootPath()+"/w/example/ygtable/batchModify/"+tablename,
+		          type: "POST",
+		          dataType: "json",
+		          data: fields,
+		          async: false,
+		          success: function(data) {
+		        	  if(data.success){
+			        	  var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+		        		  layer.msg("修改成功");
+		  	              parent.layer.close(index);
+		  	              
+		  	              parent.mainIframe.refreshGrid();
+		        	  }else{
+		        		  layer.alert(data.msg, {  skin: 'layui-layer-lan',closeBtn: 0});
+		        	  }
+		          },
+		          error: function() {
+		             layer.msg("修改请求失败");
+		          }
+			   });	
+			
+			return false;
+		});
+	});
+}

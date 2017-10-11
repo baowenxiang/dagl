@@ -1,0 +1,201 @@
+##logo图片展示区
+<header class="logoPic main-header" style="display:none">
+</header>
+##左侧导航
+<header class="main-header normal">
+
+        ##logo
+        <a href="#" class="logo">
+            <!-- 小像素 -->
+            <span class="logo-mini"><b>档</b></span>
+            <!-- 大像素 -->
+            <span class="logo-lg"><b>档案管理系统</b></span>
+        </a>
+        
+        ##
+        <nav class="navbar navbar-static-top" role="navigation">
+            <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+				<span class="sr-only">Toggle navigation</span>
+            </a>
+            ##消息菜单Navbar Right Menu
+            <div class="navbar-custom-menu">
+                <ul class="nav navbar-nav">
+    				###未读信息
+                    <li class="dropdown messages-menu">
+                        <!-- Menu toggle button -->
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        	<i class="fa fa-envelope-o"></i>
+                            <span class="label label-success"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                        
+       						<li class="header">你有<span></span>条未读信息</li>
+    						<li>
+								<div class="slimScrollDiv">
+    								<ul class="menu">
+    								
+                       			
+                                	</ul>
+                                </div>
+                            <!-- /.menu -->
+                            </li>
+    						<li class="footer"><a href="/dagl/w/message/receiveMessage/initView" target="mainIframe">查看全部信息</a></li>
+                        </ul>
+                    </li><!-- /.messages-menu -->
+    				
+                    <!-- User Account Menu -->
+                    <li class="dropdown user user-menu">
+                        <!-- Menu Toggle Button -->
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        	#if($!{picPath} == "")
+								<img src="${rc.contextPath}/resources/img/user.png" class="user-image" alt="User Image">
+							#else
+								<img src="$!{picPath}" class="user-image" alt="User Image">
+							#end
+							<span class="hidden-xs">$!{userName}</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <!-- The user image in the menu -->
+                            <li class="user-header">
+	                            #if($!{picPath} == "")
+									<img src="${rc.contextPath}/resources/img/user.png" class="img-circle" alt="User Image">
+								#else
+	                            	<img src="$!{picPath}" class="img-circle" alt="User Image">
+								#end
+                                <p>
+									$!{userName}
+                                </p>
+                            </li>
+                            <!-- Menu Footer-->
+                            <li class="user-footer">
+                                <div class="pull-left">
+									<a href="/dagl/w/sysManage/personalInfoView" target="mainIframe" class="btn btn-default btn-flat">我&nbsp;的</a>
+                                </div>
+                                <div class="pull-right logout_btn">
+									<a href="/dagl/w/logout" class="btn btn-default btn-flat">注&nbsp;销</a>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                      <!-- Control Sidebar Toggle Button -->
+                </ul>
+            </div>
+			
+		</nav>
+</header>
+
+	##修改资料收集模态框
+	<div class="modal" id="messageUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" data-show="true">
+        <div class="modal-dialog" style="width: 800px;">
+            <div class="modal-content">
+				##头部
+    			<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel1">信息查看</h4>
+                </div>
+				##正文
+				<div class="modal-body scroll" style="overflow: auto; min-height: 410px; max-height: 410px">
+					<form class="form-horizontal" role="form">
+						<input name="messageId" type="hidden"/>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">消息类型</label>
+    				    	<div class="col-sm-7">
+    				        	<input name="type" class="form-control">
+    				    	</div>
+    				    </div>
+    					<div class="form-group">
+    						<label class="col-sm-3 control-label">发送者</label>
+    				    	<div class="col-sm-7">
+    				    		<input class="form-control" name="sendName">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">发送时间</label>
+    				    	<div class="col-sm-7">
+    						    <input class="form-control"  name="sendTime">
+    				    	</div>
+    				    </div>
+    				    <div class="form-group">
+    						<label class="col-sm-3 control-label">消息内容</label>
+    				    	<div class="col-sm-7">
+    				    		<input type="textarea" class="form-control" name="content">
+    				    	</div>
+    				   </div>
+    				
+                     </form>
+                </div>
+				##尾部
+				<div class="modal-footer">
+                    <button type="button" class="btn btn-primary dataUpdate">保存</button>
+                    <button type="button" class="btn btn-default modalClose" data-dismiss="modal">关闭</button>
+                </div>
+			</div>
+        </div>
+	</div>
+	
+	##查看资料收集模态框
+##JS
+<script src="${rc.contextPath}/resources/js/web/global/header.js"></script>
+<script type="text/javascript">
+	$(function(){
+		
+		initMessage();
+	
+	});
+	//跳转至我的信息
+	function toPersonalInfo() {
+		$(".toPersonalInfo").on("click",function() {
+			window.localtion.href = Util.getRootPath() + "/w/sysManage/personalInfoView";
+		});
+	}
+	function initMessage(){
+		
+		$.ajax({
+			url : Util.getRootPath()+"/w/message/getUnReadMessageList",
+			type:'GET', 
+			dataType:'json',
+			success:function(data,textStatus,jqXHR){
+				if(data){
+					$(".label-success").text(data.length);
+					$("li .header span").text(data.length);
+					$("ul .menu").children().remove();
+					
+					
+					var html = "";
+					for(var i=0;i<data.length;i++){
+						var id = data[i].id;//消息id
+						var date = new Date(data[i].sendTime);
+						var time = date.getFullYear()+"年"+(date.getMonth()+1)+"月"+date.getDate()+"日";//消息的发送时间
+						
+						
+						html += "<li>";
+						html += "	<a href='javascript:readMessage(\"" + id + "\");'>"
+						html += "		<h4>"+data[i].sendUser.name+"<small><i class='fa fa-clock-o'></i>"+time+"</small></h4>";
+						html += "	</a>";
+						html += "</li>";
+					}
+					
+					$("ul .menu").append(html);
+					
+				}
+			}
+		});
+		
+		setTimeout('initMessage()',60000);
+	}
+	
+	function readMessage(data){
+		initMessage();
+		var id = $.trim(data);
+        layer.open({
+            type: 2,
+            title:"查看消息",
+            area: ['500px', '300px'],
+            fixed: false, //不固定
+            maxmin: true,
+            content: Util.getRootPath() + "/w/message/lookReceiveMessageView?id="+id,
+        });
+	
+	}
+	
+</script>

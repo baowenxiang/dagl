@@ -1,0 +1,5 @@
+package cn.proem.dagl.web.oaservice.service;
+
+public interface OagdService {
+	public Integer addOaGdSj(String path,String startDate,String endDate);
+}

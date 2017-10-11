@@ -1,0 +1,229 @@
+package cn.proem.suw.web.common.util;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.Properties;
+
+/**
+ * @ClassName SysConfigReader
+ * @Description 系统配置读取工具类
+ * @author Pan Jilong
+ * @date 2017年2月14日
+ */
+public class ConfigReader {
+	
+	static Properties prop;
+	static InputStreamReader in;
+	
+	static{
+		prop = new Properties();
+		try {
+			in = new InputStreamReader(ConfigReader.class.getResourceAsStream("/config.properties"), "UTF-8");
+			try {
+                prop.load(in);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+		} catch (UnsupportedEncodingException e) {
+		}
+	}
+	
+	public static String readCAHost(){
+	    return prop.getProperty("CA_HOST").trim();
+	}
+	
+	public static String readCAKeyid(){
+	    return prop.getProperty("CA_KEYID").trim();
+	}
+	
+	public static String readCAPassword(){
+	    return prop.getProperty("CA_PWD").trim();
+	}
+	
+	public static int readCAPort(){
+	    return Integer.parseInt(prop.getProperty("CA_PORT").trim());
+	}
+	
+	public static String readAppHome(){
+	    return prop.getProperty("APP_HOME").trim();
+	}
+	
+	public static String readSystemName() {
+		String name = "";
+        try {
+            prop.load(in);
+            name = prop.getProperty("SYSTEM_NAME").trim();   
+        } catch (IOException e) {   
+        }
+        return name;
+	}
+	
+	public static String readInBrowserName() {
+		String name = "";
+        try {
+            prop.load(in);
+            name = prop.getProperty("BROWSER_NAME").trim();   
+        } catch (IOException e) {   
+        }
+        return name;
+	}
+
+	public static String readCorporateName() {
+		String name = "";
+        try {
+            prop.load(in);
+            name = prop.getProperty("CORPORATE_NAME").trim();   
+        } catch (IOException e) {   
+        }
+        return name;
+	}
+	/**
+	 * @MethodName readClassPackagePath
+	 * @Description 读取流程对应的实体类
+	 * @author Pan Jilong
+	 * @date 2017年3月7日
+	 * @param processId
+	 * @return
+	 */
+	public static String readClassPackagePath(String processId) {
+		String id = "";
+        try {
+            prop.load(in);
+            id = prop.getProperty("CLASS_"+processId).trim();   
+        } catch (IOException e) {   
+        }
+        return id;
+	}
+	/**
+	 * @MethodName readProcessFormId
+	 * @Description 读取流程对应的表单id
+	 * @author Pan Jilong
+	 * @date 2017年2月27日
+	 * @return
+	 */
+	public static String readProcessFormId(String processId) {
+		String id = "";
+        try {
+            prop.load(in);
+            id = prop.getProperty("FORM_"+processId).trim();   
+        } catch (IOException e) {   
+        }
+        return id;
+	}
+	/**
+	 * @MethodName readProcessFormPath
+	 * @Description 读取流程对应的表单路径
+	 * @author Pan Jilong
+	 * @date 2017年3月7日
+	 * @param processId
+	 * @return
+	 */
+	public static String readProcessFormPath(String processId) {
+		String id = "";
+        try {
+            prop.load(in);
+            id = prop.getProperty("PAGER_"+processId).trim();   
+        } catch (IOException e) {   
+        }
+        return id;
+	}
+
+	/**
+	 * @MethodName readReferRoleId
+	 * @Description 读取查阅人角色id
+	 * @author Pan Jilong
+	 * @date 2017年3月21日
+	 * @return
+	 */
+	public static String readReferRoleId() {
+		String referRoleId = "";
+        try {
+        	prop.load(in);
+            referRoleId = prop.getProperty("REFER_ROLE_ID").trim();   
+        } catch (IOException e) {   
+        }
+		return referRoleId;
+	}
+	
+	/**
+	 * @MethodName readReferRoleId
+	 * @Description 读取查阅人角色id
+	 * @author Pan Jilong
+	 * @date 2017年3月21日
+	 * @return
+	 */
+	public static String readEmpMngRoleId() {
+		String empmngRoleId = "";
+        try {
+        	prop.load(in);
+            empmngRoleId = prop.getProperty("EMPMNG_ROLE_ID").trim();   
+        } catch (IOException e) {   
+        }
+		return empmngRoleId;
+	}
+	/**
+	 * @MethodName readIP
+	 * @Description 读取ip
+	 * @author chenxiaofen
+	 * @date 2017年5月10日
+	 * @return
+	 */
+	public static String readIP() {
+		String ip = "";
+        try {
+            prop.load(in);
+            ip = prop.getProperty("IP").trim();   
+        } catch (IOException e) {   
+        }
+        return ip;
+	}
+	/**
+	 * @MethodName readUserName
+	 * @Description 读取数据库用户名
+	 * @author chenxiaofen
+	 * @date 2017年5月10日
+	 * @return
+	 */
+	public static String readUserName() {
+		String userName = "";
+        try {
+            prop.load(in);
+            userName = prop.getProperty("JDBC_USERNAME").trim();   
+        } catch (IOException e) {   
+        }
+        return userName;
+	}
+	/**
+	 * @MethodName readPassword
+	 * @Description 读取数据库密码
+	 * @author chenxiaofen
+	 * @date 2017年5月10日
+	 * @return
+	 */
+	public static String readPassword() {
+		String password = "";
+        try {
+            prop.load(in);
+            password = prop.getProperty("JDBC_PASSWORD").trim();   
+        } catch (IOException e) {   
+        }
+        return password;
+	}
+	/**
+	 * @MethodName readDatabaseName
+	 * @Description 读取oracle数据库服务名
+	 * @author chenxiaofen
+	 * @date 2017年5月10日
+	 * @return
+	 */
+	public static String readSeverName() {
+		String databaseName = "";
+        try {
+            prop.load(in);
+            databaseName = prop.getProperty("SEVER_NAME").trim();   
+        } catch (IOException e) {   
+        }
+        return databaseName;
+	}
+}

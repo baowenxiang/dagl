@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>图表</title>
+</head>
+##<link rel="stylesheet" type="text/css" href="bootstrap.css">
+<link rel="stylesheet" type="text/css" href="${rc.contextPath}/resources/css/web/statistics/charts.css">
+
+<body>
+<section class="content">
+ <div class="box box-default">
+   <div class="box-body" id="list">
+    <div id="charts_body">
+        <div class="charts_biaoSel">
+            <label class="control-label">选择类别</label>
+            <select class="form-control dab">
+               #foreach($t in $!{tablename}) 
+					<option value="$t.dvno">$t.dvalue</option>
+			   #end
+            </select>
+            <div class="btn_zu">
+                <button type="button" class="btn btn-primary next" lang="charts_params charts_biaoSel">下一步</button>
+            </div>
+        </div>
+        <div class="charts_params">
+        	<div class="charts_table">
+            
+            </div>
+            <div class="btn_zu">
+                <button type="button" class="btn btn-primary return" lang="charts_biaoSel charts_params">返回上页</button>
+                <button type="button" class="btn btn-primary next" lang="charts_type charts_params">下一步</button>
+            </div>
+        </div>
+        <div class="charts_type">
+            <div class="charts_table"></div>
+            <div class="btn_zu">
+                <button type="button" class="btn btn-primary return" lang="charts_params charts_type">返回上页</button>
+                <button type="button" class="btn btn-success next" lang="charts_tu charts_type">完成</button>
+            </div>
+        </div>
+        <div class="charts_tu col-lg-10 connectedSortable ui-sortable">
+        	<div class="nav-tabs-custom" style="cursor: move;">
+        	  ##选项卡tab
+        	  <ul class="nav nav-tabs pull-left ui-sortable-handle chart_tabs">
+        	  </ul>
+        	  ##选项卡内容
+        	  <div class="tab-content no-padding chart_content"></div>
+        	    <div class="btn_zu">
+                <button type="button" class="btn btn-primary return" lang="charts_type charts_tu">返回上页</button>
+                </div>
+         	</div>  
+        </div>
+    </div></div></div></section>
+</body>
+<script type="text/javascript" src="${rc.contextPath}/resources/plugins/jplayer/lib/jquery.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/resources/plugins/echartsjs/echarts.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/resources/js/web/statistics/bintu.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/resources/js/web/statistics/zhutu.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/resources/js/web/statistics/echarts_util.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/resources/js/web/statistics/charts.js"></script>
+
+</html>

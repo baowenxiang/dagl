@@ -1,0 +1,152 @@
+ var grid;
+ var columns;
+ var id = $('[name="id"]').val();
+var tablename = $('[name="tablename"]').val();
+var relatablename = $('[name="relatablename"]').val();
+var isAdminOrFileAdmin = $('[name="isAdminOrFileAdmin"]').val();
+console.log(isAdminOrFileAdmin);
+$(function(){
+	var index = layer.load(1, {shade: [1,'#FFFFFF']});
+	initColumn();
+	
+	
+    initGrid();
+    
+    initMethod();
+    
+    layer.close(index);
+});
+
+function initColumn(){
+	columns = [
+					{
+						id:'dh',
+						title : '<b>档号</b>',
+						type:"string",
+						columnClass:'text-center text-fixed',
+		       			resolution:function(value, record, column, grid, dataNo, columnNo){
+							return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+						}
+						
+					},
+					{
+						id:'tm',
+						title : '<b>题名</b>',
+						type:"string",
+						columnClass:'text-center text-fixed',
+						resolution:function(value, record, column, grid, dataNo, columnNo){
+							return '<span title="'+value+'" style="cursor: pointer;">'+value+'</span>';
+						}
+					}
+					
+				];
+	if(isAdminOrFileAdmin){
+		columns.push({
+			id:'uuid',
+			title : '<b>挂接原文</b>',
+			type:"string",
+			columnClass:'text-center',
+			resolution:function(value, record, column, grid, dataNo, columnNo){
+				var html = "";
+				Util.ajaxJsonSync(
+						Util.getRootPath()+"/w/example/flow/getYwgjByFileId",
+						{
+							tablename:relatablename,
+							id : value
+						},
+						function(result){
+							if(result.success){
+								
+								var datas = result.datas;
+								if(datas.length>0){
+									for(var i = 0;i<datas.length;i++){
+										var wjlx = datas[i].wjlx;
+										var wjm = datas[i].wjm;
+										if(wjlx == 'pdf'){
+											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/pdf.svg" />';
+										}else if(wjlx == 'doc' || wjlx == 'docx'){
+											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/word.svg" />';
+										}else if(wjlx == 'xlsx' || wjlx == 'xls'){
+											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/excel.svg" />';
+										}else if(wjlx == 'm4a' ){
+											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/音频.svg" />';
+										}else if(wjlx == 'm4p'){
+											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'" src="' + Util.getRootPath() + '/resources/img/icon_16/视频.svg" />';
+										}else{
+											html += '<img dagl-uuid="' + datas[i].id  + '" title="'+wjm+'"  src="' + Util.getRootPath() + '/resources/img/icon_16/文件.svg" />';
+										}
+									}
+								}
+							}
+						}
+				)
+				return html;
+			}
+		});
+	}
+}
+
+
+//表格初始化
+function initGrid(){
+	
+	$("#relativeTableDiv").children().remove();
+	
+	grid=$.fn.DtGrid.init({
+		loadURL : Util.getRootPath() + "/w/example/table/getRelative/"+tablename+"/"+relatablename+"/"+id,
+		ajaxLoad : true,
+        lang : 'zh-cn',
+        exportFileName : '用户列表',
+	    gridContainer : 'relativeTableDiv',
+	    toolbarContainer : 'relativePagingDiv',
+	    check:true,
+	    pageSize : 20,
+	    pageSizeLimit : [20,50,100,300],
+	    tableStyle:'table-layout: fixed;word-break: break-all; word-wrap: break-word;',
+	    tools:'', 
+	    columns : columns
+	});
+     refreshGrid();
+ }
+
+
+function refreshGrid() {
+	grid.parameters = getParameters();
+	grid.load();
+}
+function getParameters() {
+	return{
+	}
+}
+
+
+
+function initMethod(){
+	 //点击预览内容
+    $("#relativeTableDiv").on("click", "img", function(){
+    	var fileid = $(this).attr("dagl-uuid");
+    	var filename = $(this).attr("title");
+    	console.log(filename);
+    	$.ajax({
+            type: "GET",
+            url: Util.getRootPath() + "/w/preview/" + fileid,
+            dataType: 'json',
+            async: false,	
+            success: function(result) {
+            	var option = {};
+            	option.title = filename;
+            	if(result.type == 'flv'){
+            		option.url = Util.getRootPath() + "/w/preview/video/" + filename + "/" + result.cache;
+            		window.parent.showModal(option);
+            	}else{
+            		option.url = result.cache;
+            		window.parent.showModal(option);
+            	}
+            },
+            error:function(XMLHttpRequest, textStatus, errorThrown){
+            	
+            	layer.msg("文件不存在或被删除");
+            },
+    	});
+    });
+}

@@ -1,0 +1,102 @@
+
+##iframe页面主体
+<section class="content">
+    <div class="row" style="margin-bottom:5px;">
+      <div class="col-md-12">
+        <small>类型：&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>
+         <select>
+             <option>档案-文件级</option>
+             <option>档案-案卷集</option>
+             <option>划控</option>
+             <option>借阅</option>
+             <option>鉴定</option>
+           </select>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:5px;">
+      <div class="col-md-12">
+        <small>年份：从&nbsp;</small>
+        <select>
+             <option>1997</option>
+             <option>1998</option>
+             <option>1999</option>
+             <option>2000</option>
+             <option>2001</option>
+           </select>
+        <small>到&nbsp;</small>
+        <select>
+            <option>1997</option>
+             <option>1998</option>
+             <option>1999</option>
+             <option>2000</option>
+             <option>2001</option>
+           </select>
+        &nbsp;&nbsp;
+        <small>门类:&nbsp;</small>
+        <select multiple='multiple' size=1>
+             <option>测试档案文件级</option>
+             <option>基建档案</option>
+             <option>一文一件</option>
+           </select>
+        &nbsp;&nbsp;
+        <small>保管期限:&nbsp;</small>
+        <select multiple='multiple' size=1>
+             <option>10年</option>
+             <option>20年</option>
+             <option>30年</option>
+             <option>永久</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h3>1997~2017年度 档案-文件级 统计</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive" data-pattern="priority-columns">
+                    <table cellspacing="0" id="ledger" class="table table-small-font table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>门类</th>
+                                <th>保管期限</th>
+                                <th>数量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th rowspan=3>基建档案</th>
+                                <td>10年</td>
+                                <td>10</td>
+                            </tr>
+                            <tr>
+                                <td>20年</td>
+                                <td>10</td>
+                            </tr>
+                            <tr>
+                                <td>30年</td>
+                                <td>10</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                        
+                        </tfoot>
+                    </table>
+                </div>
+        </div>
+    </div>
+</section>
+     <script>
+        $(function(){
+            $("form").submit(function(){
+                var keyword = $("#key").val();
+                if($.trim(keyword)==""){
+                    window.location.reload();
+                    return false;
+                }
+            });
+        });
+     </script>
+
+    

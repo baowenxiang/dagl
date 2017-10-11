@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- layer -->
+	<link href="${rc.contextPath}/resources/plugins/layer/css/layui.css" rel="stylesheet">
+	<link href="${rc.contextPath}/resources/css/web/common/exactquery.css" rel="stylesheet">
+</head>
+<body>
+	##案卷的表名
+	<input type="hidden" name="tablename" value="$!{tablename}"/>
+	##文件的表名
+	<input type="hidden" name="relatablename" value="$!{relatablename}"/>
+	##案卷的主键
+	<input type="hidden" name="id" value="$!{id}"/>	
+	##是否是管理员或者是档案管理员
+	<input type="hidden" name="isAdminOrFileAdmin" value="$!{isAdminOrFileAdmin}" />	
+	
+    <div class="site-text site-block">
+    		<div class="scroll next-content-fixed next-fixed-left">
+        		<div style="padding: 2px;overflow: hidden;">
+					<div id="relativeTableDiv" class="datatable"></div>
+					##分页栏
+					<div id="relativePagingDiv" class="dt-grid-toolbar-container"></div>
+				</div>
+			</div>
+			
+	</div>
+</body>
+<script src="${rc.contextPath}/resources/plugins/layer/layui.js" type="text/javascript"></script>
+<script src="${rc.contextPath}/resources/js/web/table/relative.js" type="text/javascript"></script>
+<script >
+	
+</script>
+</html>
+	

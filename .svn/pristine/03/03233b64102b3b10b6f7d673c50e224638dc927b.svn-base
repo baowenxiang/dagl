@@ -1,0 +1,41 @@
+#if($conditions.size() > 0)
+<div>
+
+    <form id="conditions" action="" class="form-inline">
+        #foreach($condition in $!{conditions}) 
+            $condition
+        #end
+        
+        <div class="form-group">
+            <button type="submit" class="btn btn-block btn-default btn-sm">查询</button>
+        </div>
+       
+    </form>
+    <br>
+</div>
+
+
+<script>
+$(function(){
+    $("#conditions").submit(function(event){
+        var $this = $(this);
+        var field = {}; //表单值
+        var fieldElem = $this.find('input,select,textarea'); //获取所有表单域
+        fieldElem.each(function(index, item){
+            if(!item.name) return;
+            if(/^checkbox|radio$/.test(item.type) && !item.checked) return;
+            if($.trim(item.value).length>0){
+                 field[item.name] = item.value;
+            }
+        });
+        var tablename = $('[name="tablename"]').val();
+		
+		grid.parameters = field;
+		grid.load();
+		
+		
+		return false;
+     });
+});
+</script>
+ #end

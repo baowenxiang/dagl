@@ -1,0 +1,4 @@
+package cn.proem.dagl.web.scheduled.service;
+
+public interface ScheduledService {
+}

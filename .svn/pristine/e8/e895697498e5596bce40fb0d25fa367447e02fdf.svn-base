@@ -1,0 +1,96 @@
+package cn.proem.dagl.web.fileControl.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
+import cn.proem.core.model.ConditionType;
+import cn.proem.core.model.DataGrid;
+import cn.proem.core.model.DataGridQuery;
+import cn.proem.core.model.FieldType;
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.core.model.QueryCondition;
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.dicManager.entity.Dictionary;
+import cn.proem.dagl.web.fileControl.entity.FileControl;
+import cn.proem.dagl.web.fileControl.service.FileControlService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+import cn.proem.suw.web.common.service.CommonService;
+
+@Controller
+@RequestMapping("/w/ykfda")
+public class OpenedFileControlController extends BaseCtrlModel {
+	
+	@Autowired
+	private FileControlService fileControlService;
+	@Autowired
+	private CommonService commonService;
+	@Autowired
+	private CustomArchiveService customArchiveService;
+	/**
+	 * 初始化公开档案页面
+	 * @return
+	 */
+	@RequestMapping("/initview")
+	public ModelAndView initFileControlView(){
+		
+		ModelAndView view = this.createNormalView("/web/openedFileControl/openedInitView.vm");
+		
+		return view;
+		
+	}
+	/**
+	 * 获取公开档案列表
+	 */
+	@RequestMapping("/getOpenedFileList")
+	@ResponseBody
+	public String getOpenedFileList(String dtGridPager, HttpServletRequest request){
+		DataGridQuery query = this.parseToQuery(dtGridPager == null ? "" : dtGridPager);
+		QueryBuilder queryBuilder = query.generateQueryBuilder();
+		queryBuilder.addCondition(new QueryCondition("delFlag",Integer.parseInt("0"),ConditionType.EQ,FieldType.INTEGER,null));
+		DataGrid<FileControl> dataGrid = fileControlService.getOpenedFileDataGrid(queryBuilder,query.getNowPage(),query.getPageSize());
+		
+		return JSON.toJSONStringWithDateFormat(dataGrid, "yyyy-MM-dd HH:mm:ss", SerializerFeature.WriteDateUseDateFormat,SerializerFeature.DisableCircularReferenceDetect);
+		
+	}
+	
+	@RequestMapping("/cancelOpenedFile")
+	@ResponseBody
+	public ResultModel<String> cancelOpenedFile(HttpServletRequest requset,
+			@RequestParam(value="ids[]")String[] ids){
+		ResultModel<String> rm = new ResultModel<String>();
+		
+			try {
+				for(String id : ids){
+					FileControl fileControl = commonService.findById(id, FileControl.class);
+					String daid  = fileControl.getDaid();
+					String bm = fileControl.getBm();
+				    fileControlService.deleteOpenedFile(id);
+				    BaseEntityInf entity = customArchiveService.getEntity(bm, daid);
+				    entity.set("hkkz", "3");
+				    customArchiveService.update(entity);
+				}
+			} catch (ServiceException e) {
+				rm.setSuccess(false);
+				rm.setMsg("开放档案撤销失败");
+				e.printStackTrace();
+			}
+		
+		
+		
+		return rm;
+		
+	}
+
+}

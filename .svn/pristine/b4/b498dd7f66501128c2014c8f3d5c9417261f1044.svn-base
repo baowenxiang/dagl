@@ -1,0 +1,55 @@
+package cn.proem.dagl.web.oaservice.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import cn.proem.core.annotation.LogService;
+import cn.proem.dagl.web.oaservice.service.OagdService;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+
+@Controller
+@RequestMapping(value = "/w/OAService")
+//@Component
+public class OAServiceController extends BaseCtrlModel {
+	@Autowired
+	private OagdService oagdService;
+	
+	@RequestMapping(value = "/getOaServiceData")
+	@ResponseBody
+	@LogService(description = "定时获取OA接口数据")
+//	@Scheduled(cron="0 */3 * * * ?")
+//	@Scheduled(cron="0 0 23 * * ?")
+	public void getOaData() {
+		oagdService.addOaGdSj(this.getFilePath(),"","");
+    }
+	@RequestMapping(value = "/getOaDataByDate")
+	@ResponseBody
+	@LogService(description = "根据日期获取OA接口数据")
+	public ResultModel<String> getOaDataByDate(String startDate,String endDate) {
+		ResultModel<String> resultModal = new ResultModel<String>();
+		oagdService.addOaGdSj(this.getFilePath(),startDate,endDate);
+		resultModal.setSuccess(true);
+		return resultModal;
+    }
+	/**
+     * @MethodName OADateChoose
+     * @Description 跳转OA对接起始日期选择页面
+     * @author chenxiaofen
+     * @date 2017年6月2日
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/OADateChoose")
+	public ModelAndView OADateChoose(HttpServletRequest request) {
+		ModelAndView modelAndView = this.createNormalView("/web/document/OAdate.vm");
+		return modelAndView;
+	}
+}

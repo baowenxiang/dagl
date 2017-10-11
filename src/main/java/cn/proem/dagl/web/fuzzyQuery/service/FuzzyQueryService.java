@@ -1,0 +1,28 @@
+package cn.proem.dagl.web.fuzzyQuery.service;
+
+import java.util.List;
+import java.util.Map;
+
+import cn.proem.core.model.QueryBuilder;
+import cn.proem.dagl.web.fuzzyQuery.task.CreateIndexThread;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.suw.web.docu.entity.DocuAttachment;
+
+public interface FuzzyQueryService {
+	
+	public List<Ywgj> getYwgjList(QueryBuilder queryBuilder);
+	
+	public List<DocuAttachment> getDocuAttachmentList(QueryBuilder queryBuilder);
+	
+	public Map<String, String> FileAndArchiveInfo(String fildId);
+	
+	public void collectArchiveInfo();
+
+    Map<String, Object> findRecord(String zlsj);
+    
+    public Long addThread(CreateIndexThread thread);
+    
+    int[] getProcess(Long threadid);
+
+}

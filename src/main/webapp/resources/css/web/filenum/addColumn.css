@@ -1,0 +1,19 @@
+.site-block{
+	padding: 20px;
+}
+.site-text{
+	position: relative;
+}
+/*控制表单单排显示*/
+.layui-form-item {
+	width:100% !important;
+	display:block !important;
+}
+.layui-form .layui-form-label {
+	padding-right:15px;
+	padding-left:15px;
+	width:20%;
+}
+.layui-form .layui-input-block {
+	margin-left: 20%;
+}

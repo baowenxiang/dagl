@@ -1,0 +1,158 @@
+<section class="content">
+	<div class="box box-default">
+		<div class="box-body">
+			##平台名称设置
+			<div class="InnerDiv">
+				##title区域
+	      		<ul class="layui-nav" id="plat">
+			  		<li class="layui-nav-item">
+			  			<p>平台名称设置</p>
+			  			<span class="btns">
+			            	<button type="button" class="btn btn-primary savePlateMsg">提交</button>
+			            </span>
+			  		</li>
+				</ul>
+				##内容区域
+				<div class="plat">
+					<form class="setForm form-horizontal" role="form">
+						<div class="form-group">
+							<label class="col-sm-3 control-label" for="plateName">平台名称</label>
+					    	<div class="col-sm-7">
+					        	<input name="plateName" id="plateName" class="form-control">
+					    	</div>
+					    </div>
+					    <div class="form-group">
+							<label class="col-sm-3 control-label" for="miniName">缩略名</label>
+					    	<div class="col-sm-7">
+					        	<input name="miniName" id="miniName" class="form-control">
+					    	</div>
+					    </div>
+					    ##按钮区域
+						##<div class="form-group">
+							##<label class="col-sm-4 control-label"></label>
+							##<div class="col-sm-2">
+				            	##<button type="button" class="btn btn-primary backup">提交</button>
+				            ##</div>
+				        ##</div>
+					</form>
+				</div>
+			</div>
+			##背景图设置
+			<div class="InnerDiv">
+				##title区域
+	      		<ul class="layui-nav" id="logo">
+			  		<li class="layui-nav-item">
+			  			<p>背景图设置</p>
+			  			#*<span class="btns">
+			            	<button type="button" class="btn btn-primary savePic">提交</button>
+			            </span>*#
+			  		</li>
+				</ul>
+				##内容区域
+				<div class="logo">
+					<form class="picForm form-horizontal" role="form">
+						<div class="form-group">
+				            <label class="col-sm-3 control-label eddit-label">登录页面背景图片</label>
+				            <div class="col-sm-7">
+								<input type="file" name="bgPicFile" id="bgPicFile" style="display: none;">
+								<div id="preview">
+					                <img id="bgPic" src="${rc.contextPath}/resources/img/default_bg.jpg" style="box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1);" onclick="$('#bgPicFile').click();">
+					            </div>
+				            </div>                   
+				            <div class="col-sm-2">
+				            	<button type="button" class="btn btn-primary savePic">确定</button>
+				            </div>
+						</div>
+						<div class="form-group">
+				            <label class="col-sm-3 control-label eddit-label">首页Header图片</label>
+				            <div class="col-sm-7">
+								<input type="file" name="headerPicFile" id="headerPicFile" style="display: none;">
+								<div id="preview">
+					                <img id="imghead" src="${rc.contextPath}/resources/img/click2.png" style="box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1);" onclick="$('#headerPicFile').click();">
+					            </div>
+				            </div>                   
+				            <div class="col-sm-2">
+				            	<button type="button" class="btn btn-primary saveHeadPic">确定</button>
+				            </div>
+						</div>
+					</form>
+				</div>
+			</div>
+			##皮肤设置区域
+			<div class="InnerDiv">
+	      		##title区域
+	      		<ul class="layui-nav" id="skin">
+			  		<li class="layui-nav-item"><p>皮肤选择</p></li>
+				</ul>
+				
+				##皮肤色块区域
+				<div class="skin">
+					<div class="site-demo-util">
+						<input class="hidden" id="skinClass" data-class="skin-blue-light" data-id=""/>
+						<div class="singleDiv">
+					  		<div class="colorDiv blue" id='skin-blue-light'>
+					  			<p class="selectIcon hideSelectIcon glyphicon glyphicon-ok" style="display:none"></p>
+					  		</div>
+					  		<div class="contentDiv">
+					  			<p>默认</p>
+					  		</div>
+					  	</div>
+					  	#*<div class="singleDiv">
+					  		<div class="colorDiv black" id='skin-black-light'>
+					  			<p class="selectIcon hideSelectIcon glyphicon glyphicon-ok" style="display:none"></p>
+					  		</div>
+					  		<div class="contentDiv">
+					  			<p>睿智商务</p>
+					  		</div>
+					  	</div>*#
+					  	<div class="singleDiv">
+					  		<div class="colorDiv yellow" id='skin-yellow-light'>
+					  			<p class="selectIcon hideSelectIcon glyphicon glyphicon-ok" style="display:none"></p>
+					  		</div>
+					  		<div class="contentDiv">
+					  			<p>向阳花</p>
+					  		</div>
+					  	</div>
+					  	<div class="singleDiv">
+					  		<div class="colorDiv purple" id='skin-purple-light'>
+					  			<p class="selectIcon hideSelectIcon glyphicon glyphicon-ok" style="display:none"></p>
+					  		</div>
+					  		<div class="contentDiv">
+					  			<p>紫</p>
+					  		</div>
+					  	</div>
+					  	<div class="singleDiv">
+					  		<div class="colorDiv red" id='skin-red-light'>
+					  			<p class="selectIcon hideSelectIcon glyphicon glyphicon-ok" style="display:none"></p>
+					  		</div>
+					  		<div class="contentDiv">
+					  			<p>红颜</p>
+					  		</div>
+					  	</div>
+					  	##暂时取消
+					  	#*
+					  	<form class="skinForm form-horizontal" role="form" style="display:none">
+							<div class="form-group">
+					            <label class="col-sm-3 control-label eddit-label">皮肤图片</label>
+					            <div class="col-sm-7">
+									<input type="file" name="skinPicFile" id="skinPicFile" style="display: none;">
+									<div id="preview">
+						                <img id="skinPic" src="${rc.contextPath}/resources/img/click.png" style="box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1);" onclick="$('#skinPicFile').click();">
+						            </div>
+					            </div>
+					            <div class="col-sm-2">
+					            	<button type="button" class="btn btn-primary skinPicBtn">确定</button>
+					            </div>              
+							</div>
+						</form>
+						*#
+					</div> 
+				</div>
+			</div>
+      	</div>
+    </div>
+</section>
+##引入CSS
+<link href="${rc.contextPath}/resources/css/web/setting/setting.css" rel="stylesheet">
+##引入JS
+<script src="${rc.contextPath}/resources/js/web/setting/setting.js"></script>

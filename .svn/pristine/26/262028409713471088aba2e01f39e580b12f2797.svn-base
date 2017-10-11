@@ -1,0 +1,363 @@
+package cn.proem.dagl.web.fileStamp.controller;
+
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.DocumentException;
+
+import cn.proem.dagl.web.archives.service.CustomArchiveService;
+import cn.proem.dagl.web.dicManager.entity.DictionaryValue;
+import cn.proem.dagl.web.dicManager.service.DicManagerService;
+import cn.proem.dagl.web.fileStamp.dto.PdfFileStamp;
+import cn.proem.dagl.web.fileStamp.dto.PicFileStamp;
+import cn.proem.dagl.web.fileStamp.service.FileStampService;
+import cn.proem.dagl.web.preArchive.entity.Ywgj;
+import cn.proem.dagl.web.preArchive.service.ZlsjService;
+import cn.proem.dagl.web.table.entity.inf.BaseEntityInf;
+import cn.proem.stamp.PDFWriter;
+import cn.proem.stamp.PicWriter;
+import cn.proem.suw.web.common.exception.ServiceException;
+import cn.proem.suw.web.common.model.BaseCtrlModel;
+import cn.proem.suw.web.common.model.ResultModel;
+
+@Controller
+@RequestMapping(value = "/w/fileStamp")
+public class FileStampController extends BaseCtrlModel {
+	@Autowired
+	private FileStampService fileStampService;
+	@Autowired
+	private CustomArchiveService customArchiveService;
+	@Autowired
+	private ZlsjService zlsjService;
+	@Autowired
+	private DicManagerService dicManagerService;
+	
+	@RequestMapping(value = "/toFileStampView/{tableName}")
+	public ModelAndView toFileStampView(HttpServletRequest request,@PathVariable("tableName") String tableName) throws ServiceException {
+		ModelAndView modelAndView = this.createNormalView("/web/fileStamp/fileStamp.vm");
+		modelAndView.addObject("tablename", tableName);	
+		return modelAndView;
+	}
+	
+	@RequestMapping(value = "/doFileStamp")
+    @ResponseBody
+    public ResultModel<String> doFileStamp(HttpServletRequest request){
+		ResultModel<String> resultModel = new ResultModel<String>();
+		try{
+	        String tablename = request.getParameter("tablename");
+	        String[] uuids = request.getParameterValues("uuids[]");
+	        String dhzlx = request.getParameter("dhzlx");//档号章类型
+	       
+	        
+	        //根据字典获得档号对象
+	        List<DictionaryValue> dictionaryValues = dicManagerService.getDicValueList(dhzlx);
+	 	    //FileStamp fileStamp = this.getFileStampByDic(dictionaryValues);
+	        
+	        
+	        for(String uuid : uuids){
+	        	//获得对应单个档案
+	        	List<Ywgj> ywgjs = zlsjService.getFilesByZlsjId(uuid);
+
+	        	if(ywgjs!=null && ywgjs.size()>0){
+	        		Ywgj ywgj = ywgjs.get(0);
+	        	
+	        	
+	        		if("pdf".equalsIgnoreCase(ywgj.getWjlx())){
+	        			this.getPdfStamp(dictionaryValues, tablename, uuid, ywgj);
+	        			
+	        			
+	        		}else if("jpg".equalsIgnoreCase(ywgj.getWjlx())){
+	        			this.getPicStamp(dictionaryValues, tablename, uuid, ywgj);
+	        		}
+	        	}
+	        }
+		}catch (ServiceException e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg(e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			resultModel.setSuccess(false);
+			resultModel.setMsg("文件操作失败");
+		} 
+		return resultModel;
+        
+	}
+	
+	
+	
+	
+	
+	public BaseColor getBaseColor(String color){
+		BaseColor baseColor;
+		switch (color){
+		case "0" : 
+			baseColor = BaseColor.WHITE;
+			break;
+		case "1" : 
+			baseColor =  BaseColor.LIGHT_GRAY;
+			break;
+		case "2" : 
+			baseColor =  BaseColor.GRAY;
+			break;
+		case "3" : 
+			baseColor =  BaseColor.DARK_GRAY;
+			break;
+		case "4" : 
+			baseColor =  BaseColor.RED;
+			break;
+		case "5" : 
+			baseColor =  BaseColor.PINK;
+			break;
+		case "6" : 
+			baseColor =  BaseColor.ORANGE;
+			break;
+		case "7" : 
+			baseColor =  BaseColor.YELLOW;
+			break;
+		case "8" : 
+			baseColor = BaseColor.GREEN;
+			break;
+		case "9" : 
+			baseColor = BaseColor.MAGENTA;
+			break;
+		case "10" : 
+			baseColor = BaseColor.CYAN;
+			break;
+		case "11" : 
+			baseColor = BaseColor.BLUE;
+			break;
+		default : 
+			baseColor = BaseColor.BLACK;
+			break;
+		}
+		
+		return baseColor;
+	}
+	
+	
+	public Color getColor(String color){
+		Color baseColor;
+		switch (color){
+		case "0" : 
+			baseColor = Color.WHITE;
+			break;
+		case "1" : 
+			baseColor =  Color.LIGHT_GRAY;
+			break;
+		case "2" : 
+			baseColor =  Color.GRAY;
+			break;
+		case "3" : 
+			baseColor =  Color.DARK_GRAY;
+			break;
+		case "4" : 
+			baseColor =  Color.RED;
+			break;
+		case "5" : 
+			baseColor =  Color.PINK;
+			break;
+		case "6" : 
+			baseColor =  Color.ORANGE;
+			break;
+		case "7" : 
+			baseColor =  Color.YELLOW;
+			break;
+		case "8" : 
+			baseColor = Color.GREEN;
+			break;
+		case "9" : 
+			baseColor = Color.MAGENTA;
+			break;
+		case "10" : 
+			baseColor = Color.CYAN;
+			break;
+		case "11" : 
+			baseColor = Color.BLUE;
+			break;
+		default : 
+			baseColor = Color.BLACK;
+			break;
+		}
+		
+		return baseColor;
+	}
+	
+	
+  private String getValue(Object object){
+	  String value1 = (object != null?object.toString():"");
+	  return value1;
+  }
+  
+  private void getPdfStamp(List<DictionaryValue> dictionaryValues,String tablename,String uuid,Ywgj ywgj) throws DocumentException, IOException, ServiceException{
+		  PdfFileStamp pdfFileStamp = new PdfFileStamp();
+		  
+	  	  pdfFileStamp.setInputPath(this.getFilePath() + ywgj.getWjdz());//设置输入地址
+		  String stampPath = ywgj.getWjdz().substring(0,ywgj.getWjdz().lastIndexOf(".")-36);
+		
+		  String realStampPath = stampPath+UUID.randomUUID().toString()+".pdf";
+		  pdfFileStamp.setOutputPath(this.getFilePath()+realStampPath);//设置输出地址
+		  
+		  for(DictionaryValue dic : dictionaryValues){
+	        	if("x_position".equals(dic.getDvno())){
+	        		pdfFileStamp.setHorizonPosition(Float.valueOf(dic.getDvalue()));
+	        	}else if("y_position".equals(dic.getDvno())){
+	        		pdfFileStamp.setVerticalPosition(Float.valueOf(dic.getDvalue()));
+	        	}else if("width".equals(dic.getDvno())){
+	        		pdfFileStamp.setWidth(Float.valueOf(dic.getDvalue()));
+	        	}else if("height".equals(dic.getDvno())){
+	        		pdfFileStamp.setHeight(Float.valueOf(dic.getDvalue()));
+	        	}else if("rownums".equals(dic.getDvno())){
+	        		pdfFileStamp.setRownums(Float.valueOf(dic.getDvalue()));
+	        	}else if("colnums".equals(dic.getDvno())){
+	        		pdfFileStamp.setColnums(Float.valueOf(dic.getDvalue()));
+	        	}else if("lineSize".equals(dic.getDvno())){
+	        		pdfFileStamp.setLineSize(Float.valueOf(dic.getDvalue()));
+	        	}else if("fontSize".equals(dic.getDvno())){
+	        		pdfFileStamp.setFontSize(Float.valueOf(dic.getDvalue()));
+	        	}else if("lineColor".equals(dic.getDvno())){
+	        		String lineColorDic = dic.getDvalue();
+	        		pdfFileStamp.setLineColor(getBaseColor(lineColorDic));
+	        	}else if("fontColor".equals(dic.getDvno())){
+	        		String fontColorDic = dic.getDvalue();
+	        		pdfFileStamp.setFontColor(getBaseColor(fontColorDic));
+	        	}
+	        }
+		  
+	  
+	  	
+		//获得对应单个档案
+    	BaseEntityInf entity = customArchiveService.getEntity(tablename, uuid);
+    	 //判断档案类型
+        if("info_wsda_ywyj".equalsIgnoreCase(tablename)){
+        	String[][] fonts = { 
+        			{ getValue(entity.get("qzh")), getValue(entity.get("gdnd")), getValue(entity.get("jh"))}, 
+        			{ getValue(entity.get("zzwtdh")), getValue(entity.get("bgqx")), getValue(entity.get("szyh"))}
+        	};
+        	pdfFileStamp.setFonts(fonts);//设置内容
+        }else if("info_jjda_wj".equalsIgnoreCase(tablename)){
+        	String[][] fonts = { 
+        			{"档号","序号"}, 
+        			{ getValue(entity.get("dh")), getValue(entity.get("xh"))}
+        	};
+        	pdfFileStamp.setFonts(fonts);//设置内容
+        }else{
+        	pdfFileStamp.setFonts(new String[][]{{""},{""}});//设置内容
+        }
+  
+  
+        PDFWriter.drawTable(pdfFileStamp.getInputPath(),
+			        		pdfFileStamp.getOutputPath(),
+			        		pdfFileStamp.getHorizonPosition(),
+			        		pdfFileStamp.getVerticalPosition(),
+			        		pdfFileStamp.getWidth(),
+			        		pdfFileStamp.getHeight(),
+			        		pdfFileStamp.getRownums(),
+			        		pdfFileStamp.getColnums(), 
+			        		pdfFileStamp.getFonts(),
+			        		pdfFileStamp.getLineSize(),
+			        		pdfFileStamp.getFontSize(),
+			        		pdfFileStamp.getLineColor(),
+			        		pdfFileStamp.getFontColor()
+			        		);
+
+        File realStamp = new File(this.getFilePath()+realStampPath);
+        Long size = realStamp.length();
+
+        fileStampService.doFileStamp(size, ywgj.getId(), realStampPath);
+  }
+  
+  
+  private void getPicStamp(List<DictionaryValue> dictionaryValues,String tablename,String uuid,Ywgj ywgj) throws DocumentException, IOException, ServiceException{
+	  PicFileStamp picFileStamp = new PicFileStamp();
+	  
+	  picFileStamp.setInputPath(this.getFilePath() + ywgj.getWjdz());//设置输入地址
+	  String stampPath = ywgj.getWjdz().substring(0,ywgj.getWjdz().lastIndexOf(".")-36);
+	
+	  String realStampPath = stampPath+UUID.randomUUID().toString()+".jpg";
+	  picFileStamp.setOutputPath(this.getFilePath()+realStampPath);//设置输出地址
+	  
+	  for(DictionaryValue dic : dictionaryValues){
+        	if("x_position".equals(dic.getDvno())){
+        		picFileStamp.setHorizonPosition(Integer.valueOf(dic.getDvalue()));
+        	}else if("y_position".equals(dic.getDvno())){
+        		picFileStamp.setVerticalPosition(Integer.valueOf(dic.getDvalue()));
+        	}else if("width".equals(dic.getDvno())){
+        		picFileStamp.setWidth(Integer.valueOf(dic.getDvalue()));
+        	}else if("height".equals(dic.getDvno())){
+        		picFileStamp.setHeight(Integer.valueOf(dic.getDvalue()));
+        	}else if("rownums".equals(dic.getDvno())){
+        		picFileStamp.setRownums(Integer.valueOf(dic.getDvalue()));
+        	}else if("colnums".equals(dic.getDvno())){
+        		picFileStamp.setColnums(Integer.valueOf(dic.getDvalue()));
+        	}else if("lineSize".equals(dic.getDvno())){
+        		picFileStamp.setLineSize(Integer.valueOf(dic.getDvalue()));
+        	}else if("fontSize".equals(dic.getDvno())){
+        		picFileStamp.setFontSize(Integer.valueOf(dic.getDvalue()));
+        	}else if("lineColor".equals(dic.getDvno())){
+        		String lineColorDic = dic.getDvalue();
+        		picFileStamp.setLineColor(getColor(lineColorDic));
+        	}else if("fontColor".equals(dic.getDvno())){
+        		String fontColorDic = dic.getDvalue();
+        		picFileStamp.setFontColor(getColor(fontColorDic));
+        	}
+        }
+	  
+  
+  	
+	//获得对应单个档案
+	BaseEntityInf entity = customArchiveService.getEntity(tablename, uuid);
+	 //判断档案类型
+    if("info_wsda_ywyj".equalsIgnoreCase(tablename)){
+    	String[][] fonts = { 
+    			{ getValue(entity.get("qzh")), getValue(entity.get("gdnd")), getValue(entity.get("jh"))}, 
+    			{ getValue(entity.get("zzwtdh")), getValue(entity.get("bgqx")), getValue(entity.get("szyh"))}
+    	};
+    	picFileStamp.setFonts(fonts);//设置内容
+    }else if("info_jjda_wj".equalsIgnoreCase(tablename)){
+    	String[][] fonts = { 
+    			{"档号","序号"}, 
+    			{ getValue(entity.get("dh")), getValue(entity.get("xh"))}
+    	};
+    	picFileStamp.setFonts(fonts);//设置内容
+    }else{
+    	picFileStamp.setFonts(new String[][]{{""},{""}});//设置内容
+    }
+
+
+    PicWriter.drawTable(picFileStamp.getInputPath(),
+    			picFileStamp.getOutputPath(),
+    			picFileStamp.getHorizonPosition(),
+    			picFileStamp.getVerticalPosition(),
+    			picFileStamp.getWidth(),
+    			picFileStamp.getHeight(),
+    			picFileStamp.getRownums(),
+    			picFileStamp.getColnums(), 
+    			picFileStamp.getFonts(),
+    			picFileStamp.getLineSize(),
+    			picFileStamp.getFontSize(),
+    			picFileStamp.getLineColor(),
+    			picFileStamp.getFontColor()
+		        		);
+
+    File realStamp = new File(this.getFilePath()+realStampPath);
+    Long size = realStamp.length();
+
+    fileStampService.doFileStamp(size, ywgj.getId(), realStampPath);
+}
+  
+}
+
+
